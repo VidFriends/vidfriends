@@ -144,7 +144,7 @@ function escapeHtml(str) {
 }
 
 function homePage(username, opts = {}) {
-  const { outgoing = [], incoming = [], approved = [], inbox = [] } = opts;
+  const { outgoing = [], incoming = [], approved = [], inbox = [], sent = [] } = opts;
   const hasPending = incoming.length > 0 || outgoing.some((o) => o.status === 'pending');
   return `<!DOCTYPE html>
 <html lang="en">
@@ -239,8 +239,44 @@ function homePage(username, opts = {}) {
           .map(
             (v) => `
           <li>
-            <a href="${escapeHtml(v.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(v.url)}</a>
+            <a href="/links/open?id=${escapeHtml(v.id)}" target="_blank" rel="noopener noreferrer">${escapeHtml(v.url)}</a>
             — from <strong>${escapeHtml(v.sender_username)}</strong>
+            <form method="POST" action="/links/react" style="display:inline; margin-left:8px;">
+              <input type="hidden" name="link_id" value="${escapeHtml(v.id)}" />
+              <button type="submit" name="reaction" value="❤️" title="Heart">❤️</button>
+            </form>
+            <form method="POST" action="/links/react" style="display:inline; margin-left:4px;">
+              <input type="hidden" name="link_id" value="${escapeHtml(v.id)}" />
+              <button type="submit" name="reaction" value="👍" title="Thumbs up">👍</button>
+            </form>
+            <form method="POST" action="/links/react" style="display:inline; margin-left:8px;">
+              <input type="hidden" name="link_id" value="${escapeHtml(v.id)}" />
+              <input name="reaction_text" placeholder="Add reaction" />
+              <button type="submit">Send</button>
+            </form>
+          </li>`
+          )
+          .join('')}
+      </ul>
+    </section>
+    ` : ''}
+
+    ${sent.length ? `
+    <section>
+      <h2>Videos You Sent</h2>
+      <ul>
+        ${sent
+          .map(
+            (s) => `
+          <li>
+            <a href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(s.url)}</a>
+            — to <strong>${escapeHtml(s.recipient_username)}</strong>
+            — Watched: ${s.watched ? 'Yes' : 'No'}
+            — Reaction: ${s.reaction ? escapeHtml(s.reaction) : '-'}
+            <form method="POST" action="/links/unsend" style="display:inline; margin-left:8px;">
+              <input type="hidden" name="link_id" value="${escapeHtml(s.id)}" />
+              <button>Unsend</button>
+            </form>
           </li>`
           )
           .join('')}
@@ -315,6 +351,10 @@ export default {
       return handleRefresh(req, env);
     }
 
+    if (req.method === 'GET' && url.pathname === '/links/open') {
+      return handleLinkOpen(req, env);
+    }
+
     if (req.method === 'POST' && url.pathname === '/share') {
       // expecting JSON body: { sender, recipient, url }
       const { sender, recipient, url: sharedUrl } = await req.json();
@@ -346,6 +386,13 @@ export default {
 
     if (req.method === 'POST' && url.pathname === '/links/send') {
       return handleLinkSend(req, env);
+    }
+
+    if (req.method === 'POST' && url.pathname === '/links/react') {
+      return handleLinkReact(req, env);
+    }
+    if (req.method === 'POST' && url.pathname === '/links/unsend') {
+      return handleLinkUnsend(req, env);
     }
 
     if (req.method === 'POST' && url.pathname === '/friends/add') {
@@ -467,7 +514,8 @@ async function handleHome(req, env) {
       if (nameFromJwt && idFromJwt && env && env.vidshare) {
         const lists = await fetchFriendLists(env, idFromJwt);
         const inbox = await fetchInboxLinks(env, idFromJwt);
-        return new Response(homePage(nameFromJwt, { ...lists, inbox }), {
+        const sent = await fetchSentLinks(env, idFromJwt);
+        return new Response(homePage(nameFromJwt, { ...lists, inbox, sent }), {
           headers: { 'Content-Type': 'text/html;charset=UTF-8' },
         });
       }
@@ -481,7 +529,8 @@ async function handleHome(req, env) {
         if (row && row.username && row.user_id) {
           const lists = await fetchFriendLists(env, row.user_id);
           const inbox = await fetchInboxLinks(env, row.user_id);
-          return new Response(homePage(row.username, { ...lists, inbox }), {
+          const sent = await fetchSentLinks(env, row.user_id);
+          return new Response(homePage(row.username, { ...lists, inbox, sent }), {
             headers: { 'Content-Type': 'text/html;charset=UTF-8' },
           });
         }
@@ -535,7 +584,18 @@ async function fetchFriendLists(env, meId) {
 async function fetchInboxLinks(env, meId) {
   const rows = await env.vidshare
     .prepare(
-      'SELECT l.id, l.url, l.created_at, u.username as sender_username FROM links l JOIN users u ON u.id = l.sender_id WHERE l.recipient_id = ?1 ORDER BY l.created_at DESC LIMIT 50'
+      'SELECT l.id, l.url, l.created_at, u.username as sender_username FROM links l JOIN users u ON u.id = l.sender_id WHERE l.recipient_id = ?1 ORDER BY l.created_at ASC LIMIT 50'
+    )
+    .bind(meId)
+    .all()
+    .then((r) => r.results || r);
+  return rows;
+}
+
+async function fetchSentLinks(env, meId) {
+  const rows = await env.vidshare
+    .prepare(
+      'SELECT l.id, l.url, l.created_at, l.watched, l.reaction, u.username as recipient_username FROM links l JOIN users u ON u.id = l.recipient_id WHERE l.sender_id = ?1 ORDER BY l.created_at DESC LIMIT 50'
     )
     .bind(meId)
     .all()
@@ -743,6 +803,64 @@ async function handleLinkSend(req, env) {
     .bind(crypto.randomUUID(), videoUrl, me.userId, recipientId, now, 0, 0)
     .run();
   return new Response(null, { status: 302, headers: { Location: '/' } });
+}
+
+async function handleLinkReact(req, env) {
+  if (!env || !env.vidshare) return new Response('Database unavailable', { status: 500 });
+  const me = await getAuthUser(req, env);
+  if (!me) return new Response('Unauthorized', { status: 401 });
+  const form = await req.formData();
+  const linkId = (form.get('link_id') || '').toString();
+  const emoji = form.get('reaction');
+  const text = form.get('reaction_text');
+  const value = (emoji && emoji.toString()) || (text && text.toString().trim()) || '';
+  if (!linkId || !value) return new Response('Bad request', { status: 400 });
+  const row = await env.vidshare
+    .prepare('SELECT id, recipient_id FROM links WHERE id = ?1')
+    .bind(linkId)
+    .first();
+  if (!row || row.recipient_id !== me.userId) return new Response('Forbidden', { status: 403 });
+  await env.vidshare
+    .prepare('UPDATE links SET reaction = ?1 WHERE id = ?2')
+    .bind(value, linkId)
+    .run();
+  return new Response(null, { status: 302, headers: { Location: '/' } });
+}
+
+async function handleLinkUnsend(req, env) {
+  if (!env || !env.vidshare) return new Response('Database unavailable', { status: 500 });
+  const me = await getAuthUser(req, env);
+  if (!me) return new Response('Unauthorized', { status: 401 });
+  const form = await req.formData();
+  const linkId = (form.get('link_id') || '').toString();
+  if (!linkId) return new Response('Bad request', { status: 400 });
+  await env.vidshare
+    .prepare('DELETE FROM links WHERE id = ?1 AND sender_id = ?2')
+    .bind(linkId, me.userId)
+    .run();
+  return new Response(null, { status: 302, headers: { Location: '/' } });
+}
+
+async function handleLinkOpen(req, env) {
+  if (!env || !env.vidshare) return new Response('Database unavailable', { status: 500 });
+  const url = new URL(req.url);
+  const id = url.searchParams.get('id');
+  if (!id) return new Response('Bad request', { status: 400 });
+  const row = await env.vidshare
+    .prepare('SELECT url, recipient_id FROM links WHERE id = ?1')
+    .bind(id)
+    .first();
+  if (!row) return new Response('Not found', { status: 404 });
+  try {
+    const me = await getAuthUser(req, env);
+    if (me && me.userId === row.recipient_id) {
+      await env.vidshare
+        .prepare('UPDATE links SET watched = 1 WHERE id = ?1')
+        .bind(id)
+        .run();
+    }
+  } catch (_) {}
+  return new Response(null, { status: 302, headers: { Location: row.url } });
 }
 
 function cookie(name, value, opts = {}) {
