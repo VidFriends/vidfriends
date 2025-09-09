@@ -181,7 +181,7 @@ function loginPage() {
             userHandle: cred.response.userHandle ? bufToB64url(cred.response.userHandle) : null,
           }
         };
-        const vr = await fetch('/webauthn/login/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        const vr = await fetch('/webauthn/login/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(data) });
         if (vr.ok) { location.href = '/'; } else { const t = await vr.text().catch(()=> ''); alert('Passkey login failed' + (t? (': '+t) : '')); }
       }
     </script>
@@ -1846,7 +1846,37 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
   toVerify.set(clientHash, authenticatorDataBytes.length);
   const key = await importPublicKeyFromJwk(jwk);
   if (jwk.kty === 'EC') {
-    return crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, signatureBytes, toVerify);
+    // Some authenticators return raw r|s (64 bytes) instead of DER. Convert if needed.
+    let sig = signatureBytes;
+    if (!(sig && sig.length > 0 && sig[0] === 0x30)) {
+      // Attempt raw(64) -> DER conversion
+      if (sig && sig.length === 64) {
+        const r = sig.slice(0, 32);
+        const s = sig.slice(32);
+        function trimInt(buf) {
+          let i = 0;
+          while (i < buf.length - 1 && buf[i] === 0x00) i++;
+          let v = buf.slice(i);
+          // If high bit set, prepend 0x00
+          if (v[0] & 0x80) v = Uint8Array.from([0x00, ...v]);
+          return v;
+        }
+        const rT = trimInt(r);
+        const sT = trimInt(s);
+        const der = new Uint8Array(2 + 2 + rT.length + 2 + sT.length);
+        let o = 0;
+        der[o++] = 0x30; // SEQUENCE
+        der[o++] = der.length - 2; // length
+        der[o++] = 0x02; // INTEGER
+        der[o++] = rT.length;
+        der.set(rT, o); o += rT.length;
+        der[o++] = 0x02;
+        der[o++] = sT.length;
+        der.set(sT, o);
+        sig = der;
+      }
+    }
+    return crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, sig, toVerify);
   }
   if (jwk.kty === 'OKP' && jwk.crv === 'Ed25519') {
     return crypto.subtle.verify('Ed25519', key, signatureBytes, toVerify);
