@@ -93,22 +93,32 @@ function loginPage() {
       function showPassword() {
         document.getElementById('password-form').style.display = 'block';
       }
-      async function passkeyLogin() {
+    </script>
+    <script type="module">
+      function b64urlToBuf(b64url){
+        const b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
+        const pad = '='.repeat((4 - b64.length % 4) % 4);
+        const str = atob(b64 + pad);
+        const bytes = new Uint8Array(str.length);
+        for (let i=0;i<str.length;i++) bytes[i] = str.charCodeAt(i);
+        return bytes.buffer;
+      }
+      function bufToB64url(buf){
+        const bytes = new Uint8Array(buf);
+        let bin=''; for (let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+        return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+      }
+      window.passkeyLogin = async function passkeyLogin(){
         const res = await fetch('/webauthn/login/options', { method: 'POST' });
         if (!res.ok) { alert('Failed to start passkey login'); return; }
         const options = await res.json();
-        // Convert base64url props to ArrayBuffers
         options.challenge = b64urlToBuf(options.challenge);
         if (Array.isArray(options.allowCredentials)) {
-          options.allowCredentials = options.allowCredentials.map(c => ({ ...c, id: b64urlToBuf(c.id) }));
+          options.allowCredentials = options.allowCredentials.map(function(c){ return { type: c.type, id: b64urlToBuf(c.id), transports: c.transports }; });
         }
         let cred;
-        try {
-          cred = await navigator.credentials.get({ publicKey: options });
-        } catch (e) {
-          alert('Passkey get() failed');
-          return;
-        }
+        try { cred = await navigator.credentials.get({ publicKey: options }); }
+        catch (e) { alert('Passkey get() failed'); return; }
         const data = {
           id: cred.id,
           type: cred.type,
@@ -123,26 +133,13 @@ function loginPage() {
         const vr = await fetch('/webauthn/login/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (vr.ok) { location.href = '/'; } else { alert('Passkey login failed'); }
       }
-      function b64urlToBuf(b64url){
-        const b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
-        const pad = '='.repeat((4 - b64.length % 4) % 4);
-        const str = atob(b64 + pad);
-        const bytes = new Uint8Array(str.length);
-        for (let i=0;i<str.length;i++) bytes[i] = str.charCodeAt(i);
-        return bytes.buffer;
-      }
-      function bufToB64url(buf){
-        const bytes = new Uint8Array(buf);
-        let bin=''; for (let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
-        return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-      }
     </script>
   </head>
   <body>
     <h1>Login</h1>
     <button type="button" onclick="passkeyLogin()">passkey</button>
     <button>social</button>
-    <button id="password-btn" onclick="showPassword()">password</button>
+    <button type="button" id="password-btn" onclick="showPassword()">password</button>
     <button>phone</button>
     <form id="password-form" method="POST" style="display:none;">
       <input name="username" placeholder="username" required />
@@ -173,7 +170,22 @@ function signupPage() {
         document.getElementById('passkey-form').style.display = 'block';
         document.getElementById('pk-username').focus();
       }
-      async function passkeyRegister(ev){
+    </script>
+    <script type="module">
+      function b64urlToBuf(b64url){
+        const b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
+        const pad = '='.repeat((4 - b64.length % 4) % 4);
+        const str = atob(b64 + pad);
+        const bytes = new Uint8Array(str.length);
+        for (let i=0;i<str.length;i++) bytes[i] = str.charCodeAt(i);
+        return bytes.buffer;
+      }
+      function bufToB64url(buf){
+        const bytes = new Uint8Array(buf);
+        let bin=''; for (let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+        return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+      }
+      window.passkeyRegister = async function passkeyRegister(ev){
         ev.preventDefault();
         const username = (document.getElementById('pk-username').value||'').trim();
         if (!username) { alert('Enter a username'); return; }
@@ -183,7 +195,7 @@ function signupPage() {
         options.challenge = b64urlToBuf(options.challenge);
         options.user.id = b64urlToBuf(options.user.id);
         if (Array.isArray(options.excludeCredentials)) {
-          options.excludeCredentials = options.excludeCredentials.map(c => ({ ...c, id: b64urlToBuf(c.id) }));
+          options.excludeCredentials = options.excludeCredentials.map(function(c){ return { type: c.type, id: b64urlToBuf(c.id), transports: c.transports }; });
         }
         let cred;
         try { cred = await navigator.credentials.create({ publicKey: options }); }
@@ -201,26 +213,13 @@ function signupPage() {
         const vr = await fetch('/webauthn/register/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (vr.ok) { location.href = '/'; } else { alert('Registration failed'); }
       }
-      function b64urlToBuf(b64url){
-        const b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
-        const pad = '='.repeat((4 - b64.length % 4) % 4);
-        const str = atob(b64 + pad);
-        const bytes = new Uint8Array(str.length);
-        for (let i=0;i<str.length;i++) bytes[i] = str.charCodeAt(i);
-        return bytes.buffer;
-      }
-      function bufToB64url(buf){
-        const bytes = new Uint8Array(buf);
-        let bin=''; for (let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
-        return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-      }
     </script>
   </head>
   <body>
     <h1>Sign Up</h1>
     <button type="button" onclick="showPasskey()">passkey</button>
     <button>social</button>
-    <button id="password-btn" onclick="showPassword()">password</button>
+    <button type="button" id="password-btn" onclick="showPassword()">password</button>
     <button>phone</button>
     <form id="password-form" method="POST" style="display:none;">
       <input name="username" placeholder="username" required />
