@@ -226,7 +226,10 @@ function signupPage() {
         return b64;
       }
       async function registerPasskeyStart(){
-        var res = await fetch('/webauthn/register/options', { method: 'POST', credentials: 'same-origin' });
+        var unEl = document.getElementById('signup-username');
+        var username = (unEl && unEl.value ? unEl.value : '').trim();
+        if (!username) { alert('Please enter a username first'); return; }
+        var res = await fetch('/webauthn/register/options', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ username: username }) });
         if (!res.ok) { alert('Failed to start registration'); return; }
         var options = await res.json();
         options.challenge = b64urlToBuf(options.challenge);
@@ -244,10 +247,23 @@ function signupPage() {
           };
           var vr = await fetch('/webauthn/register/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(data) });
           if (vr.ok) {
-            // Show username finalize form
-            document.getElementById('finalize-form').style.display = 'block';
-            document.getElementById('final-username').focus();
-            document.getElementById('start-passkey-btn').disabled = true;
+            // Auto-finalize using the provided username
+            try {
+              var fr = await fetch('/webauthn/register/finalize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ username: username }) });
+              if (fr.ok) { location.href = '/'; }
+              else {
+                var t = await fr.text();
+                alert('Finalize failed: ' + t + '\nYou can try finalizing below.');
+                var f = document.getElementById('finalize-form');
+                if (f) {
+                  f.style.display = 'block';
+                  var fu = document.getElementById('final-username');
+                  if (fu) fu.value = username;
+                }
+              }
+            } catch(e) {
+              alert('Finalize step failed');
+            }
           } else {
             const t = await vr.text();
             alert('Registration failed: ' + t);
@@ -272,10 +288,11 @@ function signupPage() {
   </head>
   <body>
     <h1>Sign Up</h1>
-    <p>Register a new passkey, then choose a username.</p>
+    <p>Choose a username, then register a new passkey.</p>
+    <input id="signup-username" placeholder="choose a username" required />
     <button id="start-passkey-btn" type="button">Register Passkey</button>
     <form id="finalize-form" onsubmit="return finalizeSignup(event)" style="display:none; margin-top:8px;">
-      <input id="final-username" placeholder="choose a username" required />
+      <input id="final-username" placeholder="confirm username" required />
       <button type="submit">Finalize Sign Up</button>
     </form>
     <p><a href="/login">Go to login</a></p>
@@ -1434,10 +1451,20 @@ async function webauthnRegisterOptions(req, env) {
   const rpId = getRpIdFromUrl(req.url);
   const challenge = makeChallenge();
   const userId = base64url(crypto.getRandomValues(new Uint8Array(16)));
+  // Try to use provided username for OS display label
+  let providedUsername = '';
+  try {
+    const ct = req.headers.get('Content-Type') || '';
+    if (ct.includes('application/json')) {
+      const body = await req.json().catch(() => ({}));
+      if (body && body.username) providedUsername = String(body.username).trim();
+    }
+  } catch (_) {}
+  const displayName = providedUsername || 'user';
   const options = {
     challenge,
     rp: { id: rpId, name: 'vidshare' },
-    user: { id: userId, name: 'user', displayName: 'user' },
+    user: { id: userId, name: displayName, displayName: displayName },
     pubKeyCredParams: [ { type: 'public-key', alg: -7 }, { type: 'public-key', alg: -8 } ],
     timeout: 60000,
     attestation: 'none',
