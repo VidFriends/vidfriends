@@ -274,6 +274,9 @@ async function handleSignup(req, env) {
 }
 
 async function handleLogin(req, env) {
+  if (!env || !env.vidshare) {
+    return new Response('Database unavailable', { status: 500 });
+  }
   const form = await req.formData();
   const username = form.get('username');
   const password = form.get('password');
