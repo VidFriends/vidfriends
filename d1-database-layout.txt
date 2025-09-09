@@ -21,6 +21,17 @@ sign_count (integer, used for webauthn)
 created_at (integer, epoch seconds)
 last_used (integer, epoch seconds)
 
+table: sessions
+columns:
+id (text, generated UUID)
+user_id (text, linked to users id)
+refresh_hash (text, SHA-256(base64(refreshToken)))
+created_at (integer, epoch seconds)
+expires_at (integer, epoch seconds, 60 days from now)
+user_agent (text)
+last_rotated_at (integer, epoch seconds)
+rotation_count (integer)
+
 table: links
 id (text, generated UUID)
 url (text, user provided url of the video)
