@@ -20,3 +20,17 @@ public_key (blob, used for passkey)
 sign_count (integer, used for webauthn)
 created_at (integer, epoch seconds)
 last_used (integer, epoch seconds)
+
+table: links
+id (text, generated UUID)
+url (text, user provided url of the video)
+sender_id (text, linked to users id)
+recipient_id (text, linked to users id)
+created_at (integer, epoch seconds)
+watched (integer, boolean watched or not watched)
+saved (integer, boolean, saved or not saved)
+reaction (text, could be an emoji reference or a message)
+title (text, will populate with metadata from video provider)
+thumbnail_url (text, url thumbnail for video, from video provider)
+
+these are all the tables currently.
