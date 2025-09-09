@@ -1,0 +1,22 @@
+The Cloudflare D1 tables are as follows:
+
+table: users
+columns: 
+id (text, generated UUID)
+username (text, user created)
+avatar_url (text, user uploaded)
+created_at (integer, epoch seconds)
+last_login (integer, epoch seconds)
+
+table: credentials (one user can have multiple credential entries)
+columns:
+id (text, generated UUID)
+user_id (text, linked to users id)
+type (text, preset types of logins, username_pw, email_pw, phone_sms, passkey, appleid, discord, github)
+identifier (text, based on type, could be username, email, phone number, appleid identifier, and so forth)
+external_id (text, used for passkey credentialid, and social provider_sub)
+secret_hash (text, bcrypt, only used for username_pw and email_pw as password hash)
+public_key (blob, used for passkey)
+sign_count (integer, used for webauthn)
+created_at (integer, epoch seconds)
+last_used (integer, epoch seconds)
