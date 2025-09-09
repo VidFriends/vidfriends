@@ -183,6 +183,7 @@ export default {
     }
 
     if (req.method === 'POST' && url.pathname === '/share') {
+      // expecting JSON body: { sender, recipient, url }
       const { sender, recipient, url: sharedUrl } = await req.json();
 
       if (!sender || !recipient || !sharedUrl) {
@@ -313,4 +314,3 @@ async function handleLogout(req, env) {
   headers.append('Set-Cookie', 'session=; Path=/; HttpOnly; Max-Age=0');
   return new Response(null, { status: 302, headers });
 }
-
