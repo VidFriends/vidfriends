@@ -126,12 +126,17 @@ function loginPage() {
             }
           };
           var vr = await fetch('/webauthn/login/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(data) });
-          if (vr.ok) { location.href = '/'; } else { alert('Passkey login failed'); }
+          if (vr.ok) { location.href = '/'; } else { const t = await vr.text().catch(()=> ''); alert('Passkey login failed' + (t? (': '+t) : '')); }
         } catch (e) { alert('Passkey get() failed'); }
       }
       document.addEventListener('DOMContentLoaded', function(){
         var btn = document.getElementById('login-passkey-btn');
-        if (btn) btn.addEventListener('click', function(){ loginPasskey(); });
+        if (btn) btn.addEventListener('click', function(){
+          var u = document.getElementById('login-username');
+          var name = u && u.value ? u.value.trim() : '';
+          if (name && typeof window.passkeyLogin === 'function') { window.passkeyLogin(name); }
+          else { loginPasskey(); }
+        });
       });
     </script>
     <script type="module">
@@ -177,13 +182,14 @@ function loginPage() {
           }
         };
         const vr = await fetch('/webauthn/login/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (vr.ok) { location.href = '/'; } else { alert('Passkey login failed'); }
+        if (vr.ok) { location.href = '/'; } else { const t = await vr.text().catch(()=> ''); alert('Passkey login failed' + (t? (': '+t) : '')); }
       }
     </script>
   </head>
   <body>
     <h1>Login</h1>
     <p>Use your device passkey to sign in.</p>
+    <input id="login-username" placeholder="username (optional)" />
     <button id="login-passkey-btn" type="button">Use Passkey</button>
     <p><a href="/signup">Go to sign up</a></p>
   </body>
@@ -1524,7 +1530,29 @@ async function webauthnLoginOptions(req, env) {
     userVerification: 'preferred',
     // allow resident/discoverable creds by omitting allowCredentials
   };
-  // Do not include allowCredentials to force discoverable credentials only
+  // Optionally narrow to a specific user's credentials if a username is provided
+  try {
+    const ct = req.headers.get('Content-Type') || '';
+    if (ct.includes('application/json')) {
+      const body = await req.json().catch(() => ({}));
+      const username = (body && body.username ? String(body.username) : '').trim();
+      if (username) {
+        const rows = await env.vidshare
+          .prepare(
+            'SELECT c.external_id FROM credentials c JOIN users u ON u.id = c.user_id WHERE c.type = ?1 AND lower(u.username) = lower(?2)'
+          )
+          .bind('passkey', username)
+          .all()
+          .then((r) => r.results || r);
+        if (rows && rows.length) {
+          options.allowCredentials = rows.map((r) => ({ type: 'public-key', id: r.external_id }));
+        }
+      }
+    }
+  } catch (_) {
+    // ignore and proceed without allowCredentials (discoverable only)
+  }
+  // Do not include allowCredentials (if none above) to allow discoverable credentials
   const headers = new Headers({ 'Content-Type': 'application/json' });
   headers.append('Set-Cookie', cookie('wa_auth_chal', challenge, { httpOnly: true, sameSite: 'Lax', path: '/' }));
   return new Response(JSON.stringify(options), { headers });
