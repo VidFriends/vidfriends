@@ -84,10 +84,10 @@ function loginPage() {
   <head>
     <meta charset="UTF-8" />
     <title>Login</title>
-    <link rel="icon" type="image/svg+xml" href="https://assets.zem.systems/favicon/favicon.svg">
-    <link rel="icon" type="image/png" sizes="96x96" href="https://assets.zem.systems/favicon/favicon-96x96.png">
-    <link rel="shortcut icon" href="https://assets.zem.systems/favicon/favicon.ico">
-    <link rel="apple-touch-icon" href="https://assets.zem.systems/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/svg+xml" href="https://assets.vidfriends.app/favicon/favicon.svg">
+    <link rel="icon" type="image/png" sizes="96x96" href="https://assets.vidfriends.app/favicon/favicon-96x96.png">
+    <link rel="shortcut icon" href="https://assets.vidfriends.app/favicon/favicon.ico">
+    <link rel="apple-touch-icon" href="https://assets.vidfriends.app/favicon/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
     <script>
       function b64urlToBuf(b64url){
@@ -228,10 +228,10 @@ function signupPage() {
   <head>
     <meta charset="UTF-8" />
     <title>Sign Up</title>
-    <link rel="icon" type="image/svg+xml" href="https://assets.zem.systems/favicon/favicon.svg">
-    <link rel="icon" type="image/png" sizes="96x96" href="https://assets.zem.systems/favicon/favicon-96x96.png">
-    <link rel="shortcut icon" href="https://assets.zem.systems/favicon/favicon.ico">
-    <link rel="apple-touch-icon" href="https://assets.zem.systems/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/svg+xml" href="https://assets.vidfriends.app/favicon/favicon.svg">
+    <link rel="icon" type="image/png" sizes="96x96" href="https://assets.vidfriends.app/favicon/favicon-96x96.png">
+    <link rel="shortcut icon" href="https://assets.vidfriends.app/favicon/favicon.ico">
+    <link rel="apple-touch-icon" href="https://assets.vidfriends.app/favicon/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
     <script>
       function b64urlToBuf(b64url){
@@ -390,10 +390,10 @@ function homePage(username, opts = {}) {
   <head>
     <meta charset="UTF-8" />
     <title>Home</title>
-    <link rel="icon" type="image/svg+xml" href="https://assets.zem.systems/favicon/favicon.svg">
-    <link rel="icon" type="image/png" sizes="96x96" href="https://assets.zem.systems/favicon/favicon-96x96.png">
-    <link rel="shortcut icon" href="https://assets.zem.systems/favicon/favicon.ico">
-    <link rel="apple-touch-icon" href="https://assets.zem.systems/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/svg+xml" href="https://assets.vidfriends.app/favicon/favicon.svg">
+    <link rel="icon" type="image/png" sizes="96x96" href="https://assets.vidfriends.app/favicon/favicon-96x96.png">
+    <link rel="shortcut icon" href="https://assets.vidfriends.app/favicon/favicon.ico">
+    <link rel="apple-touch-icon" href="https://assets.vidfriends.app/favicon/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
     <script>
       function toggleAddFriend() {
@@ -682,16 +682,16 @@ export default {
 
     // Favicon and manifest endpoints
     if (req.method === 'GET' && url.pathname === '/favicon.ico') {
-      return Response.redirect('https://assets.zem.systems/favicon/favicon.ico', 302);
+      return Response.redirect('https://assets.vidfriends.app/favicon/favicon.ico', 302);
     }
     if (req.method === 'GET' && url.pathname === '/favicon.svg') {
-      return Response.redirect('https://assets.zem.systems/favicon/favicon.svg', 302);
+      return Response.redirect('https://assets.vidfriends.app/favicon/favicon.svg', 302);
     }
     if (req.method === 'GET' && url.pathname === '/apple-touch-icon.png') {
-      return Response.redirect('https://assets.zem.systems/favicon/apple-touch-icon.png', 302);
+      return Response.redirect('https://assets.vidfriends.app/favicon/apple-touch-icon.png', 302);
     }
     if (req.method === 'GET' && url.pathname === '/favicon-96x96.png') {
-      return Response.redirect('https://assets.zem.systems/favicon/favicon-96x96.png', 302);
+      return Response.redirect('https://assets.vidfriends.app/favicon/favicon-96x96.png', 302);
     }
     if (req.method === 'GET' && url.pathname === '/site.webmanifest') {
       const manifest = {
@@ -702,8 +702,8 @@ export default {
         background_color: '#ffffff',
         theme_color: '#000000',
         icons: [
-          { src: 'https://assets.zem.systems/favicon/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'https://assets.zem.systems/favicon/web-app-manifest-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'https://assets.vidfriends.app/favicon/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'https://assets.vidfriends.app/favicon/web-app-manifest-512x512.png', sizes: '512x512', type: 'image/png' },
         ],
       };
       return new Response(JSON.stringify(manifest), { headers: { 'Content-Type': 'application/manifest+json' } });
