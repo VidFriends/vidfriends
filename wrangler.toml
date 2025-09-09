@@ -1,0 +1,6 @@
+# wrangler.toml (wrangler v3.88.0^)
+[observability.logs]
+enabled = true
+name = "vidshare"
+main = "worker.js"
+compatibility_date = "2025-09-09"
