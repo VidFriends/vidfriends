@@ -1491,8 +1491,8 @@ async function webauthnRegisterOptions(req, env) {
     challenge,
     rp: { id: rpId, name: 'vidshare' },
     user: { id: userId, name: displayName, displayName: displayName },
-    // Restrict to ES256 for maximum compatibility
-    pubKeyCredParams: [ { type: 'public-key', alg: -7 } ],
+    // Include ES256 and RS256 to satisfy authenticator expectations and Chrome guidance
+    pubKeyCredParams: [ { type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 } ],
     timeout: 60000,
     attestation: 'none',
     authenticatorSelection: { residentKey: 'required', requireResidentKey: true, userVerification: 'preferred' },
@@ -1869,6 +1869,11 @@ function coseToJwk(cose) {
     const x = cose['-2'];
     return { kty: 'OKP', crv: 'Ed25519', x: base64url(x), ext: true };
   }
+  if (kty === 3 && (alg === -257)) { // RSA RS256
+    const n = cose['-1'];
+    const e = cose['-2'];
+    return { kty: 'RSA', n: base64url(n), e: base64url(e), ext: true };
+  }
   throw new Error('Unsupported COSE key');
 }
 
@@ -1881,6 +1886,9 @@ async function importPublicKeyFromJwk(jwk) {
   }
   if (jwk.kty === 'OKP' && jwk.crv === 'Ed25519') {
     return crypto.subtle.importKey('jwk', jwk, { name: 'Ed25519' }, false, ['verify']);
+  }
+  if (jwk.kty === 'RSA' && jwk.n && jwk.e) {
+    return crypto.subtle.importKey('jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']);
   }
   throw new Error('Unsupported key');
 }
@@ -1937,6 +1945,11 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
   }
   if (jwk.kty === 'OKP' && jwk.crv === 'Ed25519') {
     return crypto.subtle.verify('Ed25519', key, signatureBytes, toVerify);
+  }
+  if (jwk.kty === 'RSA') {
+    const ok = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, signatureBytes, toVerify);
+    try { console.log('[webauthn] verify: RS256 result', ok); } catch(_){}
+    return ok;
   }
   return false;
 }
