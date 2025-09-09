@@ -245,7 +245,7 @@ async function handleSignup(req, env) {
   const expiresAt = now + 60 * 24 * 60 * 60; // 60 days
   const refreshToken = randomTokenB64(32);
   const refreshHash = await sha256B64(refreshToken);
-  const jwt = await createJWT({ sub: userId, iat: now, exp: now + 15 * 60 }, env);
+  const jwt = await createJWT({ sub: userId, username, iat: now, exp: now + 15 * 60 }, env);
 
   await env.vidshare
     .prepare('INSERT INTO users (id, username, created_at, last_login) VALUES (?1, ?2, ?3, ?4)')
@@ -282,7 +282,7 @@ async function handleLogin(req, env) {
   }
   const cred = await env.vidshare
     .prepare(
-      'SELECT credentials.id as cred_id, credentials.secret_hash, users.id as user_id FROM credentials JOIN users ON credentials.user_id = users.id WHERE credentials.type = ?1 AND credentials.identifier = ?2'
+      'SELECT credentials.id as cred_id, credentials.secret_hash, users.id as user_id, users.username as username FROM credentials JOIN users ON credentials.user_id = users.id WHERE credentials.type = ?1 AND credentials.identifier = ?2'
     )
     .bind('username_pw', username)
     .first();
@@ -303,7 +303,7 @@ async function handleLogin(req, env) {
   const expiresAt = now + 60 * 24 * 60 * 60; // 60 days
   const refreshToken = randomTokenB64(32);
   const refreshHash = await sha256B64(refreshToken);
-  const jwt = await createJWT({ sub: cred.user_id, iat: now, exp: now + 15 * 60 }, env);
+  const jwt = await createJWT({ sub: cred.user_id, username: cred.username, iat: now, exp: now + 15 * 60 }, env);
   await env.vidshare
     .prepare(
       'INSERT INTO sessions (id, user_id, refresh_hash, created_at, expires_at, user_agent, last_rotated_at, rotation_count) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)'
@@ -318,20 +318,34 @@ async function handleLogin(req, env) {
 }
 
 async function handleHome(req, env) {
-  const sessionId = getCookie(req, 'session');
-  if (!sessionId) {
-    return new Response(null, { status: 302, headers: { Location: '/login' } });
+  // Prefer JWT; only fall back to DB when claim missing
+  const jwtToken = getCookie(req, 'jwt');
+  if (jwtToken) {
+    try {
+      const payload = await verifyJWT(jwtToken, env);
+      if (payload && payload.username) {
+        return new Response(homePage(payload.username), {
+          headers: { 'Content-Type': 'text/html;charset=UTF-8' },
+        });
+      }
+      // Missing username claim: fall back to DB via session cookie
+      const sessionId = getCookie(req, 'session');
+      if (sessionId && env && env.vidshare) {
+        const row = await env.vidshare
+          .prepare('SELECT users.username FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.id = ?1')
+          .bind(sessionId)
+          .first();
+        if (row && row.username) {
+          return new Response(homePage(row.username), {
+            headers: { 'Content-Type': 'text/html;charset=UTF-8' },
+          });
+        }
+      }
+    } catch (_) {
+      // Invalid/expired JWT: do not fall back per request
+    }
   }
-  const row = await env.vidshare
-    .prepare('SELECT users.username FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.id = ?1')
-    .bind(sessionId)
-    .first();
-  if (!row || !row.username) {
-    return new Response(null, { status: 302, headers: { Location: '/login' } });
-  }
-  return new Response(homePage(row.username), {
-    headers: { 'Content-Type': 'text/html;charset=UTF-8' },
-  });
+  return new Response(null, { status: 302, headers: { Location: '/login' } });
 }
 
 async function handleLogout(req, env) {
@@ -401,6 +415,31 @@ async function createJWT(payload, env) {
   return `${unsigned}.${signature}`;
 }
 
+function base64urlToUint8(str) {
+  // convert base64url -> base64
+  const b64 = str.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(str.length / 4) * 4, '=');
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+async function verifyJWT(token, env) {
+  const parts = token.split('.');
+  if (parts.length !== 3) throw new Error('bad token');
+  const [h, p, s] = parts;
+  const header = JSON.parse(new TextDecoder().decode(base64urlToUint8(h)));
+  if (header.alg !== 'HS256') throw new Error('alg');
+  const keyData = utf8ToUint8(env.JWT_SECRET || 'dev-secret');
+  const key = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+  const valid = await crypto.subtle.verify('HMAC', key, base64urlToUint8(s), utf8ToUint8(`${h}.${p}`));
+  if (!valid) throw new Error('sig');
+  const payload = JSON.parse(new TextDecoder().decode(base64urlToUint8(p)));
+  const now = Math.floor(Date.now() / 1000);
+  if (payload.exp && payload.exp < now) throw new Error('exp');
+  return payload;
+}
+
 async function handleRefresh(req, env) {
   const refreshToken = getCookie(req, 'refresh');
   if (!refreshToken) return new Response('Unauthorized', { status: 401 });
@@ -426,7 +465,16 @@ async function handleRefresh(req, env) {
     .prepare('UPDATE sessions SET refresh_hash = ?1, last_rotated_at = ?2, rotation_count = ?3, expires_at = ?4 WHERE id = ?5')
     .bind(newRefreshHash, now, (session.rotation_count || 0) + 1, newExpires, session.id)
     .run();
-  const jwt = await createJWT({ sub: session.user_id, iat: now, exp: now + 15 * 60 }, env);
+  // Try to include username in refreshed JWT
+  let usernameForJwt = undefined;
+  try {
+    const row = await env.vidshare
+      .prepare('SELECT username FROM users WHERE id = ?1')
+      .bind(session.user_id)
+      .first();
+    if (row && row.username) usernameForJwt = row.username;
+  } catch (_) {}
+  const jwt = await createJWT({ sub: session.user_id, username: usernameForJwt, iat: now, exp: now + 15 * 60 }, env);
   const headers = new Headers();
   headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15 * 60 }));
   headers.append('Set-Cookie', cookie('refresh', newRefreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60 * 24 * 60 * 60 }));
