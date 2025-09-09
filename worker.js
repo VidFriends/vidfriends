@@ -144,7 +144,7 @@ function escapeHtml(str) {
 }
 
 function homePage(username, opts = {}) {
-  const { outgoing = [], incoming = [], approved = [] } = opts;
+  const { outgoing = [], incoming = [], approved = [], inbox = [] } = opts;
   const hasPending = incoming.length > 0 || outgoing.some((o) => o.status === 'pending');
   return `<!DOCTYPE html>
 <html lang="en">
@@ -167,6 +167,22 @@ function homePage(username, opts = {}) {
       <input id="friend_username" name="friend_username" placeholder="friend's username" required />
       <button type="submit">Add</button>
     </form>
+
+    ${approved.length ? `
+    <section style="margin-top:16px;">
+      <h2>Send a Video</h2>
+      <form method="POST" action="/links/send">
+        <input name="video_url" placeholder="https://example.com/video" style="min-width:300px;" required />
+        <select name="recipient_id" required>
+          <option value="">Select friend…</option>
+          ${approved
+            .map((f) => `<option value="${escapeHtml(f.user_id)}">${escapeHtml(f.username)}</option>`) 
+            .join('')}
+        </select>
+        <button type="submit">Send</button>
+      </form>
+    </section>
+    ` : ''}
 
     ${hasPending ? `
     <section>
@@ -211,6 +227,23 @@ function homePage(username, opts = {}) {
           .map((r) => `
             <li><strong>${escapeHtml(r.username)}</strong> — declined</li>
           `).join('')}
+      </ul>
+    </section>
+    ` : ''}
+
+    ${inbox.length ? `
+    <section>
+      <h2>Videos Shared With You</h2>
+      <ul>
+        ${inbox
+          .map(
+            (v) => `
+          <li>
+            <a href="${escapeHtml(v.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(v.url)}</a>
+            — from <strong>${escapeHtml(v.sender_username)}</strong>
+          </li>`
+          )
+          .join('')}
       </ul>
     </section>
     ` : ''}
@@ -309,6 +342,10 @@ export default {
           headers: { 'Content-Type': 'application/json' },
         });
       }
+    }
+
+    if (req.method === 'POST' && url.pathname === '/links/send') {
+      return handleLinkSend(req, env);
     }
 
     if (req.method === 'POST' && url.pathname === '/friends/add') {
@@ -429,7 +466,8 @@ async function handleHome(req, env) {
       const idFromJwt = payload && payload.sub;
       if (nameFromJwt && idFromJwt && env && env.vidshare) {
         const lists = await fetchFriendLists(env, idFromJwt);
-        return new Response(homePage(nameFromJwt, lists), {
+        const inbox = await fetchInboxLinks(env, idFromJwt);
+        return new Response(homePage(nameFromJwt, { ...lists, inbox }), {
           headers: { 'Content-Type': 'text/html;charset=UTF-8' },
         });
       }
@@ -442,7 +480,8 @@ async function handleHome(req, env) {
           .first();
         if (row && row.username && row.user_id) {
           const lists = await fetchFriendLists(env, row.user_id);
-          return new Response(homePage(row.username, lists), {
+          const inbox = await fetchInboxLinks(env, row.user_id);
+          return new Response(homePage(row.username, { ...lists, inbox }), {
             headers: { 'Content-Type': 'text/html;charset=UTF-8' },
           });
         }
@@ -491,6 +530,17 @@ async function fetchFriendLists(env, meId) {
 
   const approved = [...approvedInit, ...approvedRecv];
   return { incoming, outgoing, approved };
+}
+
+async function fetchInboxLinks(env, meId) {
+  const rows = await env.vidshare
+    .prepare(
+      'SELECT l.id, l.url, l.created_at, u.username as sender_username FROM links l JOIN users u ON u.id = l.sender_id WHERE l.recipient_id = ?1 ORDER BY l.created_at DESC LIMIT 50'
+    )
+    .bind(meId)
+    .all()
+    .then((r) => r.results || r);
+  return rows;
 }
 
 async function handleLogout(req, env) {
@@ -647,6 +697,51 @@ async function handleFriendBlock(req, env) {
       .bind(crypto.randomUUID(), me.userId, otherId, 'blocked', me.userId, now, now)
       .run();
   }
+  return new Response(null, { status: 302, headers: { Location: '/' } });
+}
+
+function isLikelyValidUrl(url) {
+  if (typeof url !== 'string') return false;
+  const trimmed = url.trim();
+  const re = /^https?:\/\/[\w.-]+(?:\/[\S]*)?$/i;
+  if (!re.test(trimmed)) return false;
+  try {
+    const u = new URL(trimmed);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+}
+
+async function handleLinkSend(req, env) {
+  if (!env || !env.vidshare) return new Response('Database unavailable', { status: 500 });
+  const me = await getAuthUser(req, env);
+  if (!me) return new Response('Unauthorized', { status: 401 });
+  const form = await req.formData();
+  const videoUrl = (form.get('video_url') || '').toString().trim();
+  const recipientId = (form.get('recipient_id') || '').toString().trim();
+  if (!videoUrl || !recipientId) return new Response('Bad request', { status: 400 });
+  if (!isLikelyValidUrl(videoUrl)) return new Response('Invalid URL', { status: 400 });
+  if (recipientId === me.userId) return new Response('Cannot send to yourself', { status: 400 });
+  // Ensure recipient exists
+  const recipient = await env.vidshare
+    .prepare('SELECT id FROM users WHERE id = ?1')
+    .bind(recipientId)
+    .first();
+  if (!recipient) return new Response('User not found', { status: 404 });
+  // Ensure accepted friendship in either direction
+  const friendship = await env.vidshare
+    .prepare(
+      'SELECT id FROM friendships WHERE status = ?1 AND ((initiating_user = ?2 AND receiving_user = ?3) OR (initiating_user = ?3 AND receiving_user = ?2))'
+    )
+    .bind('accepted', me.userId, recipientId)
+    .first();
+  if (!friendship) return new Response('Not friends', { status: 403 });
+  const now = Math.floor(Date.now() / 1000);
+  await env.vidshare
+    .prepare('INSERT INTO links (id, url, sender_id, recipient_id, created_at, watched, saved) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)')
+    .bind(crypto.randomUUID(), videoUrl, me.userId, recipientId, now, 0, 0)
+    .run();
   return new Response(null, { status: 302, headers: { Location: '/' } });
 }
 
