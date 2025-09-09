@@ -99,10 +99,51 @@ function loginPage() {
         var inp = document.getElementById('login-passkey-username');
         if (inp) inp.focus();
       }
+      function b64urlToBuf(b64url){
+        var b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
+        var pad = '='.repeat((4 - b64.length % 4) % 4);
+        var str = atob(b64 + pad);
+        var bytes = new Uint8Array(str.length);
+        for (var i=0;i<str.length;i++) bytes[i] = str.charCodeAt(i);
+        return bytes.buffer;
+      }
+      function bufToB64url(buf){
+        var bytes = new Uint8Array(buf);
+        var bin=''; for (var i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+        return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+      }
+      async function loginPasskeyLocal(username){
+        try {
+          var init = { method: 'POST', headers: {} };
+          if (username) { init.headers['Content-Type'] = 'application/json'; init.body = JSON.stringify({ username: username }); }
+          var res = await fetch('/webauthn/login/options', init);
+          if (!res.ok) { alert('Failed to start passkey login'); return; }
+          var options = await res.json();
+          options.challenge = b64urlToBuf(options.challenge);
+          if (Array.isArray(options.allowCredentials)) {
+            options.allowCredentials = options.allowCredentials.map(function(c){ return { type: c.type, id: b64urlToBuf(c.id), transports: c.transports }; });
+          }
+          var cred = await navigator.credentials.get({ publicKey: options });
+          var data = {
+            id: cred.id,
+            type: cred.type,
+            rawId: bufToB64url(cred.rawId),
+            response: {
+              clientDataJSON: bufToB64url(cred.response.clientDataJSON),
+              authenticatorData: bufToB64url(cred.response.authenticatorData),
+              signature: bufToB64url(cred.response.signature),
+              userHandle: cred.response.userHandle ? bufToB64url(cred.response.userHandle) : null,
+            }
+          };
+          var vr = await fetch('/webauthn/login/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+          if (vr.ok) { location.href = '/'; } else { alert('Passkey login failed'); }
+        } catch (e) { alert('Passkey get() failed'); }
+      }
       function startPasskeyLogin(ev) {
         ev.preventDefault();
         var u = (document.getElementById('login-passkey-username').value || '').trim();
-        if (window.passkeyLogin) window.passkeyLogin(u || null);
+        var fn = window.passkeyLogin || loginPasskeyLocal;
+        fn(u || null);
         return false;
       }
     </script>
@@ -188,50 +229,50 @@ function signupPage() {
         document.getElementById('passkey-form').style.display = 'block';
         document.getElementById('pk-username').focus();
       }
-    </script>
-    <script type="module">
       function b64urlToBuf(b64url){
-        const b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
-        const pad = '='.repeat((4 - b64.length % 4) % 4);
-        const str = atob(b64 + pad);
-        const bytes = new Uint8Array(str.length);
-        for (let i=0;i<str.length;i++) bytes[i] = str.charCodeAt(i);
+        var b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
+        var pad = '='.repeat((4 - b64.length % 4) % 4);
+        var str = atob(b64 + pad);
+        var bytes = new Uint8Array(str.length);
+        for (var i=0;i<str.length;i++) bytes[i] = str.charCodeAt(i);
         return bytes.buffer;
       }
       function bufToB64url(buf){
-        const bytes = new Uint8Array(buf);
-        let bin=''; for (let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+        var bytes = new Uint8Array(buf);
+        var bin=''; for (var i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
         return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
       }
-      window.passkeyRegister = async function passkeyRegister(ev){
+      async function registerPasskeyLocal(ev){
         ev.preventDefault();
-        const username = (document.getElementById('pk-username').value||'').trim();
-        if (!username) { alert('Enter a username'); return; }
-        const res = await fetch('/webauthn/register/options', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) });
-        if (!res.ok) { alert('Failed to start registration'); return; }
-        const options = await res.json();
+        var username = (document.getElementById('pk-username').value||'').trim();
+        if (!username) { alert('Enter a username'); return false; }
+        var res = await fetch('/webauthn/register/options', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: username }) });
+        if (!res.ok) { alert('Failed to start registration'); return false; }
+        var options = await res.json();
         options.challenge = b64urlToBuf(options.challenge);
         options.user.id = b64urlToBuf(options.user.id);
         if (Array.isArray(options.excludeCredentials)) {
           options.excludeCredentials = options.excludeCredentials.map(function(c){ return { type: c.type, id: b64urlToBuf(c.id), transports: c.transports }; });
         }
-        let cred;
-        try { cred = await navigator.credentials.create({ publicKey: options }); }
-        catch(e){ alert('Passkey create() failed'); return; }
-        const data = {
-          id: cred.id,
-          type: cred.type,
-          rawId: bufToB64url(cred.rawId),
-          response: {
-            clientDataJSON: bufToB64url(cred.response.clientDataJSON),
-            attestationObject: bufToB64url(cred.response.attestationObject),
-          },
-          username,
-        };
-        const vr = await fetch('/webauthn/register/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (vr.ok) { location.href = '/'; } else { alert('Registration failed'); }
+        try {
+          var cred = await navigator.credentials.create({ publicKey: options });
+          var data = {
+            id: cred.id,
+            type: cred.type,
+            rawId: bufToB64url(cred.rawId),
+            response: {
+              clientDataJSON: bufToB64url(cred.response.clientDataJSON),
+              attestationObject: bufToB64url(cred.response.attestationObject),
+            },
+            username: username,
+          };
+          var vr = await fetch('/webauthn/register/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+          if (vr.ok) { location.href = '/'; } else { alert('Registration failed'); }
+        } catch (e) { alert('Passkey create() failed'); }
+        return false;
       }
     </script>
+    <script type="module"></script>
   </head>
   <body>
     <h1>Sign Up</h1>
@@ -244,7 +285,7 @@ function signupPage() {
       <input name="password" type="password" placeholder="password" required />
       <button type="submit">sign up</button>
     </form>
-    <form id="passkey-form" onsubmit="passkeyRegister(event)" style="display:none; margin-top:8px;">
+    <form id="passkey-form" onsubmit="return registerPasskeyLocal(event)" style="display:none; margin-top:8px;">
       <input id="pk-username" placeholder="username" required />
       <button type="submit">Register with Passkey</button>
     </form>
