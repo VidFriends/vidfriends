@@ -1939,8 +1939,47 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
         try { console.log('[webauthn] verify: converted raw r|s to DER', { len: sig.length, head: hexPreview(sig, 8) }); } catch(_){}
       }
     }
-    const ok = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, sig, toVerify);
+    let ok = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, sig, toVerify);
     try { console.log('[webauthn] verify: ECDSA result', ok); } catch(_){}
+    if (!ok && sig && sig[0] === 0x30) {
+      // Try to normalize DER by parsing and re-encoding r/s
+      try {
+        let p = 0;
+        if (sig[p++] !== 0x30) throw new Error('DER: no SEQ');
+        const seqLen = sig[p++];
+        if (sig[p++] !== 0x02) throw new Error('DER: no INT r');
+        const rLen = sig[p++];
+        const r = sig.slice(p, p + rLen); p += rLen;
+        if (sig[p++] !== 0x02) throw new Error('DER: no INT s');
+        const sLen = sig[p++];
+        const s = sig.slice(p, p + sLen);
+        function trimInt2(buf) {
+          let i = 0;
+          while (i < buf.length - 1 && buf[i] === 0x00) i++;
+          let v = buf.slice(i);
+          if (v[0] & 0x80) v = Uint8Array.from([0x00, ...v]);
+          return v;
+        }
+        const rT = trimInt2(r);
+        const sT = trimInt2(s);
+        const nSeqLen = 2 + rT.length + 2 + sT.length;
+        const der2 = new Uint8Array(2 + nSeqLen);
+        let o2 = 0;
+        der2[o2++] = 0x30;
+        der2[o2++] = nSeqLen;
+        der2[o2++] = 0x02;
+        der2[o2++] = rT.length;
+        der2.set(rT, o2); o2 += rT.length;
+        der2[o2++] = 0x02;
+        der2[o2++] = sT.length;
+        der2.set(sT, o2);
+        const ok2 = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, der2, toVerify);
+        try { console.log('[webauthn] verify: ECDSA normalized result', ok2); } catch(_){}
+        return ok2;
+      } catch (e) {
+        try { console.log('[webauthn] verify: ECDSA normalize error', e && (e.stack || e.message || e)); } catch(_){}
+      }
+    }
     return ok;
   }
   if (jwk.kty === 'OKP' && jwk.crv === 'Ed25519') {
