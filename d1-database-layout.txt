@@ -53,5 +53,6 @@ saved (integer, boolean, saved or not saved)
 reaction (text, could be an emoji reference or a message)
 title (text, will populate with metadata from video provider)
 thumbnail_url (text, url thumbnail for video, from video provider)
+watched_at (integer, epoch seconds, nullable; set when link is viewed)
 
 these are all the tables currently.
