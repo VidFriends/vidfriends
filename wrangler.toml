@@ -1,6 +1,13 @@
-# wrangler.toml (wrangler v3.88.0^)
-[observability.logs]
-enabled = true
+# wrangler.toml (wrangler v3)
+
 name = "vidshare"
 main = "worker.js"
 compatibility_date = "2025-09-09"
+
+[observability.logs]
+enabled = true
+
+[[d1_databases]]
+binding = "vidshare"
+database_name = "vidshare"
+database_id = "22f9fd9b-3c3c-4ae4-97c9-b746ea116af2"
