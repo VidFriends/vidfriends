@@ -143,16 +143,102 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
-function homePage(username) {
+function homePage(username, opts = {}) {
+  const { outgoing = [], incoming = [], approved = [] } = opts;
+  const hasPending = incoming.length > 0 || outgoing.some((o) => o.status === 'pending');
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>Home</title>
+    <script>
+      function toggleAddFriend() {
+        var f = document.getElementById('add-friend-form');
+        f.style.display = f.style.display === 'none' ? 'block' : 'none';
+        if (f.style.display === 'block') document.getElementById('friend_username').focus();
+      }
+    </script>
   </head>
   <body>
     <h1>Home</h1>
     <p>Logged in as <strong>${escapeHtml(username)}</strong></p>
+    <button type="button" onclick="toggleAddFriend()">Add Friend</button>
+    <form id="add-friend-form" method="POST" action="/friends/add" style="display:none;margin-top:8px;">
+      <input id="friend_username" name="friend_username" placeholder="friend's username" required />
+      <button type="submit">Add</button>
+    </form>
+
+    ${hasPending ? `
+    <section>
+      <h2>Friend Requests</h2>
+      ${incoming.length ? `
+      <h3>Incoming</h3>
+      <ul>
+        ${incoming
+          .map(
+            (r) => `
+          <li>
+            <strong>${escapeHtml(r.username)}</strong>
+            <form method="POST" action="/friends/respond" style="display:inline; margin-left:8px;">
+              <input type="hidden" name="other_user_id" value="${escapeHtml(r.user_id)}" />
+              <button name="action" value="accept">Accept</button>
+              <button name="action" value="decline">Decline</button>
+            </form>
+          </li>`
+          )
+          .join('')}
+      </ul>` : ''}
+      ${outgoing.some((o) => o.status === 'pending') ? `
+      <h3>Outgoing</h3>
+      <ul>
+        ${outgoing.filter((r)=> r.status === 'pending')
+          .map(
+            (r) => `
+          <li>
+            <strong>${escapeHtml(r.username)}</strong> — pending
+          </li>`
+          )
+          .join('')}
+      </ul>` : ''}
+    </section>
+    ` : ''}
+
+    ${outgoing.some((o) => o.status === 'declined') ? `
+    <section>
+      <h2>Recent Responses</h2>
+      <ul>
+        ${outgoing.filter((r)=> r.status === 'declined')
+          .map((r) => `
+            <li><strong>${escapeHtml(r.username)}</strong> — declined</li>
+          `).join('')}
+      </ul>
+    </section>
+    ` : ''}
+
+    ${approved.length ? `
+    <section>
+      <h2>Friends</h2>
+      <ul>
+        ${approved
+          .map(
+            (f) => `
+          <li>
+            <strong>${escapeHtml(f.username)}</strong>
+            <form method="POST" action="/friends/block" style="display:inline; margin-left:8px;">
+              <input type="hidden" name="other_user_id" value="${escapeHtml(f.user_id)}" />
+              <button>Block</button>
+            </form>
+            <form method="POST" action="/friends/remove" style="display:inline; margin-left:4px;">
+              <input type="hidden" name="other_user_id" value="${escapeHtml(f.user_id)}" />
+              <button>Remove</button>
+            </form>
+          </li>`
+          )
+          .join('')}
+      </ul>
+    </section>
+    ` : ''}
+
     <form method="POST" action="/logout">
       <button type="submit">logout</button>
     </form>
@@ -223,6 +309,19 @@ export default {
           headers: { 'Content-Type': 'application/json' },
         });
       }
+    }
+
+    if (req.method === 'POST' && url.pathname === '/friends/add') {
+      return handleFriendAdd(req, env);
+    }
+    if (req.method === 'POST' && url.pathname === '/friends/respond') {
+      return handleFriendRespond(req, env);
+    }
+    if (req.method === 'POST' && url.pathname === '/friends/remove') {
+      return handleFriendRemove(req, env);
+    }
+    if (req.method === 'POST' && url.pathname === '/friends/block') {
+      return handleFriendBlock(req, env);
     }
 
     return new Response('Not Found', { status: 404 });
@@ -326,20 +425,24 @@ async function handleHome(req, env) {
   if (jwtToken) {
     try {
       const payload = await verifyJWT(jwtToken, env);
-      if (payload && payload.username) {
-        return new Response(homePage(payload.username), {
+      const nameFromJwt = payload && payload.username;
+      const idFromJwt = payload && payload.sub;
+      if (nameFromJwt && idFromJwt && env && env.vidshare) {
+        const lists = await fetchFriendLists(env, idFromJwt);
+        return new Response(homePage(nameFromJwt, lists), {
           headers: { 'Content-Type': 'text/html;charset=UTF-8' },
         });
       }
-      // Missing username claim: fall back to DB via session cookie
+      // Missing username or sub claim: fall back to DB via session cookie
       const sessionId = getCookie(req, 'session');
       if (sessionId && env && env.vidshare) {
         const row = await env.vidshare
-          .prepare('SELECT users.username FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.id = ?1')
+          .prepare('SELECT users.id as user_id, users.username FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.id = ?1')
           .bind(sessionId)
           .first();
-        if (row && row.username) {
-          return new Response(homePage(row.username), {
+        if (row && row.username && row.user_id) {
+          const lists = await fetchFriendLists(env, row.user_id);
+          return new Response(homePage(row.username, lists), {
             headers: { 'Content-Type': 'text/html;charset=UTF-8' },
           });
         }
@@ -349,6 +452,45 @@ async function handleHome(req, env) {
     }
   }
   return new Response(null, { status: 302, headers: { Location: '/login' } });
+}
+
+async function fetchFriendLists(env, meId) {
+  // Incoming pending where I am the receiver
+  const incoming = await env.vidshare
+    .prepare(
+      'SELECT u.id as user_id, u.username FROM friendships f JOIN users u ON u.id = f.initiating_user WHERE f.receiving_user = ?1 AND f.status = ?2'
+    )
+    .bind(meId, 'pending')
+    .all()
+    .then((r) => r.results || r);
+
+  // Outgoing pending/declined where I am the initiator
+  const outgoing = await env.vidshare
+    .prepare(
+      'SELECT u.id as user_id, u.username, f.status FROM friendships f JOIN users u ON u.id = f.receiving_user WHERE f.initiating_user = ?1 AND (f.status = ?2 OR f.status = ?3)'
+    )
+    .bind(meId, 'pending', 'declined')
+    .all()
+    .then((r) => r.results || r);
+
+  // Approved: union of both directions where accepted
+  const approvedInit = await env.vidshare
+    .prepare(
+      'SELECT u.id as user_id, u.username FROM friendships f JOIN users u ON u.id = f.receiving_user WHERE f.initiating_user = ?1 AND f.status = ?2'
+    )
+    .bind(meId, 'accepted')
+    .all()
+    .then((r) => r.results || r);
+  const approvedRecv = await env.vidshare
+    .prepare(
+      'SELECT u.id as user_id, u.username FROM friendships f JOIN users u ON u.id = f.initiating_user WHERE f.receiving_user = ?1 AND f.status = ?2'
+    )
+    .bind(meId, 'accepted')
+    .all()
+    .then((r) => r.results || r);
+
+  const approved = [...approvedInit, ...approvedRecv];
+  return { incoming, outgoing, approved };
 }
 
 async function handleLogout(req, env) {
@@ -371,6 +513,141 @@ async function handleLogout(req, env) {
   headers.append('Set-Cookie', cookie('jwt', '', { path: '/', httpOnly: true, maxAge: 0 }));
   headers.append('Set-Cookie', cookie('refresh', '', { path: '/', httpOnly: true, maxAge: 0 }));
   return new Response(null, { status: 302, headers });
+}
+
+async function getAuthUser(req, env) {
+  // Prefer JWT claims
+  try {
+    const token = getCookie(req, 'jwt');
+    if (token) {
+      const p = await verifyJWT(token, env);
+      if (p && p.sub) return { userId: p.sub, username: p.username };
+    }
+  } catch (_) {}
+  // Fallback via session cookie -> DB lookup
+  try {
+    const sessionId = getCookie(req, 'session');
+    if (sessionId && env && env.vidshare) {
+      const row = await env.vidshare
+        .prepare('SELECT users.id as user_id, users.username FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.id = ?1')
+        .bind(sessionId)
+        .first();
+      if (row && row.user_id) return { userId: row.user_id, username: row.username };
+    }
+  } catch (_) {}
+  return null;
+}
+
+async function handleFriendAdd(req, env) {
+  if (!env || !env.vidshare) return new Response('Database unavailable', { status: 500 });
+  const me = await getAuthUser(req, env);
+  if (!me) return new Response('Unauthorized', { status: 401 });
+  const form = await req.formData();
+  const targetName = (form.get('friend_username') || '').toString().trim();
+  if (!targetName) return new Response('Missing username', { status: 400 });
+  if (me.username && targetName.toLowerCase() === me.username.toLowerCase()) {
+    return new Response('Cannot add yourself', { status: 400 });
+  }
+  const target = await env.vidshare
+    .prepare('SELECT id, username FROM users WHERE lower(username) = lower(?1)')
+    .bind(targetName)
+    .first();
+  if (!target) return new Response('User not found', { status: 404 });
+  if (target.id === me.userId) return new Response('Cannot add yourself', { status: 400 });
+  const exists = await env.vidshare
+    .prepare(
+      'SELECT id, status FROM friendships WHERE (initiating_user = ?1 AND receiving_user = ?2) OR (initiating_user = ?2 AND receiving_user = ?1)'
+    )
+    .bind(me.userId, target.id)
+    .first();
+  const now = Math.floor(Date.now() / 1000);
+  if (exists) {
+    // If previously declined/blocked, do not re-open automatically
+    return new Response('Friendship already exists', { status: 400 });
+  }
+  await env.vidshare
+    .prepare(
+      'INSERT INTO friendships (id, initiating_user, receiving_user, status, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)'
+    )
+    .bind(crypto.randomUUID(), me.userId, target.id, 'pending', now, now)
+    .run();
+  return new Response(null, { status: 302, headers: { Location: '/' } });
+}
+
+async function handleFriendRespond(req, env) {
+  if (!env || !env.vidshare) return new Response('Database unavailable', { status: 500 });
+  const me = await getAuthUser(req, env);
+  if (!me) return new Response('Unauthorized', { status: 401 });
+  const form = await req.formData();
+  const otherId = form.get('other_user_id');
+  const action = (form.get('action') || '').toString();
+  if (!otherId || !action) return new Response('Bad request', { status: 400 });
+  const fr = await env.vidshare
+    .prepare(
+      'SELECT id, status FROM friendships WHERE initiating_user = ?1 AND receiving_user = ?2'
+    )
+    .bind(otherId, me.userId)
+    .first();
+  if (!fr || fr.status !== 'pending') return new Response('Not found', { status: 404 });
+  const now = Math.floor(Date.now() / 1000);
+  let newStatus = action === 'accept' ? 'accepted' : action === 'decline' ? 'declined' : null;
+  if (!newStatus) return new Response('Bad action', { status: 400 });
+  await env.vidshare
+    .prepare('UPDATE friendships SET status = ?1, updated_at = ?2 WHERE id = ?3')
+    .bind(newStatus, now, fr.id)
+    .run();
+  return new Response(null, { status: 302, headers: { Location: '/' } });
+}
+
+async function handleFriendRemove(req, env) {
+  if (!env || !env.vidshare) return new Response('Database unavailable', { status: 500 });
+  const me = await getAuthUser(req, env);
+  if (!me) return new Response('Unauthorized', { status: 401 });
+  const form = await req.formData();
+  const otherId = form.get('other_user_id');
+  if (!otherId) return new Response('Bad request', { status: 400 });
+  const row = await env.vidshare
+    .prepare(
+      'SELECT id FROM friendships WHERE status = ?1 AND ((initiating_user = ?2 AND receiving_user = ?3) OR (initiating_user = ?3 AND receiving_user = ?2))'
+    )
+    .bind('accepted', me.userId, otherId)
+    .first();
+  if (!row) return new Response('Not found', { status: 404 });
+  await env.vidshare
+    .prepare('DELETE FROM friendships WHERE id = ?1')
+    .bind(row.id)
+    .run();
+  return new Response(null, { status: 302, headers: { Location: '/' } });
+}
+
+async function handleFriendBlock(req, env) {
+  if (!env || !env.vidshare) return new Response('Database unavailable', { status: 500 });
+  const me = await getAuthUser(req, env);
+  if (!me) return new Response('Unauthorized', { status: 401 });
+  const form = await req.formData();
+  const otherId = form.get('other_user_id');
+  if (!otherId) return new Response('Bad request', { status: 400 });
+  const now = Math.floor(Date.now() / 1000);
+  const row = await env.vidshare
+    .prepare(
+      'SELECT id FROM friendships WHERE ((initiating_user = ?1 AND receiving_user = ?2) OR (initiating_user = ?2 AND receiving_user = ?1))'
+    )
+    .bind(me.userId, otherId)
+    .first();
+  if (row) {
+    await env.vidshare
+      .prepare('UPDATE friendships SET status = ?1, blocked_by = ?2, updated_at = ?3 WHERE id = ?4')
+      .bind('blocked', me.userId, now, row.id)
+      .run();
+  } else {
+    await env.vidshare
+      .prepare(
+        'INSERT INTO friendships (id, initiating_user, receiving_user, status, blocked_by, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)'
+      )
+      .bind(crypto.randomUUID(), me.userId, otherId, 'blocked', me.userId, now, now)
+      .run();
+  }
+  return new Response(null, { status: 302, headers: { Location: '/' } });
 }
 
 function cookie(name, value, opts = {}) {
