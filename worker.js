@@ -109,11 +109,20 @@ function loginPage() {
       }
       async function loginPasskey(){
         try {
+          console.log('[webauthn] login (no username) start');
           var res = await fetch('/webauthn/login/options', { method: 'POST', credentials: 'same-origin' });
+          console.log('[webauthn] options status', res.status);
           if (!res.ok) { alert('Failed to start passkey login'); return; }
           var options = await res.json();
+          console.log('[webauthn] options', { rpId: options.rpId, uv: options.userVerification, allowCreds: Array.isArray(options.allowCredentials) ? options.allowCredentials.length : 0 });
           options.challenge = b64urlToBuf(options.challenge);
+          console.log('[webauthn] calling navigator.credentials.get');
           var cred = await navigator.credentials.get({ publicKey: options });
+          console.log('[webauthn] got credential', { id: cred && cred.id, type: cred && cred.type });
+          try {
+            var cdj = JSON.parse(new TextDecoder().decode(cred.response.clientDataJSON));
+            console.log('[webauthn] clientData', { type: cdj.type, challenge: cdj.challenge });
+          } catch (e) { /* ignore */ }
           var data = {
             id: cred.id,
             type: cred.type,
@@ -125,9 +134,12 @@ function loginPage() {
               userHandle: cred.response.userHandle ? bufToB64url(cred.response.userHandle) : null,
             }
           };
+          console.log('[webauthn] assertion summary', { rawId: data.rawId, hasUserHandle: !!data.response.userHandle });
+          console.log('[webauthn] posting assertion to verify');
           var vr = await fetch('/webauthn/login/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(data) });
-          if (vr.ok) { location.href = '/'; } else { const t = await vr.text().catch(()=> ''); alert('Passkey login failed' + (t? (': '+t) : '')); }
-        } catch (e) { alert('Passkey get() failed'); }
+          console.log('[webauthn] verify status', vr.status);
+          if (vr.ok) { location.href = '/'; } else { const t = await vr.text().catch(()=> ''); console.error('[webauthn] verify failed', vr.status, t); alert('Passkey login failed' + (t? (': '+t) : '')); }
+        } catch (e) { console.error('[webauthn] navigator.credentials.get error', e); alert('Passkey get() failed'); }
       }
       document.addEventListener('DOMContentLoaded', function(){
         var btn = document.getElementById('login-passkey-btn');
@@ -158,18 +170,29 @@ function loginPage() {
         return b64;
       }
       window.passkeyLogin = async function passkeyLogin(username){
+        console.log('[webauthn] login (with username) start', { username });
         const init = { method: 'POST', headers: {} };
         if (username) { init.headers['Content-Type'] = 'application/json'; init.body = JSON.stringify({ username }); }
         const res = await fetch('/webauthn/login/options', init);
+        console.log('[webauthn] options status', res.status);
         if (!res.ok) { alert('Failed to start passkey login'); return; }
         const options = await res.json();
+        console.log('[webauthn] options', { rpId: options.rpId, uv: options.userVerification, allowCreds: Array.isArray(options.allowCredentials) ? options.allowCredentials.length : 0 });
         options.challenge = b64urlToBuf(options.challenge);
         if (Array.isArray(options.allowCredentials)) {
           options.allowCredentials = options.allowCredentials.map(function(c){ return { type: c.type, id: b64urlToBuf(c.id), transports: c.transports }; });
         }
         let cred;
-        try { cred = await navigator.credentials.get({ publicKey: options }); }
-        catch (e) { alert('Passkey get() failed'); return; }
+        try {
+          console.log('[webauthn] calling navigator.credentials.get');
+          cred = await navigator.credentials.get({ publicKey: options });
+          console.log('[webauthn] got credential', { id: cred && cred.id, type: cred && cred.type });
+          try {
+            var cdj2 = JSON.parse(new TextDecoder().decode(cred.response.clientDataJSON));
+            console.log('[webauthn] clientData', { type: cdj2.type, challenge: cdj2.challenge });
+          } catch (e) { /* ignore */ }
+        }
+        catch (e) { console.error('[webauthn] navigator.credentials.get error', e); alert('Passkey get() failed'); return; }
         const data = {
           id: cred.id,
           type: cred.type,
@@ -181,8 +204,11 @@ function loginPage() {
             userHandle: cred.response.userHandle ? bufToB64url(cred.response.userHandle) : null,
           }
         };
+        console.log('[webauthn] assertion summary', { rawId: data.rawId, hasUserHandle: !!data.response.userHandle });
+        console.log('[webauthn] posting assertion to verify');
         const vr = await fetch('/webauthn/login/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(data) });
-        if (vr.ok) { location.href = '/'; } else { const t = await vr.text().catch(()=> ''); alert('Passkey login failed' + (t? (': '+t) : '')); }
+        console.log('[webauthn] verify status', vr.status);
+        if (vr.ok) { location.href = '/'; } else { const t = await vr.text().catch(()=> ''); console.error('[webauthn] verify failed', vr.status, t); alert('Passkey login failed' + (t? (': '+t) : '')); }
       }
     </script>
   </head>
