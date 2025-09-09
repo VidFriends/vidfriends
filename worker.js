@@ -90,15 +90,6 @@ function loginPage() {
     <link rel="apple-touch-icon" href="https://assets.zem.systems/favicon/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
     <script>
-      function showPassword() {
-        document.getElementById('password-form').style.display = 'block';
-      }
-      function togglePasskeyLogin() {
-        var f = document.getElementById('passkey-login-form');
-        f.style.display = 'block';
-        var inp = document.getElementById('login-passkey-username');
-        if (inp) inp.focus();
-      }
       function b64urlToBuf(b64url){
         var b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
         var pad = '='.repeat((4 - b64.length % 4) % 4);
@@ -112,17 +103,12 @@ function loginPage() {
         var bin=''; for (var i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
         return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
       }
-      async function loginPasskeyLocal(username){
+      async function loginPasskey(){
         try {
-          var init = { method: 'POST', headers: {} };
-          if (username) { init.headers['Content-Type'] = 'application/json'; init.body = JSON.stringify({ username: username }); }
-          var res = await fetch('/webauthn/login/options', init);
+          var res = await fetch('/webauthn/login/options', { method: 'POST' });
           if (!res.ok) { alert('Failed to start passkey login'); return; }
           var options = await res.json();
           options.challenge = b64urlToBuf(options.challenge);
-          if (Array.isArray(options.allowCredentials)) {
-            options.allowCredentials = options.allowCredentials.map(function(c){ return { type: c.type, id: b64urlToBuf(c.id), transports: c.transports }; });
-          }
           var cred = await navigator.credentials.get({ publicKey: options });
           var data = {
             id: cred.id,
@@ -138,13 +124,6 @@ function loginPage() {
           var vr = await fetch('/webauthn/login/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
           if (vr.ok) { location.href = '/'; } else { alert('Passkey login failed'); }
         } catch (e) { alert('Passkey get() failed'); }
-      }
-      function startPasskeyLogin(ev) {
-        ev.preventDefault();
-        var u = (document.getElementById('login-passkey-username').value || '').trim();
-        var fn = window.passkeyLogin || loginPasskeyLocal;
-        fn(u || null);
-        return false;
       }
     </script>
     <script type="module">
@@ -192,19 +171,8 @@ function loginPage() {
   </head>
   <body>
     <h1>Login</h1>
-    <button type="button" onclick="togglePasskeyLogin()">passkey</button>
-    <button>social</button>
-    <button type="button" id="password-btn" onclick="showPassword()">password</button>
-    <button>phone</button>
-    <form id="password-form" method="POST" style="display:none;">
-      <input name="username" placeholder="username" required />
-      <input name="password" type="password" placeholder="password" required />
-      <button type="submit">log in</button>
-    </form>
-    <form id="passkey-login-form" onsubmit="return startPasskeyLogin(event)" style="display:none; margin-top:8px;">
-      <input id="login-passkey-username" placeholder="username (optional)" />
-      <button type="submit">Use Passkey</button>
-    </form>
+    <p>Use your device passkey to sign in.</p>
+    <button type="button" onclick="loginPasskey()">Use Passkey</button>
     <p><a href="/signup">Go to sign up</a></p>
   </body>
 </html>`;
@@ -222,13 +190,6 @@ function signupPage() {
     <link rel="apple-touch-icon" href="https://assets.zem.systems/favicon/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
     <script>
-      function showPassword() {
-        document.getElementById('password-form').style.display = 'block';
-      }
-      function showPasskey() {
-        document.getElementById('passkey-form').style.display = 'block';
-        document.getElementById('pk-username').focus();
-      }
       function b64urlToBuf(b64url){
         var b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
         var pad = '='.repeat((4 - b64.length % 4) % 4);
@@ -242,18 +203,12 @@ function signupPage() {
         var bin=''; for (var i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
         return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
       }
-      async function registerPasskeyLocal(ev){
-        ev.preventDefault();
-        var username = (document.getElementById('pk-username').value||'').trim();
-        if (!username) { alert('Enter a username'); return false; }
-        var res = await fetch('/webauthn/register/options', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: username }) });
-        if (!res.ok) { alert('Failed to start registration'); return false; }
+      async function registerPasskeyStart(){
+        var res = await fetch('/webauthn/register/options', { method: 'POST' });
+        if (!res.ok) { alert('Failed to start registration'); return; }
         var options = await res.json();
         options.challenge = b64urlToBuf(options.challenge);
         options.user.id = b64urlToBuf(options.user.id);
-        if (Array.isArray(options.excludeCredentials)) {
-          options.excludeCredentials = options.excludeCredentials.map(function(c){ return { type: c.type, id: b64urlToBuf(c.id), transports: c.transports }; });
-        }
         try {
           var cred = await navigator.credentials.create({ publicKey: options });
           var data = {
@@ -264,11 +219,26 @@ function signupPage() {
               clientDataJSON: bufToB64url(cred.response.clientDataJSON),
               attestationObject: bufToB64url(cred.response.attestationObject),
             },
-            username: username,
           };
           var vr = await fetch('/webauthn/register/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-          if (vr.ok) { location.href = '/'; } else { alert('Registration failed'); }
+          if (vr.ok) {
+            // Show username finalize form
+            document.getElementById('finalize-form').style.display = 'block';
+            document.getElementById('final-username').focus();
+            document.getElementById('start-passkey-btn').disabled = true;
+          } else {
+            const t = await vr.text();
+            alert('Registration failed: ' + t);
+          }
         } catch (e) { alert('Passkey create() failed'); }
+      }
+      async function finalizeSignup(ev){
+        ev.preventDefault();
+        var username = (document.getElementById('final-username').value||'').trim();
+        if (!username) { alert('Enter a username'); return false; }
+        var res = await fetch('/webauthn/register/finalize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: username }) });
+        if (res.ok) { location.href = '/'; }
+        else { const t = await res.text(); alert('Finalize failed: ' + t); }
         return false;
       }
     </script>
@@ -276,18 +246,11 @@ function signupPage() {
   </head>
   <body>
     <h1>Sign Up</h1>
-    <button type="button" onclick="showPasskey()">passkey</button>
-    <button>social</button>
-    <button type="button" id="password-btn" onclick="showPassword()">password</button>
-    <button>phone</button>
-    <form id="password-form" method="POST" style="display:none;">
-      <input name="username" placeholder="username" required />
-      <input name="password" type="password" placeholder="password" required />
-      <button type="submit">sign up</button>
-    </form>
-    <form id="passkey-form" onsubmit="return registerPasskeyLocal(event)" style="display:none; margin-top:8px;">
-      <input id="pk-username" placeholder="username" required />
-      <button type="submit">Register with Passkey</button>
+    <p>Register a new passkey, then choose a username.</p>
+    <button id="start-passkey-btn" type="button" onclick="registerPasskeyStart()">Register Passkey</button>
+    <form id="finalize-form" onsubmit="return finalizeSignup(event)" style="display:none; margin-top:8px;">
+      <input id="final-username" placeholder="choose a username" required />
+      <button type="submit">Finalize Sign Up</button>
     </form>
     <p><a href="/login">Go to login</a></p>
   </body>
@@ -716,6 +679,9 @@ export default {
     }
     if (req.method === 'POST' && url.pathname === '/webauthn/register/verify') {
       return webauthnRegisterVerify(req, env);
+    }
+    if (req.method === 'POST' && url.pathname === '/webauthn/register/finalize') {
+      return webauthnRegisterFinalize(req, env);
     }
     if (req.method === 'POST' && url.pathname === '/webauthn/login/options') {
       return webauthnLoginOptions(req, env);
@@ -1439,38 +1405,27 @@ function makeChallenge(bytes=32) {
 }
 
 async function webauthnRegisterOptions(req, env) {
-  const { username } = await req.json();
-  if (!username) return new Response('Bad request', { status: 400 });
-  // Ensure username is not taken
-  const existing = await env.vidshare
-    .prepare('SELECT id FROM users WHERE lower(username) = lower(?1)')
-    .bind(username)
-    .first();
-  if (existing) return new Response('Username taken', { status: 409 });
   const rpId = getRpIdFromUrl(req.url);
   const challenge = makeChallenge();
   const userId = base64url(crypto.getRandomValues(new Uint8Array(16)));
   const options = {
     challenge,
     rp: { id: rpId, name: 'vidshare' },
-    user: { id: userId, name: username, displayName: username },
+    user: { id: userId, name: 'user', displayName: 'user' },
     pubKeyCredParams: [ { type: 'public-key', alg: -7 }, { type: 'public-key', alg: -8 } ],
     timeout: 60000,
     attestation: 'none',
-    authenticatorSelection: { residentKey: 'preferred', userVerification: 'preferred' },
+    authenticatorSelection: { residentKey: 'required', requireResidentKey: true, userVerification: 'preferred' },
   };
   const headers = new Headers({ 'Content-Type': 'application/json' });
   headers.append('Set-Cookie', cookie('wa_reg_chal', challenge, { httpOnly: true, sameSite: 'Lax', path: '/' }));
-  headers.append('Set-Cookie', cookie('wa_reg_user', encodeURIComponent(username), { httpOnly: true, sameSite: 'Lax', path: '/' }));
   return new Response(JSON.stringify(options), { headers });
 }
 
 async function webauthnRegisterVerify(req, env) {
   const body = await req.json();
   const regChal = getCookie(req, 'wa_reg_chal');
-  const cookieUser = getCookie(req, 'wa_reg_user');
-  const claimedUsername = body.username || (cookieUser ? decodeURIComponent(cookieUser) : null);
-  if (!regChal || !claimedUsername) return new Response('Challenge missing', { status: 400 });
+  if (!regChal) return new Response('Challenge missing', { status: 400 });
   const clientData = base64urlToUint8(body.response.clientDataJSON);
   const client = JSON.parse(new TextDecoder().decode(clientData));
   if (client.type !== 'webauthn.create') return new Response('Bad type', { status: 400 });
@@ -1489,27 +1444,44 @@ async function webauthnRegisterVerify(req, env) {
   if (!parsed.credId || !parsed.coseKey) return new Response('No credential', { status: 400 });
   const jwk = coseToJwk(parsed.coseKey);
   const credIdB64 = base64url(parsed.credId);
+  const pending = { external_id: credIdB64, public_key: jwk, sign_count: parsed.signCount || 0 };
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  headers.append('Set-Cookie', cookie('wa_reg_data', encodeURIComponent(JSON.stringify(pending)), { httpOnly: true, sameSite: 'Lax', path: '/' }));
+  headers.append('Set-Cookie', cookie('wa_reg_chal', '', { httpOnly:true, path:'/', maxAge:0 }));
+  return new Response(JSON.stringify({ ok: true }), { headers });
+}
 
-  // Create user and credential
+async function webauthnRegisterFinalize(req, env) {
+  const body = await req.json().catch(() => ({}));
+  const username = (body.username || '').trim();
+  if (!username) return new Response('Username required', { status: 400 });
+  const pendingCookie = getCookie(req, 'wa_reg_data');
+  if (!pendingCookie) return new Response('No pending registration', { status: 400 });
+  let pending;
+  try { pending = JSON.parse(decodeURIComponent(pendingCookie)); } catch { return new Response('Invalid pending data', { status: 400 }); }
+  // Ensure username is not taken
+  const existing = await env.vidshare
+    .prepare('SELECT id FROM users WHERE lower(username) = lower(?1)')
+    .bind(username)
+    .first();
+  if (existing) return new Response('Username taken', { status: 409 });
   const now = Math.floor(Date.now()/1000);
   const userId = crypto.randomUUID();
   const credId = crypto.randomUUID();
   await env.vidshare
     .prepare('INSERT INTO users (id, username, created_at, last_login) VALUES (?1, ?2, ?3, ?4)')
-    .bind(userId, claimedUsername, now, now)
+    .bind(userId, username, now, now)
     .run();
   await env.vidshare
     .prepare('INSERT INTO credentials (id, user_id, type, identifier, external_id, public_key, sign_count, created_at, last_used) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)')
-    .bind(credId, userId, 'passkey', claimedUsername, credIdB64, JSON.stringify(jwk), parsed.signCount||0, now, now)
+    .bind(credId, userId, 'passkey', username, pending.external_id, JSON.stringify(pending.public_key), pending.sign_count||0, now, now)
     .run();
-
-  // Create session + cookies
   const sessionId = crypto.randomUUID();
   const ua = req.headers.get('User-Agent') || '';
   const expiresAt = now + 60 * 24 * 60 * 60;
   const refreshToken = randomTokenB64(32);
   const refreshHash = await sha256B64(refreshToken);
-  const jwt = await createJWT({ sub: userId, username: claimedUsername, iat: now, exp: now + 15*60 }, env);
+  const jwt = await createJWT({ sub: userId, username, iat: now, exp: now + 15*60 }, env);
   await env.vidshare
     .prepare('INSERT INTO sessions (id, user_id, refresh_hash, created_at, expires_at, user_agent, last_rotated_at, rotation_count) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)')
     .bind(sessionId, userId, refreshHash, now, expiresAt, ua, now, 0)
@@ -1518,8 +1490,7 @@ async function webauthnRegisterVerify(req, env) {
   headers.append('Set-Cookie', cookie('session', sessionId, { httpOnly: true, sameSite: 'Lax', path: '/' }));
   headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15*60 }));
   headers.append('Set-Cookie', cookie('refresh', refreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60*24*60*60 }));
-  headers.append('Set-Cookie', cookie('wa_reg_chal', '', { httpOnly:true, path:'/', maxAge:0 }));
-  headers.append('Set-Cookie', cookie('wa_reg_user', '', { httpOnly:true, path:'/', maxAge:0 }));
+  headers.append('Set-Cookie', cookie('wa_reg_data', '', { httpOnly:true, path:'/', maxAge:0 }));
   return new Response(null, { status: 302, headers });
 }
 
@@ -1533,20 +1504,7 @@ async function webauthnLoginOptions(req, env) {
     userVerification: 'preferred',
     // allow resident/discoverable creds by omitting allowCredentials
   };
-  try {
-    if (req.headers.get('Content-Type') && req.headers.get('Content-Type').includes('application/json')) {
-      const body = await req.json();
-      const username = body && typeof body.username === 'string' ? body.username.trim() : '';
-      if (username) {
-        const creds = await env.vidshare
-          .prepare('SELECT c.external_id FROM credentials c JOIN users u ON u.id = c.user_id WHERE c.type = ?1 AND lower(u.username) = lower(?2)')
-          .bind('passkey', username)
-          .all();
-        const arr = (creds.results || creds || []).map((r) => ({ type: 'public-key', id: r.external_id, transports: ['internal'] }));
-        if (arr.length) options.allowCredentials = arr;
-      }
-    }
-  } catch (_) {}
+  // Do not include allowCredentials to force discoverable credentials only
   const headers = new Headers({ 'Content-Type': 'application/json' });
   headers.append('Set-Cookie', cookie('wa_auth_chal', challenge, { httpOnly: true, sameSite: 'Lax', path: '/' }));
   return new Response(JSON.stringify(options), { headers });
