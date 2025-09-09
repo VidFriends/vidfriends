@@ -84,15 +84,63 @@ function loginPage() {
   <head>
     <meta charset="UTF-8" />
     <title>Login</title>
+    <link rel="icon" type="image/svg+xml" href="https://assets.zem.systems/favicon/favicon.svg">
+    <link rel="icon" type="image/png" sizes="96x96" href="https://assets.zem.systems/favicon/favicon-96x96.png">
+    <link rel="shortcut icon" href="https://assets.zem.systems/favicon/favicon.ico">
+    <link rel="apple-touch-icon" href="https://assets.zem.systems/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
     <script>
       function showPassword() {
         document.getElementById('password-form').style.display = 'block';
+      }
+      async function passkeyLogin() {
+        const res = await fetch('/webauthn/login/options', { method: 'POST' });
+        if (!res.ok) { alert('Failed to start passkey login'); return; }
+        const options = await res.json();
+        // Convert base64url props to ArrayBuffers
+        options.challenge = b64urlToBuf(options.challenge);
+        if (Array.isArray(options.allowCredentials)) {
+          options.allowCredentials = options.allowCredentials.map(c => ({ ...c, id: b64urlToBuf(c.id) }));
+        }
+        let cred;
+        try {
+          cred = await navigator.credentials.get({ publicKey: options });
+        } catch (e) {
+          alert('Passkey get() failed');
+          return;
+        }
+        const data = {
+          id: cred.id,
+          type: cred.type,
+          rawId: bufToB64url(cred.rawId),
+          response: {
+            clientDataJSON: bufToB64url(cred.response.clientDataJSON),
+            authenticatorData: bufToB64url(cred.response.authenticatorData),
+            signature: bufToB64url(cred.response.signature),
+            userHandle: cred.response.userHandle ? bufToB64url(cred.response.userHandle) : null,
+          }
+        };
+        const vr = await fetch('/webauthn/login/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        if (vr.ok) { location.href = '/'; } else { alert('Passkey login failed'); }
+      }
+      function b64urlToBuf(b64url){
+        const b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
+        const pad = '='.repeat((4 - b64.length % 4) % 4);
+        const str = atob(b64 + pad);
+        const bytes = new Uint8Array(str.length);
+        for (let i=0;i<str.length;i++) bytes[i] = str.charCodeAt(i);
+        return bytes.buffer;
+      }
+      function bufToB64url(buf){
+        const bytes = new Uint8Array(buf);
+        let bin=''; for (let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+        return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
       }
     </script>
   </head>
   <body>
     <h1>Login</h1>
-    <button>passkey</button>
+    <button type="button" onclick="passkeyLogin()">passkey</button>
     <button>social</button>
     <button id="password-btn" onclick="showPassword()">password</button>
     <button>phone</button>
@@ -112,15 +160,65 @@ function signupPage() {
   <head>
     <meta charset="UTF-8" />
     <title>Sign Up</title>
+    <link rel="icon" type="image/svg+xml" href="https://assets.zem.systems/favicon/favicon.svg">
+    <link rel="icon" type="image/png" sizes="96x96" href="https://assets.zem.systems/favicon/favicon-96x96.png">
+    <link rel="shortcut icon" href="https://assets.zem.systems/favicon/favicon.ico">
+    <link rel="apple-touch-icon" href="https://assets.zem.systems/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
     <script>
       function showPassword() {
         document.getElementById('password-form').style.display = 'block';
+      }
+      function showPasskey() {
+        document.getElementById('passkey-form').style.display = 'block';
+        document.getElementById('pk-username').focus();
+      }
+      async function passkeyRegister(ev){
+        ev.preventDefault();
+        const username = (document.getElementById('pk-username').value||'').trim();
+        if (!username) { alert('Enter a username'); return; }
+        const res = await fetch('/webauthn/register/options', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) });
+        if (!res.ok) { alert('Failed to start registration'); return; }
+        const options = await res.json();
+        options.challenge = b64urlToBuf(options.challenge);
+        options.user.id = b64urlToBuf(options.user.id);
+        if (Array.isArray(options.excludeCredentials)) {
+          options.excludeCredentials = options.excludeCredentials.map(c => ({ ...c, id: b64urlToBuf(c.id) }));
+        }
+        let cred;
+        try { cred = await navigator.credentials.create({ publicKey: options }); }
+        catch(e){ alert('Passkey create() failed'); return; }
+        const data = {
+          id: cred.id,
+          type: cred.type,
+          rawId: bufToB64url(cred.rawId),
+          response: {
+            clientDataJSON: bufToB64url(cred.response.clientDataJSON),
+            attestationObject: bufToB64url(cred.response.attestationObject),
+          },
+          username,
+        };
+        const vr = await fetch('/webauthn/register/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        if (vr.ok) { location.href = '/'; } else { alert('Registration failed'); }
+      }
+      function b64urlToBuf(b64url){
+        const b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
+        const pad = '='.repeat((4 - b64.length % 4) % 4);
+        const str = atob(b64 + pad);
+        const bytes = new Uint8Array(str.length);
+        for (let i=0;i<str.length;i++) bytes[i] = str.charCodeAt(i);
+        return bytes.buffer;
+      }
+      function bufToB64url(buf){
+        const bytes = new Uint8Array(buf);
+        let bin=''; for (let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+        return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
       }
     </script>
   </head>
   <body>
     <h1>Sign Up</h1>
-    <button>passkey</button>
+    <button type="button" onclick="showPasskey()">passkey</button>
     <button>social</button>
     <button id="password-btn" onclick="showPassword()">password</button>
     <button>phone</button>
@@ -128,6 +226,10 @@ function signupPage() {
       <input name="username" placeholder="username" required />
       <input name="password" type="password" placeholder="password" required />
       <button type="submit">sign up</button>
+    </form>
+    <form id="passkey-form" onsubmit="passkeyRegister(event)" style="display:none; margin-top:8px;">
+      <input id="pk-username" placeholder="username" required />
+      <button type="submit">Register with Passkey</button>
     </form>
     <p><a href="/login">Go to login</a></p>
   </body>
@@ -198,6 +300,11 @@ function homePage(username, opts = {}) {
   <head>
     <meta charset="UTF-8" />
     <title>Home</title>
+    <link rel="icon" type="image/svg+xml" href="https://assets.zem.systems/favicon/favicon.svg">
+    <link rel="icon" type="image/png" sizes="96x96" href="https://assets.zem.systems/favicon/favicon-96x96.png">
+    <link rel="shortcut icon" href="https://assets.zem.systems/favicon/favicon.ico">
+    <link rel="apple-touch-icon" href="https://assets.zem.systems/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
     <script>
       function toggleAddFriend() {
         var f = document.getElementById('add-friend-form');
@@ -483,6 +590,35 @@ export default {
       });
     }
 
+    // Favicon and manifest endpoints
+    if (req.method === 'GET' && url.pathname === '/favicon.ico') {
+      return Response.redirect('https://assets.zem.systems/favicon/favicon.ico', 302);
+    }
+    if (req.method === 'GET' && url.pathname === '/favicon.svg') {
+      return Response.redirect('https://assets.zem.systems/favicon/favicon.svg', 302);
+    }
+    if (req.method === 'GET' && url.pathname === '/apple-touch-icon.png') {
+      return Response.redirect('https://assets.zem.systems/favicon/apple-touch-icon.png', 302);
+    }
+    if (req.method === 'GET' && url.pathname === '/favicon-96x96.png') {
+      return Response.redirect('https://assets.zem.systems/favicon/favicon-96x96.png', 302);
+    }
+    if (req.method === 'GET' && url.pathname === '/site.webmanifest') {
+      const manifest = {
+        name: 'vidshare',
+        short_name: 'vidshare',
+        start_url: '/',
+        display: 'standalone',
+        background_color: '#ffffff',
+        theme_color: '#000000',
+        icons: [
+          { src: 'https://assets.zem.systems/favicon/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'https://assets.zem.systems/favicon/web-app-manifest-512x512.png', sizes: '512x512', type: 'image/png' },
+        ],
+      };
+      return new Response(JSON.stringify(manifest), { headers: { 'Content-Type': 'application/manifest+json' } });
+    }
+
     if (req.method === 'POST' && url.pathname === '/login') {
       return handleLogin(req, env);
     }
@@ -515,6 +651,19 @@ export default {
 
     if (req.method === 'POST' && url.pathname === '/auth/refresh') {
       return handleRefresh(req, env);
+    }
+
+    if (req.method === 'POST' && url.pathname === '/webauthn/register/options') {
+      return webauthnRegisterOptions(req, env);
+    }
+    if (req.method === 'POST' && url.pathname === '/webauthn/register/verify') {
+      return webauthnRegisterVerify(req, env);
+    }
+    if (req.method === 'POST' && url.pathname === '/webauthn/login/options') {
+      return webauthnLoginOptions(req, env);
+    }
+    if (req.method === 'POST' && url.pathname === '/webauthn/login/verify') {
+      return webauthnLoginVerify(req, env);
     }
 
     if (req.method === 'GET' && url.pathname === '/links/open') {
@@ -827,6 +976,11 @@ function savedPage(username, list) {
   <head>
     <meta charset="UTF-8" />
     <title>Saved</title>
+    <link rel="icon" type="image/svg+xml" href="https://assets.zem.systems/favicon/favicon.svg">
+    <link rel="icon" type="image/png" sizes="96x96" href="https://assets.zem.systems/favicon/favicon-96x96.png">
+    <link rel="shortcut icon" href="https://assets.zem.systems/favicon/favicon.ico">
+    <link rel="apple-touch-icon" href="https://assets.zem.systems/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
     <script>
       var ytPlayers = [];
       function onYouTubeIframeAPIReady() {
@@ -868,6 +1022,11 @@ function historyPage(username, list) {
   <head>
     <meta charset="UTF-8" />
     <title>History</title>
+    <link rel="icon" type="image/svg+xml" href="https://assets.zem.systems/favicon/favicon.svg">
+    <link rel="icon" type="image/png" sizes="96x96" href="https://assets.zem.systems/favicon/favicon-96x96.png">
+    <link rel="shortcut icon" href="https://assets.zem.systems/favicon/favicon.ico">
+    <link rel="apple-touch-icon" href="https://assets.zem.systems/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
     <script>
       var ytPlayers = [];
       function onYouTubeIframeAPIReady() {
@@ -1212,6 +1371,173 @@ async function handleLinkWatched(req, env) {
   return new Response(null, { status: 204 });
 }
 
+// ========== WebAuthn routes ==========
+function getRpIdFromUrl(reqUrl) {
+  try { return new URL(reqUrl).hostname; } catch { return null; }
+}
+
+function makeChallenge(bytes=32) {
+  const b = new Uint8Array(bytes); crypto.getRandomValues(b); return base64url(b);
+}
+
+async function webauthnRegisterOptions(req, env) {
+  const { username } = await req.json();
+  if (!username) return new Response('Bad request', { status: 400 });
+  // Ensure username is not taken
+  const existing = await env.vidshare
+    .prepare('SELECT id FROM users WHERE lower(username) = lower(?1)')
+    .bind(username)
+    .first();
+  if (existing) return new Response('Username taken', { status: 409 });
+  const rpId = getRpIdFromUrl(req.url);
+  const challenge = makeChallenge();
+  const userId = base64url(crypto.getRandomValues(new Uint8Array(16)));
+  const options = {
+    challenge,
+    rp: { id: rpId, name: 'vidshare' },
+    user: { id: userId, name: username, displayName: username },
+    pubKeyCredParams: [ { type: 'public-key', alg: -7 }, { type: 'public-key', alg: -8 } ],
+    timeout: 60000,
+    attestation: 'none',
+    authenticatorSelection: { residentKey: 'preferred', userVerification: 'preferred' },
+  };
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  headers.append('Set-Cookie', cookie('wa_reg_chal', challenge, { httpOnly: true, sameSite: 'Lax', path: '/' }));
+  headers.append('Set-Cookie', cookie('wa_reg_user', encodeURIComponent(username), { httpOnly: true, sameSite: 'Lax', path: '/' }));
+  return new Response(JSON.stringify(options), { headers });
+}
+
+async function webauthnRegisterVerify(req, env) {
+  const body = await req.json();
+  const regChal = getCookie(req, 'wa_reg_chal');
+  const cookieUser = getCookie(req, 'wa_reg_user');
+  const claimedUsername = body.username || (cookieUser ? decodeURIComponent(cookieUser) : null);
+  if (!regChal || !claimedUsername) return new Response('Challenge missing', { status: 400 });
+  const clientData = base64urlToUint8(body.response.clientDataJSON);
+  const client = JSON.parse(new TextDecoder().decode(clientData));
+  if (client.type !== 'webauthn.create') return new Response('Bad type', { status: 400 });
+  const chalFromClient = atob(client.challenge.replace(/-/g,'+').replace(/_/g,'/'));
+  const chalRaw = atob(regChal.replace(/-/g,'+').replace(/_/g,'/'));
+  if (chalFromClient !== chalRaw) return new Response('Bad challenge', { status: 400 });
+  // Parse attestationObject
+  const att = base64urlToUint8(body.response.attestationObject);
+  const attObj = cborDecode(att);
+  const authData = attObj['authData'];
+  const parsed = parseAuthData(authData);
+  const rpId = getRpIdFromUrl(req.url);
+  const rpHash = await sha256Bytes(new TextEncoder().encode(rpId));
+  if (!parsed.rpIdHash || base64url(parsed.rpIdHash) !== base64url(rpHash)) return new Response('RP mismatch', { status: 400 });
+  if (!hasUserPresent(parsed.flags)) return new Response('UP required', { status: 400 });
+  if (!parsed.credId || !parsed.coseKey) return new Response('No credential', { status: 400 });
+  const jwk = coseToJwk(parsed.coseKey);
+  const credIdB64 = base64url(parsed.credId);
+
+  // Create user and credential
+  const now = Math.floor(Date.now()/1000);
+  const userId = crypto.randomUUID();
+  const credId = crypto.randomUUID();
+  await env.vidshare
+    .prepare('INSERT INTO users (id, username, created_at, last_login) VALUES (?1, ?2, ?3, ?4)')
+    .bind(userId, claimedUsername, now, now)
+    .run();
+  await env.vidshare
+    .prepare('INSERT INTO credentials (id, user_id, type, identifier, external_id, public_key, sign_count, created_at, last_used) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)')
+    .bind(credId, userId, 'passkey', claimedUsername, credIdB64, JSON.stringify(jwk), parsed.signCount||0, now, now)
+    .run();
+
+  // Create session + cookies
+  const sessionId = crypto.randomUUID();
+  const ua = req.headers.get('User-Agent') || '';
+  const expiresAt = now + 60 * 24 * 60 * 60;
+  const refreshToken = randomTokenB64(32);
+  const refreshHash = await sha256B64(refreshToken);
+  const jwt = await createJWT({ sub: userId, username: claimedUsername, iat: now, exp: now + 15*60 }, env);
+  await env.vidshare
+    .prepare('INSERT INTO sessions (id, user_id, refresh_hash, created_at, expires_at, user_agent, last_rotated_at, rotation_count) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)')
+    .bind(sessionId, userId, refreshHash, now, expiresAt, ua, now, 0)
+    .run();
+  const headers = new Headers({ Location: '/' });
+  headers.append('Set-Cookie', cookie('session', sessionId, { httpOnly: true, sameSite: 'Lax', path: '/' }));
+  headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15*60 }));
+  headers.append('Set-Cookie', cookie('refresh', refreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60*24*60*60 }));
+  headers.append('Set-Cookie', cookie('wa_reg_chal', '', { httpOnly:true, path:'/', maxAge:0 }));
+  headers.append('Set-Cookie', cookie('wa_reg_user', '', { httpOnly:true, path:'/', maxAge:0 }));
+  return new Response(null, { status: 302, headers });
+}
+
+async function webauthnLoginOptions(req, env) {
+  const rpId = getRpIdFromUrl(req.url);
+  const challenge = makeChallenge();
+  const options = {
+    challenge,
+    rpId,
+    timeout: 60000,
+    userVerification: 'preferred',
+    // allow resident/discoverable creds by omitting allowCredentials
+  };
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  headers.append('Set-Cookie', cookie('wa_auth_chal', challenge, { httpOnly: true, sameSite: 'Lax', path: '/' }));
+  return new Response(JSON.stringify(options), { headers });
+}
+
+async function webauthnLoginVerify(req, env) {
+  const chal = getCookie(req, 'wa_auth_chal');
+  if (!chal) return new Response('Challenge missing', { status: 400 });
+  const body = await req.json();
+  const clientData = base64urlToUint8(body.response.clientDataJSON);
+  const client = JSON.parse(new TextDecoder().decode(clientData));
+  if (client.type !== 'webauthn.get') return new Response('Bad type', { status: 400 });
+  const chalFromClient = atob(client.challenge.replace(/-/g,'+').replace(/_/g,'/'));
+  const chalRaw = atob(chal.replace(/-/g,'+').replace(/_/g,'/'));
+  if (chalFromClient !== chalRaw) return new Response('Bad challenge', { status: 400 });
+  const authData = base64urlToUint8(body.response.authenticatorData);
+  const sig = base64urlToUint8(body.response.signature);
+  const parsed = parseAuthData(authData);
+  const rpId = getRpIdFromUrl(req.url);
+  const rpHash = await sha256Bytes(new TextEncoder().encode(rpId));
+  if (!parsed.rpIdHash || base64url(parsed.rpIdHash) !== base64url(rpHash)) return new Response('RP mismatch', { status: 400 });
+  if (!hasUserPresent(parsed.flags)) return new Response('UP required', { status: 400 });
+
+  // Lookup credential by external_id from body.rawId
+  const rawIdB64 = body.rawId; // already b64url from client
+  const credRow = await env.vidshare
+    .prepare('SELECT credentials.id as cred_id, credentials.user_id, credentials.public_key, credentials.sign_count, users.username FROM credentials JOIN users ON users.id = credentials.user_id WHERE credentials.type = ?1 AND credentials.external_id = ?2')
+    .bind('passkey', rawIdB64)
+    .first();
+  if (!credRow) return new Response('Unknown credential', { status: 404 });
+  const jwk = JSON.parse(credRow.public_key);
+  const ok = await verifyAssertionSignature(jwk, authData, clientData, sig);
+  if (!ok) return new Response('Bad signature', { status: 401 });
+
+  // Update counters and issue session
+  const now = Math.floor(Date.now()/1000);
+  await env.vidshare
+    .prepare('UPDATE credentials SET last_used = ?1, sign_count = ?2 WHERE id = ?3')
+    .bind(now, parsed.signCount || credRow.sign_count, credRow.cred_id)
+    .run();
+  await env.vidshare
+    .prepare('UPDATE users SET last_login = ?1 WHERE id = ?2')
+    .bind(now, credRow.user_id)
+    .run();
+
+  const sessionId = crypto.randomUUID();
+  const ua = req.headers.get('User-Agent') || '';
+  const expiresAt = now + 60 * 24 * 60 * 60;
+  const refreshToken = randomTokenB64(32);
+  const refreshHash = await sha256B64(refreshToken);
+  const jwt = await createJWT({ sub: credRow.user_id, username: credRow.username, iat: now, exp: now + 15*60 }, env);
+  await env.vidshare
+    .prepare('INSERT INTO sessions (id, user_id, refresh_hash, created_at, expires_at, user_agent, last_rotated_at, rotation_count) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)')
+    .bind(sessionId, credRow.user_id, refreshHash, now, expiresAt, ua, now, 0)
+    .run();
+  const headers = new Headers({ Location: '/' });
+  headers.append('Set-Cookie', cookie('session', sessionId, { httpOnly: true, sameSite: 'Lax', path: '/' }));
+  headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15*60 }));
+  headers.append('Set-Cookie', cookie('refresh', refreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60*24*60*60 }));
+  headers.append('Set-Cookie', cookie('wa_auth_chal', '', { httpOnly:true, path:'/', maxAge:0 }));
+  return new Response(null, { status: 302, headers });
+}
+
 function cookie(name, value, opts = {}) {
   const parts = [`${name}=${value}`];
   if (opts.maxAge !== undefined) parts.push(`Max-Age=${opts.maxAge}`);
@@ -1321,4 +1647,104 @@ async function handleRefresh(req, env) {
   headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15 * 60 }));
   headers.append('Set-Cookie', cookie('refresh', newRefreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60 * 24 * 60 * 60 }));
   return new Response(null, { status: 204, headers });
+}
+
+// ========== WebAuthn helpers ==========
+function b64url(bytes) {
+  return base64url(bytes);
+}
+
+async function sha256Bytes(bytes) {
+  const buf = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const dig = await crypto.subtle.digest('SHA-256', buf);
+  return new Uint8Array(dig);
+}
+
+function cborDecode(data) {
+  let pos = 0;
+  const dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  const td = new TextDecoder();
+  function readUint(addl) {
+    if (addl < 24) return addl;
+    if (addl === 24) return dv.getUint8(pos++);
+    if (addl === 25) { const v = dv.getUint16(pos); pos += 2; return v; }
+    if (addl === 26) { const v = dv.getUint32(pos); pos += 4; return v; }
+    throw new Error('CBOR int too large');
+  }
+  function decodeItem() {
+    const ib = dv.getUint8(pos++);
+    const mt = ib >> 5;
+    const addl = ib & 31;
+    if (mt === 0) return readUint(addl);
+    if (mt === 1) return -1 - readUint(addl);
+    if (mt === 2) { const len = readUint(addl); const v = data.subarray(pos, pos+len); pos += len; return v; }
+    if (mt === 3) { const len = readUint(addl); const v = td.decode(data.subarray(pos, pos+len)); pos += len; return v; }
+    if (mt === 4) { const len = readUint(addl); const arr = []; for (let i=0;i<len;i++) arr.push(decodeItem()); return arr; }
+    if (mt === 5) { const len = readUint(addl); const obj = {}; for (let i=0;i<len;i++){ const k = decodeItem(); const v = decodeItem(); obj[typeof k === 'string' ? k : String(k)] = v; } return obj; }
+    if (mt === 6) { /* tag */ decodeItem(); return decodeItem(); }
+    if (mt === 7) { if (addl === 20) return false; if (addl===21) return true; if (addl===22) return null; if (addl===23) return undefined; throw new Error('CBOR simple'); }
+    throw new Error('CBOR mt');
+  }
+  return decodeItem();
+}
+
+function parseAuthData(buf) {
+  let off = 0;
+  const rpIdHash = buf.slice(off, off+32); off += 32;
+  const flags = buf[off++];
+  const signCount = (buf[off]<<24) | (buf[off+1]<<16) | (buf[off+2]<<8) | buf[off+3]; off += 4;
+  const AT = (flags & 0x40) !== 0;
+  let aaguid=null, credId=null, coseKey=null;
+  if (AT) {
+    aaguid = buf.slice(off, off+16); off += 16;
+    const idLen = (buf[off]<<8) | buf[off+1]; off += 2;
+    credId = buf.slice(off, off+idLen); off += idLen;
+    const rest = buf.slice(off);
+    const cose = cborDecode(rest);
+    coseKey = cose;
+  }
+  return { rpIdHash, flags, signCount, aaguid, credId, coseKey };
+}
+
+function coseToJwk(cose) {
+  const kty = cose['1'];
+  const alg = cose['3'];
+  if (kty === 2 && alg === -7) { // EC2 P-256 ES256
+    const x = cose['-2'];
+    const y = cose['-3'];
+    return { kty: 'EC', crv: 'P-256', x: base64url(x), y: base64url(y), ext: true };
+  }
+  if (kty === 1 && (alg === -8)) { // OKP Ed25519
+    const x = cose['-2'];
+    return { kty: 'OKP', crv: 'Ed25519', x: base64url(x), ext: true };
+  }
+  throw new Error('Unsupported COSE key');
+}
+
+function hasUserPresent(flags){ return (flags & 0x01) !== 0; }
+function hasUserVerified(flags){ return (flags & 0x04) !== 0; }
+
+async function importPublicKeyFromJwk(jwk) {
+  if (jwk.kty === 'EC' && jwk.crv === 'P-256') {
+    return crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+  }
+  if (jwk.kty === 'OKP' && jwk.crv === 'Ed25519') {
+    return crypto.subtle.importKey('jwk', jwk, { name: 'Ed25519' }, false, ['verify']);
+  }
+  throw new Error('Unsupported key');
+}
+
+async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJSONBytes, signatureBytes) {
+  const clientHash = await sha256Bytes(clientDataJSONBytes);
+  const toVerify = new Uint8Array(authenticatorDataBytes.length + clientHash.length);
+  toVerify.set(authenticatorDataBytes, 0);
+  toVerify.set(clientHash, authenticatorDataBytes.length);
+  const key = await importPublicKeyFromJwk(jwk);
+  if (jwk.kty === 'EC') {
+    return crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, signatureBytes, toVerify);
+  }
+  if (jwk.kty === 'OKP' && jwk.crv === 'Ed25519') {
+    return crypto.subtle.verify('Ed25519', key, signatureBytes, toVerify);
+  }
+  return false;
 }
