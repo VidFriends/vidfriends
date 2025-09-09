@@ -1,4 +1,4 @@
-function getCookie(req, name) {
+﻿function getCookie(req, name) {
   const cookie = req.headers.get('Cookie') || '';
   const match = cookie.match(new RegExp('(^|;)\\s*' + name + '=([^;]+)'));
   return match ? match.pop() : null;
@@ -101,7 +101,11 @@ function loginPage() {
       function bufToB64url(buf){
         var bytes = new Uint8Array(buf);
         var bin=''; for (var i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
-        return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+        var b64 = btoa(bin);
+        b64 = b64.split('+').join('-');
+        b64 = b64.split('/').join('_');
+        b64 = b64.replace(/=+$/,'');
+        return b64;
       }
       async function loginPasskey(){
         try {
@@ -142,7 +146,11 @@ function loginPage() {
       function bufToB64url(buf){
         const bytes = new Uint8Array(buf);
         let bin=''; for (let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
-        return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+        var b64 = btoa(bin);
+        b64 = b64.split('+').join('-');
+        b64 = b64.split('/').join('_');
+        b64 = b64.replace(/=+$/,'');
+        return b64;
       }
       window.passkeyLogin = async function passkeyLogin(username){
         const init = { method: 'POST', headers: {} };
@@ -205,7 +213,11 @@ function signupPage() {
       function bufToB64url(buf){
         var bytes = new Uint8Array(buf);
         var bin=''; for (var i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
-        return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+        var b64 = btoa(bin);
+        b64 = b64.split('+').join('-');
+        b64 = b64.split('/').join('_');
+        b64 = b64.replace(/=+$/,'');
+        return b64;
       }
       async function registerPasskeyStart(){
         var res = await fetch('/webauthn/register/options', { method: 'POST', credentials: 'same-origin' });
