@@ -11,3 +11,7 @@ enabled = true
 binding = "vidshare"
 database_name = "vidshare"
 database_id = "22f9fd9b-3c3c-4ae4-97c9-b746ea116af2"
+
+[[r2_buckets]]
+binding = 'assets' # <~ valid JavaScript variable name
+bucket_name = 'vidshare'
