@@ -143,6 +143,31 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+function youtubeEmbedHTML(url, linkId) {
+  try {
+    const u = new URL(url);
+    let vid = null;
+    if (u.hostname.includes('youtu.be')) {
+      vid = u.pathname.slice(1);
+    } else if (u.hostname.includes('youtube.com')) {
+      if (u.pathname.startsWith('/watch')) vid = u.searchParams.get('v');
+      else if (u.pathname.startsWith('/shorts/')) vid = u.pathname.split('/')[2];
+      else if (u.pathname.startsWith('/embed/')) vid = u.pathname.split('/')[2];
+    }
+    if (!vid) return null;
+    const src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(vid)}?enablejsapi=1&rel=0`;
+    return `<iframe class="yt-embed" data-link-id="${escapeHtml(linkId)}" width="360" height="203" src="${src}" title="YouTube video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+  } catch (_) {
+    return null;
+  }
+}
+
+function renderVideoHTML(link) {
+  const yt = youtubeEmbedHTML(link.url, link.id);
+  if (yt) return yt;
+  return `<a href="/links/open?id=${escapeHtml(link.id)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.url)}</a>`;
+}
+
 function homePage(username, opts = {}) {
   const { outgoing = [], incoming = [], approved = [], inbox = [], sent = [] } = opts;
   const hasPending = incoming.length > 0 || outgoing.some((o) => o.status === 'pending');
@@ -157,11 +182,79 @@ function homePage(username, opts = {}) {
         f.style.display = f.style.display === 'none' ? 'block' : 'none';
         if (f.style.display === 'block') document.getElementById('friend_username').focus();
       }
+      // YouTube embed play tracking -> POST /links/watched
+      var ytPlayers = [];
+      function onYouTubeIframeAPIReady() {
+        var iframes = document.querySelectorAll('iframe.yt-embed');
+        for (var i = 0; i < iframes.length; i++) {
+          (function(fr){
+            var linkId = fr.getAttribute('data-link-id');
+            var p = new YT.Player(fr, {
+              events: {
+                onStateChange: function(e){
+                  if (e.data === 1 && fr.getAttribute('data-played') !== '1') {
+                    fr.setAttribute('data-played','1');
+                    var fd = new FormData();
+                    fd.append('link_id', linkId);
+                    fetch('/links/watched', { method: 'POST', body: fd, credentials: 'same-origin' });
+                  }
+                }
+              }
+            });
+            ytPlayers.push(p);
+          })(iframes[i]);
+        }
+      }
+      (function(){
+        var tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        var first = document.getElementsByTagName('script')[0];
+        first.parentNode.insertBefore(tag, first);
+        window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+      })();
+
+      // Convert YouTube links in inbox to embeds
+      document.addEventListener('DOMContentLoaded', function(){
+        var anchors = document.querySelectorAll('section ul li a[href^="/links/open?id="]');
+        for (var i=0;i<anchors.length;i++){
+          var a = anchors[i];
+          var linkId = (new URL(a.getAttribute('href'), window.location.origin)).searchParams.get('id');
+          var urlText = a.textContent || '';
+          try{
+            var u = new URL(urlText);
+            var host = u.hostname || '';
+            var vid = null;
+            if (host.indexOf('youtu.be') !== -1) { vid = u.pathname.slice(1); }
+            else if (host.indexOf('youtube.com') !== -1) {
+              if (u.pathname.indexOf('/watch') === 0) vid = u.searchParams.get('v');
+              else if (u.pathname.indexOf('/shorts/') === 0) vid = u.pathname.split('/')[2];
+              else if (u.pathname.indexOf('/embed/') === 0) vid = u.pathname.split('/')[2];
+            }
+            if (vid) {
+              var iframe = document.createElement('iframe');
+              iframe.className = 'yt-embed';
+              iframe.setAttribute('data-link-id', linkId);
+              iframe.width = '360';
+              iframe.height = '203';
+              iframe.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(vid) + '?enablejsapi=1&rel=0';
+              iframe.title = 'YouTube video';
+              iframe.frameBorder = '0';
+              iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+              iframe.allowFullscreen = true;
+              a.insertAdjacentElement('afterend', iframe);
+            }
+          }catch(e){}
+        }
+      });
     </script>
   </head>
   <body>
     <h1>Home</h1>
     <p>Logged in as <strong>${escapeHtml(username)}</strong></p>
+    <nav style="margin: 8px 0;">
+      <a href="/saved"><button type="button">Saved</button></a>
+      <a href="/history"><button type="button">History</button></a>
+    </nav>
     <button type="button" onclick="toggleAddFriend()">Add Friend</button>
     <form id="add-friend-form" method="POST" action="/friends/add" style="display:none;margin-top:8px;">
       <input id="friend_username" name="friend_username" placeholder="friend's username" required />
@@ -254,6 +347,12 @@ function homePage(username, opts = {}) {
               <input name="reaction_text" placeholder="Add reaction" />
               <button type="submit">Send</button>
             </form>
+            ${v.reaction ? ` - Your reaction: ${escapeHtml(v.reaction)}` : ''}
+            <form method="POST" action="/links/save" style="display:inline; margin-left:8px;">
+              <input type="hidden" name="link_id" value="${escapeHtml(v.id)}" />
+              <input type="hidden" name="set" value="${v.saved ? '0' : '1'}" />
+              <button>${v.saved ? 'Unsave' : 'Save'}</button>
+            </form>
           </li>`
           )
           .join('')}
@@ -343,6 +442,14 @@ export default {
       return handleHome(req, env);
     }
 
+    if (req.method === 'GET' && url.pathname === '/saved') {
+      return handleSaved(req, env);
+    }
+
+    if (req.method === 'GET' && url.pathname === '/history') {
+      return handleHistory(req, env);
+    }
+
     if (req.method === 'POST' && url.pathname === '/logout') {
       return handleLogout(req, env);
     }
@@ -393,6 +500,12 @@ export default {
     }
     if (req.method === 'POST' && url.pathname === '/links/unsend') {
       return handleLinkUnsend(req, env);
+    }
+    if (req.method === 'POST' && url.pathname === '/links/save') {
+      return handleLinkSave(req, env);
+    }
+    if (req.method === 'POST' && url.pathname === '/links/watched') {
+      return handleLinkWatched(req, env);
     }
 
     if (req.method === 'POST' && url.pathname === '/friends/add') {
@@ -582,11 +695,12 @@ async function fetchFriendLists(env, meId) {
 }
 
 async function fetchInboxLinks(env, meId) {
+  const now = Math.floor(Date.now() / 1000);
   const rows = await env.vidshare
     .prepare(
-      'SELECT l.id, l.url, l.created_at, u.username as sender_username FROM links l JOIN users u ON u.id = l.sender_id WHERE l.recipient_id = ?1 ORDER BY l.created_at ASC LIMIT 50'
+      'SELECT l.id, l.url, l.created_at, l.saved, l.watched, l.reaction, l.watched_at, u.username as sender_username FROM links l JOIN users u ON u.id = l.sender_id WHERE l.recipient_id = ?1 AND (l.saved = 1 OR l.watched = 0 OR (l.watched = 1 AND l.watched_at IS NOT NULL AND l.watched_at >= ?2 - 172800)) ORDER BY l.created_at ASC LIMIT 50'
     )
-    .bind(meId)
+    .bind(meId, now)
     .all()
     .then((r) => r.results || r);
   return rows;
@@ -598,6 +712,29 @@ async function fetchSentLinks(env, meId) {
       'SELECT l.id, l.url, l.created_at, l.watched, l.reaction, u.username as recipient_username FROM links l JOIN users u ON u.id = l.recipient_id WHERE l.sender_id = ?1 ORDER BY l.created_at DESC LIMIT 50'
     )
     .bind(meId)
+    .all()
+    .then((r) => r.results || r);
+  return rows;
+}
+
+async function fetchSavedLinks(env, meId) {
+  const rows = await env.vidshare
+    .prepare(
+      'SELECT l.id, l.url, l.created_at, l.reaction, u.username as sender_username FROM links l JOIN users u ON u.id = l.sender_id WHERE l.recipient_id = ?1 AND l.saved = 1 ORDER BY l.created_at DESC LIMIT 100'
+    )
+    .bind(meId)
+    .all()
+    .then((r) => r.results || r);
+  return rows;
+}
+
+async function fetchHistoryLinks(env, meId) {
+  const now = Math.floor(Date.now() / 1000);
+  const rows = await env.vidshare
+    .prepare(
+      'SELECT l.id, l.url, l.watched_at, l.reaction, u.username as sender_username FROM links l JOIN users u ON u.id = l.sender_id WHERE l.recipient_id = ?1 AND l.saved = 0 AND l.watched = 1 AND l.watched_at IS NOT NULL AND l.watched_at < ?2 - 172800 ORDER BY l.watched_at DESC LIMIT 100'
+    )
+    .bind(meId, now)
     .all()
     .then((r) => r.results || r);
   return rows;
@@ -623,6 +760,100 @@ async function handleLogout(req, env) {
   headers.append('Set-Cookie', cookie('jwt', '', { path: '/', httpOnly: true, maxAge: 0 }));
   headers.append('Set-Cookie', cookie('refresh', '', { path: '/', httpOnly: true, maxAge: 0 }));
   return new Response(null, { status: 302, headers });
+}
+
+function savedPage(username, list) {
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Saved</title>
+    <script>
+      var ytPlayers = [];
+      function onYouTubeIframeAPIReady() {
+        var iframes = document.querySelectorAll('iframe.yt-embed');
+        for (var i = 0; i < iframes.length; i++) {
+          (function(fr){
+            var linkId = fr.getAttribute('data-link-id');
+            var p = new YT.Player(fr, { events: { onStateChange: function(e){ if (e.data === 1 && fr.getAttribute('data-played') !== '1') { fr.setAttribute('data-played','1'); var fd=new FormData(); fd.append('link_id', linkId); fetch('/links/watched', { method: 'POST', body: fd, credentials: 'same-origin' }); } } } });
+            ytPlayers.push(p);
+          })(iframes[i]);
+        }
+      }
+      (function(){ var s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api'; var f=document.getElementsByTagName('script')[0]; f.parentNode.insertBefore(s,f); window.onYouTubeIframeAPIReady=onYouTubeIframeAPIReady; })();
+    </script>
+  </head>
+  <body>
+    <h1>Saved</h1>
+    <p>Logged in as <strong>${escapeHtml(username)}</strong></p>
+    <nav style="margin:8px 0;">
+      <a href="/"><button type="button">Home</button></a>
+      <a href="/history"><button type="button">History</button></a>
+    </nav>
+    <ul>
+      ${list.map(v => `
+        <li>
+          ${youtubeEmbedHTML(v.url, v.id) || `<a href="/links/open?id=${escapeHtml(v.id)}" target="_blank" rel="noopener noreferrer">${escapeHtml(v.url)}</a>`}
+          - from <strong>${escapeHtml(v.sender_username)}</strong>
+          ${v.reaction ? ` - Your reaction: ${escapeHtml(v.reaction)}` : ''}
+        </li>`).join('')}
+    </ul>
+  </body>
+</html>`;
+}
+
+function historyPage(username, list) {
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>History</title>
+    <script>
+      var ytPlayers = [];
+      function onYouTubeIframeAPIReady() {
+        var iframes = document.querySelectorAll('iframe.yt-embed');
+        for (var i = 0; i < iframes.length; i++) {
+          (function(fr){
+            var linkId = fr.getAttribute('data-link-id');
+            var p = new YT.Player(fr, { events: { onStateChange: function(e){ if (e.data === 1 && fr.getAttribute('data-played') !== '1') { fr.setAttribute('data-played','1'); var fd=new FormData(); fd.append('link_id', linkId); fetch('/links/watched', { method: 'POST', body: fd, credentials: 'same-origin' }); } } } });
+            ytPlayers.push(p);
+          })(iframes[i]);
+        }
+      }
+      (function(){ var s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api'; var f=document.getElementsByTagName('script')[0]; f.parentNode.insertBefore(s,f); window.onYouTubeIframeAPIReady=onYouTubeIframeAPIReady; })();
+    </script>
+  </head>
+  <body>
+    <h1>History</h1>
+    <p>Logged in as <strong>${escapeHtml(username)}</strong></p>
+    <nav style="margin:8px 0;">
+      <a href="/"><button type="button">Home</button></a>
+      <a href="/saved"><button type="button">Saved</button></a>
+    </nav>
+    <ul>
+      ${list.map(v => `
+        <li>
+          ${youtubeEmbedHTML(v.url, v.id) || `<a href="/links/open?id=${escapeHtml(v.id)}" target="_blank" rel="noopener noreferrer">${escapeHtml(v.url)}</a>`}
+          - from <strong>${escapeHtml(v.sender_username)}</strong>
+          ${v.reaction ? ` - Your reaction: ${escapeHtml(v.reaction)}` : ''}
+        </li>`).join('')}
+    </ul>
+  </body>
+</html>`;
+}
+
+async function handleSaved(req, env) {
+  const me = await getAuthUser(req, env);
+  if (!me || !env || !env.vidshare) return new Response(null, { status: 302, headers: { Location: '/login' } });
+  const list = await fetchSavedLinks(env, me.userId);
+  return new Response(savedPage(me.username || '', list), { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
+}
+
+async function handleHistory(req, env) {
+  const me = await getAuthUser(req, env);
+  if (!me || !env || !env.vidshare) return new Response(null, { status: 302, headers: { Location: '/login' } });
+  const list = await fetchHistoryLinks(env, me.userId);
+  return new Response(historyPage(me.username || '', list), { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
 }
 
 async function getAuthUser(req, env) {
@@ -854,13 +1085,70 @@ async function handleLinkOpen(req, env) {
   try {
     const me = await getAuthUser(req, env);
     if (me && me.userId === row.recipient_id) {
-      await env.vidshare
-        .prepare('UPDATE links SET watched = 1 WHERE id = ?1')
-        .bind(id)
-        .run();
+      const now = Math.floor(Date.now() / 1000);
+      try {
+        await env.vidshare
+          .prepare('UPDATE links SET watched = 1, watched_at = ?1 WHERE id = ?2')
+          .bind(now, id)
+          .run();
+      } catch (_) {
+        await env.vidshare
+          .prepare('UPDATE links SET watched = 1 WHERE id = ?1')
+          .bind(id)
+          .run();
+      }
     }
   } catch (_) {}
   return new Response(null, { status: 302, headers: { Location: row.url } });
+}
+
+async function handleLinkSave(req, env) {
+  if (!env || !env.vidshare) return new Response('Database unavailable', { status: 500 });
+  const me = await getAuthUser(req, env);
+  if (!me) return new Response('Unauthorized', { status: 401 });
+  const form = await req.formData();
+  const linkId = (form.get('link_id') || '').toString();
+  const setVal = form.get('set');
+  if (!linkId) return new Response('Bad request', { status: 400 });
+  let newVal = null;
+  if (setVal === '1' || setVal === '0') newVal = setVal === '1' ? 1 : 0;
+  if (newVal === null) {
+    // toggle
+    const row = await env.vidshare
+      .prepare('SELECT saved FROM links WHERE id = ?1 AND recipient_id = ?2')
+      .bind(linkId, me.userId)
+      .first();
+    if (!row) return new Response('Not found', { status: 404 });
+    newVal = row.saved ? 0 : 1;
+  }
+  await env.vidshare
+    .prepare('UPDATE links SET saved = ?1 WHERE id = ?2 AND recipient_id = ?3')
+    .bind(newVal, linkId, me.userId)
+    .run();
+  return new Response(null, { status: 302, headers: { Location: '/' } });
+}
+
+async function handleLinkWatched(req, env) {
+  if (!env || !env.vidshare) return new Response('Database unavailable', { status: 500 });
+  const me = await getAuthUser(req, env);
+  if (!me) return new Response('Unauthorized', { status: 401 });
+  const form = await req.formData();
+  const linkId = (form.get('link_id') || '').toString();
+  if (!linkId) return new Response('Bad request', { status: 400 });
+  const now = Math.floor(Date.now() / 1000);
+  try {
+    await env.vidshare
+      .prepare('UPDATE links SET watched = 1, watched_at = ?1 WHERE id = ?2 AND recipient_id = ?3')
+      .bind(now, linkId, me.userId)
+      .run();
+  } catch (e) {
+    // Fallback if watched_at column missing
+    await env.vidshare
+      .prepare('UPDATE links SET watched = 1 WHERE id = ?1 AND recipient_id = ?2')
+      .bind(linkId, me.userId)
+      .run();
+  }
+  return new Response(null, { status: 204 });
 }
 
 function cookie(name, value, opts = {}) {
