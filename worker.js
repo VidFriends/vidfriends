@@ -93,6 +93,18 @@ function loginPage() {
       function showPassword() {
         document.getElementById('password-form').style.display = 'block';
       }
+      function togglePasskeyLogin() {
+        var f = document.getElementById('passkey-login-form');
+        f.style.display = 'block';
+        var inp = document.getElementById('login-passkey-username');
+        if (inp) inp.focus();
+      }
+      function startPasskeyLogin(ev) {
+        ev.preventDefault();
+        var u = (document.getElementById('login-passkey-username').value || '').trim();
+        if (window.passkeyLogin) window.passkeyLogin(u || null);
+        return false;
+      }
     </script>
     <script type="module">
       function b64urlToBuf(b64url){
@@ -108,8 +120,10 @@ function loginPage() {
         let bin=''; for (let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
         return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
       }
-      window.passkeyLogin = async function passkeyLogin(){
-        const res = await fetch('/webauthn/login/options', { method: 'POST' });
+      window.passkeyLogin = async function passkeyLogin(username){
+        const init = { method: 'POST', headers: {} };
+        if (username) { init.headers['Content-Type'] = 'application/json'; init.body = JSON.stringify({ username }); }
+        const res = await fetch('/webauthn/login/options', init);
         if (!res.ok) { alert('Failed to start passkey login'); return; }
         const options = await res.json();
         options.challenge = b64urlToBuf(options.challenge);
@@ -137,7 +151,7 @@ function loginPage() {
   </head>
   <body>
     <h1>Login</h1>
-    <button type="button" onclick="passkeyLogin()">passkey</button>
+    <button type="button" onclick="togglePasskeyLogin()">passkey</button>
     <button>social</button>
     <button type="button" id="password-btn" onclick="showPassword()">password</button>
     <button>phone</button>
@@ -145,6 +159,10 @@ function loginPage() {
       <input name="username" placeholder="username" required />
       <input name="password" type="password" placeholder="password" required />
       <button type="submit">log in</button>
+    </form>
+    <form id="passkey-login-form" onsubmit="return startPasskeyLogin(event)" style="display:none; margin-top:8px;">
+      <input id="login-passkey-username" placeholder="username (optional)" />
+      <button type="submit">Use Passkey</button>
     </form>
     <p><a href="/signup">Go to sign up</a></p>
   </body>
@@ -1467,13 +1485,27 @@ async function webauthnRegisterVerify(req, env) {
 async function webauthnLoginOptions(req, env) {
   const rpId = getRpIdFromUrl(req.url);
   const challenge = makeChallenge();
-  const options = {
+  let options = {
     challenge,
     rpId,
     timeout: 60000,
     userVerification: 'preferred',
     // allow resident/discoverable creds by omitting allowCredentials
   };
+  try {
+    if (req.headers.get('Content-Type') && req.headers.get('Content-Type').includes('application/json')) {
+      const body = await req.json();
+      const username = body && typeof body.username === 'string' ? body.username.trim() : '';
+      if (username) {
+        const creds = await env.vidshare
+          .prepare('SELECT c.external_id FROM credentials c JOIN users u ON u.id = c.user_id WHERE c.type = ?1 AND lower(u.username) = lower(?2)')
+          .bind('passkey', username)
+          .all();
+        const arr = (creds.results || creds || []).map((r) => ({ type: 'public-key', id: r.external_id, transports: ['internal'] }));
+        if (arr.length) options.allowCredentials = arr;
+      }
+    }
+  } catch (_) {}
   const headers = new Headers({ 'Content-Type': 'application/json' });
   headers.append('Set-Cookie', cookie('wa_auth_chal', challenge, { httpOnly: true, sameSite: 'Lax', path: '/' }));
   return new Response(JSON.stringify(options), { headers });
