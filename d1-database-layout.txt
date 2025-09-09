@@ -33,12 +33,14 @@ last_rotated_at (integer, epoch seconds)
 rotation_count (integer)
 
 table: friendships
+columns:
 id (text, generated UUID)
 initiating_user (text, linked to users id)
 receiving_user (text, linked to users id)
-status (text, possible options are pending, accepted, declined, blocked, removed)
+status (text, one of: pending, accepted, declined, blocked)
+blocked_by (text, linked to users id, nullable; set when status = blocked)
 created_at (integer, epoch seconds)
-responded_at (integer, epoch seconds)
+updated_at (integer, epoch seconds)
 
 table: links
 id (text, generated UUID)
