@@ -162,9 +162,31 @@ function youtubeEmbedHTML(url, linkId) {
   }
 }
 
+function tiktokEmbedHTML(url, linkId) {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.toLowerCase();
+    if (host.includes('tiktok.com')) {
+      // Pattern: /@username/video/VIDEO_ID
+      const parts = u.pathname.split('/').filter(Boolean);
+      const idx = parts.findIndex((p) => p === 'video');
+      if (idx !== -1 && parts[idx + 1]) {
+        const videoId = parts[idx + 1];
+        const cite = url;
+        return `<blockquote class="tiktok-embed" cite="${escapeHtml(cite)}" data-video-id="${escapeHtml(videoId)}" style="max-width: 360px; min-width: 225px;" data-link-id="${escapeHtml(linkId)}"><section></section></blockquote>`;
+      }
+    }
+    return null;
+  } catch (_) {
+    return null;
+  }
+}
+
 function renderVideoHTML(link) {
   const yt = youtubeEmbedHTML(link.url, link.id);
   if (yt) return yt;
+  const tt = tiktokEmbedHTML(link.url, link.id);
+  if (tt) return tt;
   return `<a href="/links/open?id=${escapeHtml(link.id)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.url)}</a>`;
 }
 
@@ -242,6 +264,43 @@ function homePage(username, opts = {}) {
               iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
               iframe.allowFullscreen = true;
               a.insertAdjacentElement('afterend', iframe);
+            }
+          }catch(e){}
+        }
+
+        // Ensure TikTok embed.js is present
+        var ttScript = document.querySelector('script[src^="https://www.tiktok.com/embed.js"]');
+        if (!ttScript) {
+          ttScript = document.createElement('script');
+          ttScript.src = 'https://www.tiktok.com/embed.js';
+          ttScript.async = true;
+          document.head.appendChild(ttScript);
+        }
+
+        // Convert TikTok links to embed blockquotes if possible
+        var tiktokAnchors = document.querySelectorAll('section ul li a[href^="/links/open?id="]');
+        for (var j=0;j<tiktokAnchors.length;j++){
+          var ta = tiktokAnchors[j];
+          var linkId2 = (new URL(ta.getAttribute('href'), window.location.origin)).searchParams.get('id');
+          var urlText2 = ta.textContent || '';
+          try{
+            var u2 = new URL(urlText2);
+            if (u2.hostname.indexOf('tiktok.com') !== -1 && u2.pathname.indexOf('/video/') !== -1) {
+              var parts = u2.pathname.split('/').filter(Boolean);
+              var idx = parts.indexOf('video');
+              if (idx !== -1 && parts[idx+1]){
+                var videoId2 = parts[idx+1];
+                var bq = document.createElement('blockquote');
+                bq.className = 'tiktok-embed';
+                bq.setAttribute('cite', urlText2);
+                bq.setAttribute('data-video-id', videoId2);
+                bq.setAttribute('data-link-id', linkId2);
+                bq.style.maxWidth = '360px';
+                bq.style.minWidth = '225px';
+                var sec = document.createElement('section');
+                bq.appendChild(sec);
+                ta.insertAdjacentElement('afterend', bq);
+              }
             }
           }catch(e){}
         }
@@ -781,6 +840,7 @@ function savedPage(username, list) {
         }
       }
       (function(){ var s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api'; var f=document.getElementsByTagName('script')[0]; f.parentNode.insertBefore(s,f); window.onYouTubeIframeAPIReady=onYouTubeIframeAPIReady; })();
+      (function(){ var t=document.createElement('script'); t.src='https://www.tiktok.com/embed.js'; t.async=true; document.head.appendChild(t); })();
     </script>
   </head>
   <body>
@@ -793,7 +853,7 @@ function savedPage(username, list) {
     <ul>
       ${list.map(v => `
         <li>
-          ${youtubeEmbedHTML(v.url, v.id) || `<a href="/links/open?id=${escapeHtml(v.id)}" target="_blank" rel="noopener noreferrer">${escapeHtml(v.url)}</a>`}
+          ${youtubeEmbedHTML(v.url, v.id) || tiktokEmbedHTML(v.url, v.id) || `<a href="/links/open?id=${escapeHtml(v.id)}" target="_blank" rel="noopener noreferrer">${escapeHtml(v.url)}</a>`}
           - from <strong>${escapeHtml(v.sender_username)}</strong>
           ${v.reaction ? ` - Your reaction: ${escapeHtml(v.reaction)}` : ''}
         </li>`).join('')}
@@ -821,6 +881,7 @@ function historyPage(username, list) {
         }
       }
       (function(){ var s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api'; var f=document.getElementsByTagName('script')[0]; f.parentNode.insertBefore(s,f); window.onYouTubeIframeAPIReady=onYouTubeIframeAPIReady; })();
+      (function(){ var t=document.createElement('script'); t.src='https://www.tiktok.com/embed.js'; t.async=true; document.head.appendChild(t); })();
     </script>
   </head>
   <body>
@@ -833,7 +894,7 @@ function historyPage(username, list) {
     <ul>
       ${list.map(v => `
         <li>
-          ${youtubeEmbedHTML(v.url, v.id) || `<a href="/links/open?id=${escapeHtml(v.id)}" target="_blank" rel="noopener noreferrer">${escapeHtml(v.url)}</a>`}
+          ${youtubeEmbedHTML(v.url, v.id) || tiktokEmbedHTML(v.url, v.id) || `<a href="/links/open?id=${escapeHtml(v.id)}" target="_blank" rel="noopener noreferrer">${escapeHtml(v.url)}</a>`}
           - from <strong>${escapeHtml(v.sender_username)}</strong>
           ${v.reaction ? ` - Your reaction: ${escapeHtml(v.reaction)}` : ''}
         </li>`).join('')}
