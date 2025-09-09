@@ -1612,17 +1612,20 @@ async function webauthnLoginOptions(req, env) {
 }
 
 async function webauthnLoginVerify(req, env) {
+  try { console.log('[webauthn] verify: start'); } catch (_) {}
   const chal = getCookie(req, 'wa_auth_chal');
   if (!chal) return new Response('Challenge missing', { status: 400 });
   const body = await req.json();
   const clientData = base64urlToUint8(body.response.clientDataJSON);
   const client = JSON.parse(new TextDecoder().decode(clientData));
+  try { console.log('[webauthn] verify: clientData', { type: client.type, challenge: client.challenge }); } catch (_) {}
   if (client.type !== 'webauthn.get') return new Response('Bad type', { status: 400 });
   const chalFromClient = atob(client.challenge.replace(/-/g,'+').replace(/_/g,'/'));
   const chalRaw = atob(chal.replace(/-/g,'+').replace(/_/g,'/'));
   if (chalFromClient !== chalRaw) return new Response('Bad challenge', { status: 400 });
   const authData = base64urlToUint8(body.response.authenticatorData);
   const sig = base64urlToUint8(body.response.signature);
+  try { console.log('[webauthn] verify: lengths', { authData: authData.length, sig: sig.length }); } catch (_) {}
   const parsed = parseAuthData(authData);
   const rpId = getRpIdFromUrl(req.url);
   const rpHash = await sha256Bytes(new TextEncoder().encode(rpId));
@@ -1637,7 +1640,8 @@ async function webauthnLoginVerify(req, env) {
     .first();
   if (!credRow) return new Response('Unknown credential', { status: 404 });
   const jwk = JSON.parse(credRow.public_key);
-  const ok = await verifyAssertionSignature(jwk, authData, clientData, sig);
+  try { console.log('[webauthn] verify: key', { kty: jwk.kty, crv: jwk.crv }); } catch (_) {}
+  const ok = await verifyAssertionSignature(jwk, authData, clientData, sig).catch((e) => { try { console.log('[webauthn] verify: error', e && (e.stack || e.message || e)); } catch(_){} return false; });
   if (!ok) return new Response('Bad signature', { status: 401 });
 
   // Update counters and issue session
@@ -1666,6 +1670,7 @@ async function webauthnLoginVerify(req, env) {
   headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15*60 }));
   headers.append('Set-Cookie', cookie('refresh', refreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60*24*60*60 }));
   headers.append('Set-Cookie', cookie('wa_auth_chal', '', { httpOnly:true, path:'/', maxAge:0 }));
+  try { console.log('[webauthn] verify: success, user', credRow.username); } catch (_) {}
   return new Response(null, { status: 302, headers });
 }
 
