@@ -105,7 +105,7 @@ function loginPage() {
       }
       async function loginPasskey(){
         try {
-          var res = await fetch('/webauthn/login/options', { method: 'POST' });
+          var res = await fetch('/webauthn/login/options', { method: 'POST', credentials: 'same-origin' });
           if (!res.ok) { alert('Failed to start passkey login'); return; }
           var options = await res.json();
           options.challenge = b64urlToBuf(options.challenge);
@@ -121,10 +121,14 @@ function loginPage() {
               userHandle: cred.response.userHandle ? bufToB64url(cred.response.userHandle) : null,
             }
           };
-          var vr = await fetch('/webauthn/login/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+          var vr = await fetch('/webauthn/login/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(data) });
           if (vr.ok) { location.href = '/'; } else { alert('Passkey login failed'); }
         } catch (e) { alert('Passkey get() failed'); }
       }
+      document.addEventListener('DOMContentLoaded', function(){
+        var btn = document.getElementById('login-passkey-btn');
+        if (btn) btn.addEventListener('click', function(){ loginPasskey(); });
+      });
     </script>
     <script type="module">
       function b64urlToBuf(b64url){
@@ -172,7 +176,7 @@ function loginPage() {
   <body>
     <h1>Login</h1>
     <p>Use your device passkey to sign in.</p>
-    <button type="button" onclick="loginPasskey()">Use Passkey</button>
+    <button id="login-passkey-btn" type="button">Use Passkey</button>
     <p><a href="/signup">Go to sign up</a></p>
   </body>
 </html>`;
@@ -204,7 +208,7 @@ function signupPage() {
         return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
       }
       async function registerPasskeyStart(){
-        var res = await fetch('/webauthn/register/options', { method: 'POST' });
+        var res = await fetch('/webauthn/register/options', { method: 'POST', credentials: 'same-origin' });
         if (!res.ok) { alert('Failed to start registration'); return; }
         var options = await res.json();
         options.challenge = b64urlToBuf(options.challenge);
@@ -220,7 +224,7 @@ function signupPage() {
               attestationObject: bufToB64url(cred.response.attestationObject),
             },
           };
-          var vr = await fetch('/webauthn/register/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+          var vr = await fetch('/webauthn/register/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(data) });
           if (vr.ok) {
             // Show username finalize form
             document.getElementById('finalize-form').style.display = 'block';
@@ -232,6 +236,10 @@ function signupPage() {
           }
         } catch (e) { alert('Passkey create() failed'); }
       }
+      document.addEventListener('DOMContentLoaded', function(){
+        var btn = document.getElementById('start-passkey-btn');
+        if (btn) btn.addEventListener('click', function(){ registerPasskeyStart(); });
+      });
       async function finalizeSignup(ev){
         ev.preventDefault();
         var username = (document.getElementById('final-username').value||'').trim();
@@ -247,7 +255,7 @@ function signupPage() {
   <body>
     <h1>Sign Up</h1>
     <p>Register a new passkey, then choose a username.</p>
-    <button id="start-passkey-btn" type="button" onclick="registerPasskeyStart()">Register Passkey</button>
+    <button id="start-passkey-btn" type="button">Register Passkey</button>
     <form id="finalize-form" onsubmit="return finalizeSignup(event)" style="display:none; margin-top:8px;">
       <input id="final-username" placeholder="choose a username" required />
       <button type="submit">Finalize Sign Up</button>
