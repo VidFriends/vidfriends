@@ -134,7 +134,16 @@ function signupPage() {
 </html>`;
 }
 
-function homePage() {
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function homePage(username) {
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -143,6 +152,7 @@ function homePage() {
   </head>
   <body>
     <h1>Home</h1>
+    <p>Logged in as <strong>${escapeHtml(username)}</strong></p>
     <form method="POST" action="/logout">
       <button type="submit">logout</button>
     </form>
@@ -312,14 +322,14 @@ async function handleHome(req, env) {
   if (!sessionId) {
     return new Response(null, { status: 302, headers: { Location: '/login' } });
   }
-  const session = await env.vidshare
-    .prepare('SELECT user_id FROM sessions WHERE id = ?1')
+  const row = await env.vidshare
+    .prepare('SELECT users.username FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.id = ?1')
     .bind(sessionId)
     .first();
-  if (!session) {
+  if (!row || !row.username) {
     return new Response(null, { status: 302, headers: { Location: '/login' } });
   }
-  return new Response(homePage(), {
+  return new Response(homePage(row.username), {
     headers: { 'Content-Type': 'text/html;charset=UTF-8' },
   });
 }
