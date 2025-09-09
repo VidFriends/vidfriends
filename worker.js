@@ -253,7 +253,7 @@ function signupPage() {
               if (fr.ok) { location.href = '/'; }
               else {
                 var t = await fr.text();
-                alert('Finalize failed: ' + t + '\nYou can try finalizing below.');
+                alert('Finalize failed: ' + t + '\\nYou can try finalizing below.');
                 var f = document.getElementById('finalize-form');
                 if (f) {
                   f.style.display = 'block';
