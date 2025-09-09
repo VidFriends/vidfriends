@@ -1491,7 +1491,8 @@ async function webauthnRegisterOptions(req, env) {
     challenge,
     rp: { id: rpId, name: 'vidshare' },
     user: { id: userId, name: displayName, displayName: displayName },
-    pubKeyCredParams: [ { type: 'public-key', alg: -7 }, { type: 'public-key', alg: -8 } ],
+    // Restrict to ES256 for maximum compatibility
+    pubKeyCredParams: [ { type: 'public-key', alg: -7 } ],
     timeout: 60000,
     attestation: 'none',
     authenticatorSelection: { residentKey: 'required', requireResidentKey: true, userVerification: 'preferred' },
@@ -1626,11 +1627,13 @@ async function webauthnLoginVerify(req, env) {
   const authData = base64urlToUint8(body.response.authenticatorData);
   const sig = base64urlToUint8(body.response.signature);
   try { console.log('[webauthn] verify: lengths', { authData: authData.length, sig: sig.length }); } catch (_) {}
+  try { console.log('[webauthn] verify: sig head', { head: hexPreview(sig, 8), der: sig[0] === 0x30 }); } catch (_) {}
   const parsed = parseAuthData(authData);
   const rpId = getRpIdFromUrl(req.url);
   const rpHash = await sha256Bytes(new TextEncoder().encode(rpId));
   if (!parsed.rpIdHash || base64url(parsed.rpIdHash) !== base64url(rpHash)) return new Response('RP mismatch', { status: 400 });
   if (!hasUserPresent(parsed.flags)) return new Response('UP required', { status: 400 });
+  try { console.log('[webauthn] verify: flags', { flags: parsed.flags, up: hasUserPresent(parsed.flags), uv: hasUserVerified(parsed.flags), signCount: parsed.signCount }); } catch (_) {}
 
   // Lookup credential by external_id from body.rawId
   const rawIdB64 = body.rawId; // already b64url from client
@@ -1790,6 +1793,18 @@ function b64url(bytes) {
   return base64url(bytes);
 }
 
+function hexPreview(bytes, max = 16) {
+  try {
+    const len = Math.min(max, bytes.length || 0);
+    let out = '';
+    for (let i = 0; i < len; i++) {
+      const b = bytes[i].toString(16).padStart(2, '0');
+      out += b + (i + 1 < len ? '' : '');
+    }
+    return out;
+  } catch (_) { return ''; }
+}
+
 async function sha256Bytes(bytes) {
   const buf = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   const dig = await crypto.subtle.digest('SHA-256', buf);
@@ -1879,6 +1894,12 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
   if (jwk.kty === 'EC') {
     // Some authenticators return raw r|s (64 bytes) instead of DER. Convert if needed.
     let sig = signatureBytes;
+    try { console.log('[webauthn] verify: sig preview', { len: sig.length, der: sig[0] === 0x30, head: hexPreview(sig, 8) }); } catch(_){}
+    if (sig && sig.length === 65 && sig[0] === 0x00) {
+      // Occasionally signatures include a leading 0x00; strip it
+      sig = sig.slice(1);
+      try { console.log('[webauthn] verify: stripped leading 0x00 from signature, new len', sig.length); } catch(_){}
+    }
     if (!(sig && sig.length > 0 && sig[0] === 0x30)) {
       // Attempt raw(64) -> DER conversion
       if (sig && sig.length === 64) {
@@ -1894,20 +1915,25 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
         }
         const rT = trimInt(r);
         const sT = trimInt(s);
-        const der = new Uint8Array(2 + 2 + rT.length + 2 + sT.length);
+        // Build DER with short-form length (safe because total < 128 for P-256)
+        const seqLen = 2 + rT.length + 2 + sT.length;
+        const der = new Uint8Array(2 + seqLen);
         let o = 0;
         der[o++] = 0x30; // SEQUENCE
-        der[o++] = der.length - 2; // length
+        der[o++] = seqLen; // length
         der[o++] = 0x02; // INTEGER
         der[o++] = rT.length;
         der.set(rT, o); o += rT.length;
-        der[o++] = 0x02;
+        der[o++] = 0x02; // INTEGER
         der[o++] = sT.length;
-        der.set(sT, o);
+        der.set(sT, o); o += sT.length;
         sig = der;
+        try { console.log('[webauthn] verify: converted raw r|s to DER', { len: sig.length, head: hexPreview(sig, 8) }); } catch(_){}
       }
     }
-    return crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, sig, toVerify);
+    const ok = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, sig, toVerify);
+    try { console.log('[webauthn] verify: ECDSA result', ok); } catch(_){}
+    return ok;
   }
   if (jwk.kty === 'OKP' && jwk.crv === 'Ed25519') {
     return crypto.subtle.verify('Ed25519', key, signatureBytes, toVerify);
