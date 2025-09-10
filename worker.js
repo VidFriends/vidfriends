@@ -89,135 +89,26 @@ function loginPage() {
     <link rel="shortcut icon" href="https://assets.vidfriends.app/favicon/favicon.ico">
     <link rel="apple-touch-icon" href="https://assets.vidfriends.app/favicon/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
-    <script>
-      function b64urlToBuf(b64url){
-        var b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
-        var pad = '='.repeat((4 - b64.length % 4) % 4);
-        var str = atob(b64 + pad);
-        var bytes = new Uint8Array(str.length);
-        for (var i=0;i<str.length;i++) bytes[i] = str.charCodeAt(i);
-        return bytes.buffer;
-      }
-      function bufToB64url(buf){
-        var bytes = new Uint8Array(buf);
-        var bin=''; for (var i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
-        var b64 = btoa(bin);
-        b64 = b64.split('+').join('-');
-        b64 = b64.split('/').join('_');
-        b64 = b64.replace(/=+$/,'');
-        return b64;
-      }
-      async function loginPasskey(){
-        try {
-          console.log('[webauthn] login (no username) start');
-          var res = await fetch('/webauthn/login/options', { method: 'POST', credentials: 'same-origin' });
-          console.log('[webauthn] options status', res.status);
-          if (!res.ok) { alert('Failed to start passkey login'); return; }
-          var options = await res.json();
-          console.log('[webauthn] options', { rpId: options.rpId, uv: options.userVerification, allowCreds: Array.isArray(options.allowCredentials) ? options.allowCredentials.length : 0 });
-          options.challenge = b64urlToBuf(options.challenge);
-          console.log('[webauthn] calling navigator.credentials.get');
-          var cred = await navigator.credentials.get({ publicKey: options });
-          console.log('[webauthn] got credential', { id: cred && cred.id, type: cred && cred.type });
-          try {
-            var cdj = JSON.parse(new TextDecoder().decode(cred.response.clientDataJSON));
-            console.log('[webauthn] clientData', { type: cdj.type, challenge: cdj.challenge });
-          } catch (e) { /* ignore */ }
-          var data = {
-            id: cred.id,
-            type: cred.type,
-            rawId: bufToB64url(cred.rawId),
-            response: {
-              clientDataJSON: bufToB64url(cred.response.clientDataJSON),
-              authenticatorData: bufToB64url(cred.response.authenticatorData),
-              signature: bufToB64url(cred.response.signature),
-              userHandle: cred.response.userHandle ? bufToB64url(cred.response.userHandle) : null,
-            }
-          };
-          console.log('[webauthn] assertion summary', { rawId: data.rawId, hasUserHandle: !!data.response.userHandle });
-          console.log('[webauthn] posting assertion to verify');
-          var vr = await fetch('/webauthn/login/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(data) });
-          console.log('[webauthn] verify status', vr.status);
-          if (vr.ok) { location.href = '/'; } else { const t = await vr.text().catch(()=> ''); console.error('[webauthn] verify failed', vr.status, t); alert('Passkey login failed' + (t? (': '+t) : '')); }
-        } catch (e) { console.error('[webauthn] navigator.credentials.get error', e); alert('Passkey get() failed'); }
-      }
-      document.addEventListener('DOMContentLoaded', function(){
-        var btn = document.getElementById('login-passkey-btn');
-        if (btn) btn.addEventListener('click', function(){
-          var u = document.getElementById('login-username');
-          var name = u && u.value ? u.value.trim() : '';
-          if (name && typeof window.passkeyLogin === 'function') { window.passkeyLogin(name); }
-          else { loginPasskey(); }
-        });
-      });
-    </script>
-    <script type="module">
-      function b64urlToBuf(b64url){
-        const b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
-        const pad = '='.repeat((4 - b64.length % 4) % 4);
-        const str = atob(b64 + pad);
-        const bytes = new Uint8Array(str.length);
-        for (let i=0;i<str.length;i++) bytes[i] = str.charCodeAt(i);
-        return bytes.buffer;
-      }
-      function bufToB64url(buf){
-        const bytes = new Uint8Array(buf);
-        let bin=''; for (let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
-        var b64 = btoa(bin);
-        b64 = b64.split('+').join('-');
-        b64 = b64.split('/').join('_');
-        b64 = b64.replace(/=+$/,'');
-        return b64;
-      }
-      window.passkeyLogin = async function passkeyLogin(username){
-        console.log('[webauthn] login (with username) start', { username });
-        const init = { method: 'POST', headers: {} };
-        if (username) { init.headers['Content-Type'] = 'application/json'; init.body = JSON.stringify({ username }); }
-        const res = await fetch('/webauthn/login/options', init);
-        console.log('[webauthn] options status', res.status);
-        if (!res.ok) { alert('Failed to start passkey login'); return; }
-        const options = await res.json();
-        console.log('[webauthn] options', { rpId: options.rpId, uv: options.userVerification, allowCreds: Array.isArray(options.allowCredentials) ? options.allowCredentials.length : 0 });
-        options.challenge = b64urlToBuf(options.challenge);
-        if (Array.isArray(options.allowCredentials)) {
-          options.allowCredentials = options.allowCredentials.map(function(c){ return { type: c.type, id: b64urlToBuf(c.id), transports: c.transports }; });
-        }
-        let cred;
-        try {
-          console.log('[webauthn] calling navigator.credentials.get');
-          cred = await navigator.credentials.get({ publicKey: options });
-          console.log('[webauthn] got credential', { id: cred && cred.id, type: cred && cred.type });
-          try {
-            var cdj2 = JSON.parse(new TextDecoder().decode(cred.response.clientDataJSON));
-            console.log('[webauthn] clientData', { type: cdj2.type, challenge: cdj2.challenge });
-          } catch (e) { /* ignore */ }
-        }
-        catch (e) { console.error('[webauthn] navigator.credentials.get error', e); alert('Passkey get() failed'); return; }
-        const data = {
-          id: cred.id,
-          type: cred.type,
-          rawId: bufToB64url(cred.rawId),
-          response: {
-            clientDataJSON: bufToB64url(cred.response.clientDataJSON),
-            authenticatorData: bufToB64url(cred.response.authenticatorData),
-            signature: bufToB64url(cred.response.signature),
-            userHandle: cred.response.userHandle ? bufToB64url(cred.response.userHandle) : null,
-          }
-        };
-        console.log('[webauthn] assertion summary', { rawId: data.rawId, hasUserHandle: !!data.response.userHandle });
-        console.log('[webauthn] posting assertion to verify');
-        const vr = await fetch('/webauthn/login/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(data) });
-        console.log('[webauthn] verify status', vr.status);
-        if (vr.ok) { location.href = '/'; } else { const t = await vr.text().catch(()=> ''); console.error('[webauthn] verify failed', vr.status, t); alert('Passkey login failed' + (t? (': '+t) : '')); }
-      }
-    </script>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px; }
+      form { display: inline-block; padding: 16px; border: 1px solid #ddd; border-radius: 8px; }
+      label { display:block; margin-top: 8px; font-size: 14px; }
+      input { width: 240px; padding: 8px; margin-top: 4px; }
+      button { margin-top: 12px; padding: 8px 12px; }
+    </style>
   </head>
   <body>
     <h1>Login</h1>
-    <p>Use your device passkey to sign in.</p>
-    <input id="login-username" placeholder="username (optional)" />
-    <button id="login-passkey-btn" type="button">Use Passkey</button>
-    <p><a href="/signup">Go to sign up</a></p>
+    <form method="POST" action="/login">
+      <label>Username
+        <input name="username" autocomplete="username" required />
+      </label>
+      <label>Password
+        <input name="password" type="password" autocomplete="current-password" required />
+      </label>
+      <button type="submit">Sign In</button>
+    </form>
+    <p style="margin-top:12px;"><a href="/signup">Create an account</a></p>
   </body>
 </html>`;
 }
@@ -233,95 +124,26 @@ function signupPage() {
     <link rel="shortcut icon" href="https://assets.vidfriends.app/favicon/favicon.ico">
     <link rel="apple-touch-icon" href="https://assets.vidfriends.app/favicon/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
-    <script>
-      function b64urlToBuf(b64url){
-        var b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
-        var pad = '='.repeat((4 - b64.length % 4) % 4);
-        var str = atob(b64 + pad);
-        var bytes = new Uint8Array(str.length);
-        for (var i=0;i<str.length;i++) bytes[i] = str.charCodeAt(i);
-        return bytes.buffer;
-      }
-      function bufToB64url(buf){
-        var bytes = new Uint8Array(buf);
-        var bin=''; for (var i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
-        var b64 = btoa(bin);
-        b64 = b64.split('+').join('-');
-        b64 = b64.split('/').join('_');
-        b64 = b64.replace(/=+$/,'');
-        return b64;
-      }
-      async function registerPasskeyStart(){
-        var unEl = document.getElementById('signup-username');
-        var username = (unEl && unEl.value ? unEl.value : '').trim();
-        if (!username) { alert('Please enter a username first'); return; }
-        var res = await fetch('/webauthn/register/options', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ username: username }) });
-        if (!res.ok) { alert('Failed to start registration'); return; }
-        var options = await res.json();
-        options.challenge = b64urlToBuf(options.challenge);
-        options.user.id = b64urlToBuf(options.user.id);
-        try {
-          var cred = await navigator.credentials.create({ publicKey: options });
-          var data = {
-            id: cred.id,
-            type: cred.type,
-            rawId: bufToB64url(cred.rawId),
-            response: {
-              clientDataJSON: bufToB64url(cred.response.clientDataJSON),
-              attestationObject: bufToB64url(cred.response.attestationObject),
-            },
-          };
-          var vr = await fetch('/webauthn/register/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(data) });
-          if (vr.ok) {
-            // Auto-finalize using the provided username
-            try {
-              var fr = await fetch('/webauthn/register/finalize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ username: username }) });
-              if (fr.ok) { location.href = '/'; }
-              else {
-                var t = await fr.text();
-                alert('Finalize failed: ' + t + '\\nYou can try finalizing below.');
-                var f = document.getElementById('finalize-form');
-                if (f) {
-                  f.style.display = 'block';
-                  var fu = document.getElementById('final-username');
-                  if (fu) fu.value = username;
-                }
-              }
-            } catch(e) {
-              alert('Finalize step failed');
-            }
-          } else {
-            const t = await vr.text();
-            alert('Registration failed: ' + t);
-          }
-        } catch (e) { alert('Passkey create() failed'); }
-      }
-      document.addEventListener('DOMContentLoaded', function(){
-        var btn = document.getElementById('start-passkey-btn');
-        if (btn) btn.addEventListener('click', function(){ registerPasskeyStart(); });
-      });
-      async function finalizeSignup(ev){
-        ev.preventDefault();
-        var username = (document.getElementById('final-username').value||'').trim();
-        if (!username) { alert('Enter a username'); return false; }
-        var res = await fetch('/webauthn/register/finalize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: username }) });
-        if (res.ok) { location.href = '/'; }
-        else { const t = await res.text(); alert('Finalize failed: ' + t); }
-        return false;
-      }
-    </script>
-    <script type="module"></script>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px; }
+      form { display: inline-block; padding: 16px; border: 1px solid #ddd; border-radius: 8px; }
+      label { display:block; margin-top: 8px; font-size: 14px; }
+      input { width: 240px; padding: 8px; margin-top: 4px; }
+      button { margin-top: 12px; padding: 8px 12px; }
+    </style>
   </head>
   <body>
     <h1>Sign Up</h1>
-    <p>Choose a username, then register a new passkey.</p>
-    <input id="signup-username" placeholder="choose a username" required />
-    <button id="start-passkey-btn" type="button">Register Passkey</button>
-    <form id="finalize-form" onsubmit="return finalizeSignup(event)" style="display:none; margin-top:8px;">
-      <input id="final-username" placeholder="confirm username" required />
-      <button type="submit">Finalize Sign Up</button>
+    <form method="POST" action="/signup">
+      <label>Username
+        <input name="username" autocomplete="username" required />
+      </label>
+      <label>Password
+        <input name="password" type="password" autocomplete="new-password" required />
+      </label>
+      <button type="submit">Create Account</button>
     </form>
-    <p><a href="/login">Go to login</a></p>
+    <p style="margin-top:12px;"><a href="/login">Back to login</a></p>
   </body>
 </html>`;
 }
@@ -743,21 +565,7 @@ export default {
       return handleRefresh(req, env);
     }
 
-    if (req.method === 'POST' && url.pathname === '/webauthn/register/options') {
-      return webauthnRegisterOptions(req, env);
-    }
-    if (req.method === 'POST' && url.pathname === '/webauthn/register/verify') {
-      return webauthnRegisterVerify(req, env);
-    }
-    if (req.method === 'POST' && url.pathname === '/webauthn/register/finalize') {
-      return webauthnRegisterFinalize(req, env);
-    }
-    if (req.method === 'POST' && url.pathname === '/webauthn/login/options') {
-      return webauthnLoginOptions(req, env);
-    }
-    if (req.method === 'POST' && url.pathname === '/webauthn/login/verify') {
-      return webauthnLoginVerify(req, env);
-    }
+    // Passkey routes removed
 
     if (req.method === 'GET' && url.pathname === '/links/open') {
       return handleLinkOpen(req, env);
@@ -833,6 +641,12 @@ async function handleSignup(req, env) {
   if (!username || !password) {
     return new Response('Invalid input', { status: 400 });
   }
+  // Ensure username is not taken (case-insensitive)
+  const existing = await env.vidshare
+    .prepare('SELECT id FROM users WHERE lower(username) = lower(?1)')
+    .bind(username)
+    .first();
+  if (existing) return new Response('Username taken', { status: 409 });
   const now = Math.floor(Date.now() / 1000);
   const userId = crypto.randomUUID();
   const credId = crypto.randomUUID();
@@ -1464,265 +1278,7 @@ async function handleLinkWatched(req, env) {
   return new Response(null, { status: 204 });
 }
 
-// ========== WebAuthn routes ==========
-function getRpIdFromUrl(reqUrl) {
-  try {
-    const u = new URL(reqUrl);
-    const rp = u.hostname;
-    try { console.log('[webauthn] rpId from URL', { url: reqUrl, rpId: rp }); } catch(_){}
-    return rp;
-  } catch (e) {
-    try { console.log('[webauthn] rpId parse error', e && (e.message || e)); } catch(_){}
-    return null;
-  }
-}
-
-function makeChallenge(bytes=32) {
-  const b = new Uint8Array(bytes); crypto.getRandomValues(b); return base64url(b);
-}
-
-async function webauthnRegisterOptions(req, env) {
-  const rpId = getRpIdFromUrl(req.url);
-  const challenge = makeChallenge();
-  const userId = base64url(crypto.getRandomValues(new Uint8Array(16)));
-  // Try to use provided username for OS display label
-  let providedUsername = '';
-  try {
-    const ct = req.headers.get('Content-Type') || '';
-    if (ct.includes('application/json')) {
-      const body = await req.json().catch(() => ({}));
-      if (body && body.username) providedUsername = String(body.username).trim();
-    }
-  } catch (_) {}
-  logj('[webauthn] register/options', { rpId, userIdLen: 16, chal: challenge, username: providedUsername, ua: req.headers.get('User-Agent') || '' });
-  const displayName = providedUsername || 'user';
-  const options = {
-    challenge,
-    rp: { id: rpId, name: 'vidshare' },
-    user: { id: userId, name: displayName, displayName: displayName },
-    // Include ES256 and RS256 to satisfy authenticator expectations and Chrome guidance
-    pubKeyCredParams: [ { type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 } ],
-    timeout: 60000,
-    attestation: 'none',
-    authenticatorSelection: { residentKey: 'required', requireResidentKey: true, userVerification: 'preferred' },
-  };
-  const headers = new Headers({ 'Content-Type': 'application/json' });
-  headers.append('Set-Cookie', cookie('wa_reg_chal', challenge, { httpOnly: true, sameSite: 'Lax', path: '/' }));
-  return new Response(JSON.stringify(options), { headers });
-}
-
-async function webauthnRegisterVerify(req, env) {
-  const body = await req.json();
-  const regChal = getCookie(req, 'wa_reg_chal');
-  if (!regChal) return new Response('Challenge missing', { status: 400 });
-  const clientData = base64urlToUint8(body.response.clientDataJSON);
-  const client = JSON.parse(new TextDecoder().decode(clientData));
-  logj('[webauthn] register/verify clientData', { type: client.type, challenge: client.challenge, origin: client.origin });
-  if (client.type !== 'webauthn.create') return new Response('Bad type', { status: 400 });
-  const chalFromClient = atob(client.challenge.replace(/-/g,'+').replace(/_/g,'/'));
-  const chalRaw = atob(regChal.replace(/-/g,'+').replace(/_/g,'/'));
-  if (chalFromClient !== chalRaw) {
-    logj('[webauthn] register/verify: bad challenge', { client: client.challenge, cookie: regChal });
-    return new Response('Bad challenge', { status: 400 });
-  }
-  // Parse attestationObject
-  const att = base64urlToUint8(body.response.attestationObject);
-  const attObj = cborDecode(att);
-  const authData = attObj['authData'];
-  const parsed = parseAuthData(authData);
-  const rpId = getRpIdFromUrl(req.url);
-  const rpHash = await sha256Bytes(new TextEncoder().encode(rpId));
-  logj('[webauthn] register/verify authData', {
-    rpIdHash_auth: base64url(parsed.rpIdHash || new Uint8Array()),
-    rpIdHash_calc: base64url(rpHash),
-    flags: parsed.flags,
-    up: hasUserPresent(parsed.flags),
-    uv: hasUserVerified(parsed.flags),
-    signCount: parsed.signCount,
-    hasAT: !!parsed.credId,
-  });
-  if (!parsed.rpIdHash || base64url(parsed.rpIdHash) !== base64url(rpHash)) return new Response('RP mismatch', { status: 400 });
-  if (!hasUserPresent(parsed.flags)) return new Response('UP required', { status: 400 });
-  if (!parsed.credId || !parsed.coseKey) return new Response('No credential', { status: 400 });
-  const jwk = coseToJwk(parsed.coseKey);
-  logj('[webauthn] register/verify key', { kty: jwk.kty, crv: jwk.crv, x: jwk.x && jwk.x.slice(0,16)+'...', y: jwk.y && jwk.y.slice(0,16)+'...' });
-  const credIdB64 = base64url(parsed.credId);
-  const pending = { external_id: credIdB64, public_key: jwk, sign_count: parsed.signCount || 0 };
-  const headers = new Headers({ 'Content-Type': 'application/json' });
-  headers.append('Set-Cookie', cookie('wa_reg_data', encodeURIComponent(JSON.stringify(pending)), { httpOnly: true, sameSite: 'Lax', path: '/' }));
-  headers.append('Set-Cookie', cookie('wa_reg_chal', '', { httpOnly:true, path:'/', maxAge:0 }));
-  return new Response(JSON.stringify({ ok: true }), { headers });
-}
-
-async function webauthnRegisterFinalize(req, env) {
-  const body = await req.json().catch(() => ({}));
-  const username = (body.username || '').trim();
-  if (!username) return new Response('Username required', { status: 400 });
-  const pendingCookie = getCookie(req, 'wa_reg_data');
-  if (!pendingCookie) return new Response('No pending registration', { status: 400 });
-  let pending;
-  try { pending = JSON.parse(decodeURIComponent(pendingCookie)); } catch { return new Response('Invalid pending data', { status: 400 }); }
-  // Ensure username is not taken
-  const existing = await env.vidshare
-    .prepare('SELECT id FROM users WHERE lower(username) = lower(?1)')
-    .bind(username)
-    .first();
-  if (existing) return new Response('Username taken', { status: 409 });
-  const now = Math.floor(Date.now()/1000);
-  const userId = crypto.randomUUID();
-  const credId = crypto.randomUUID();
-  await env.vidshare
-    .prepare('INSERT INTO users (id, username, created_at, last_login) VALUES (?1, ?2, ?3, ?4)')
-    .bind(userId, username, now, now)
-    .run();
-  await env.vidshare
-    .prepare('INSERT INTO credentials (id, user_id, type, identifier, external_id, public_key, sign_count, created_at, last_used) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)')
-    .bind(credId, userId, 'passkey', username, pending.external_id, JSON.stringify(pending.public_key), pending.sign_count||0, now, now)
-    .run();
-  const sessionId = crypto.randomUUID();
-  const ua = req.headers.get('User-Agent') || '';
-  const expiresAt = now + 60 * 24 * 60 * 60;
-  const refreshToken = randomTokenB64(32);
-  const refreshHash = await sha256B64(refreshToken);
-  const jwt = await createJWT({ sub: userId, username, iat: now, exp: now + 15*60 }, env);
-  await env.vidshare
-    .prepare('INSERT INTO sessions (id, user_id, refresh_hash, created_at, expires_at, user_agent, last_rotated_at, rotation_count) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)')
-    .bind(sessionId, userId, refreshHash, now, expiresAt, ua, now, 0)
-    .run();
-  const headers = new Headers({ Location: '/' });
-  headers.append('Set-Cookie', cookie('session', sessionId, { httpOnly: true, sameSite: 'Lax', path: '/' }));
-  headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15*60 }));
-  headers.append('Set-Cookie', cookie('refresh', refreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60*24*60*60 }));
-  headers.append('Set-Cookie', cookie('wa_reg_data', '', { httpOnly:true, path:'/', maxAge:0 }));
-  return new Response(null, { status: 302, headers });
-}
-
-async function webauthnLoginOptions(req, env) {
-  const rpId = getRpIdFromUrl(req.url);
-  const challenge = makeChallenge();
-  let options = {
-    challenge,
-    rpId,
-    timeout: 60000,
-    userVerification: 'preferred',
-    // allow resident/discoverable creds by omitting allowCredentials
-  };
-  // Optionally narrow to a specific user's credentials if a username is provided
-  try {
-    const ct = req.headers.get('Content-Type') || '';
-    if (ct.includes('application/json')) {
-      const body = await req.json().catch(() => ({}));
-      const username = (body && body.username ? String(body.username) : '').trim();
-      if (username) {
-        const rows = await env.vidshare
-          .prepare(
-            'SELECT c.external_id FROM credentials c JOIN users u ON u.id = c.user_id WHERE c.type = ?1 AND lower(u.username) = lower(?2)'
-          )
-          .bind('passkey', username)
-          .all()
-          .then((r) => r.results || r);
-        if (rows && rows.length) {
-          options.allowCredentials = rows.map((r) => ({ type: 'public-key', id: r.external_id }));
-        }
-      }
-    }
-  } catch (_) {
-    // ignore and proceed without allowCredentials (discoverable only)
-  }
-  // Do not include allowCredentials (if none above) to allow discoverable credentials
-  const headers = new Headers({ 'Content-Type': 'application/json' });
-  headers.append('Set-Cookie', cookie('wa_auth_chal', challenge, { httpOnly: true, sameSite: 'Lax', path: '/' }));
-  logj('[webauthn] login/options', {
-    rpId,
-    chal: challenge,
-    allowCreds: options.allowCredentials ? options.allowCredentials.map(c => (c.id || '')) : null,
-    ua: req.headers.get('User-Agent') || ''
-  });
-  return new Response(JSON.stringify(options), { headers });
-}
-
-async function webauthnLoginVerify(req, env) {
-  try { console.log('[webauthn] verify: start'); } catch (_) {}
-  const chal = getCookie(req, 'wa_auth_chal');
-  if (!chal) return new Response('Challenge missing', { status: 400 });
-  const body = await req.json();
-  const clientData = base64urlToUint8(body.response.clientDataJSON);
-  const client = JSON.parse(new TextDecoder().decode(clientData));
-  logj('[webauthn] verify: clientData', { type: client.type, challenge: client.challenge, origin: client.origin });
-  if (client.type !== 'webauthn.get') return new Response('Bad type', { status: 400 });
-  const chalFromClient = atob(client.challenge.replace(/-/g,'+').replace(/_/g,'/'));
-  const chalRaw = atob(chal.replace(/-/g,'+').replace(/_/g,'/'));
-  if (chalFromClient !== chalRaw) {
-    logj('[webauthn] verify: bad challenge', { client: client.challenge, cookie: chal });
-    return new Response('Bad challenge', { status: 400 });
-  }
-  const authData = base64urlToUint8(body.response.authenticatorData);
-  const sig = base64urlToUint8(body.response.signature);
-  logj('[webauthn] verify: lengths', { rawId: body.rawId, authData: authData.length, sig: sig.length });
-  logj('[webauthn] verify: sig head', { head: hexPreview(sig, 24), der: sig[0] === 0x30 });
-  const parsed = parseAuthData(authData);
-  const rpId = getRpIdFromUrl(req.url);
-  const rpHash = await sha256Bytes(new TextEncoder().encode(rpId));
-  logj('[webauthn] verify: rpIdHash', { fromAuth: base64url(parsed.rpIdHash || new Uint8Array()), calc: base64url(rpHash) });
-  if (!parsed.rpIdHash || base64url(parsed.rpIdHash) !== base64url(rpHash)) return new Response('RP mismatch', { status: 400 });
-  if (!hasUserPresent(parsed.flags)) return new Response('UP required', { status: 400 });
-  try { console.log('[webauthn] verify: flags', { flags: parsed.flags, up: hasUserPresent(parsed.flags), uv: hasUserVerified(parsed.flags), signCount: parsed.signCount }); } catch (_) {}
-
-  // Lookup credential by external_id from body.rawId
-  const rawIdB64 = body.rawId; // already b64url from client
-  const credRow = await env.vidshare
-    .prepare('SELECT credentials.id as cred_id, credentials.user_id, credentials.public_key, credentials.sign_count, users.username FROM credentials JOIN users ON users.id = credentials.user_id WHERE credentials.type = ?1 AND credentials.external_id = ?2')
-    .bind('passkey', rawIdB64)
-    .first();
-  if (!credRow) { logj('[webauthn] verify: unknown credential', { rawId: body.rawId }); return new Response('Unknown credential', { status: 404 }); }
-  const jwk = JSON.parse(credRow.public_key);
-  let xLen = undefined, yLen = undefined;
-  try { if (jwk && jwk.x) xLen = base64urlToUint8(jwk.x).length; if (jwk && jwk.y) yLen = base64urlToUint8(jwk.y).length; } catch(_){}
-  logj('[webauthn] verify: key', { kty: jwk.kty, crv: jwk.crv, x: jwk.x && jwk.x.slice(0,24)+'...', y: jwk.y && jwk.y.slice(0,24)+'...', xLen, yLen });
-  try {
-    const clientHash = await sha256Bytes(clientData);
-    const toVerify = new Uint8Array(authData.length + clientHash.length);
-    toVerify.set(authData, 0);
-    toVerify.set(clientHash, authData.length);
-    logj('[webauthn] verify: buffers', {
-      clientHash: hexPreview(clientHash, 32),
-      authDataHead: hexPreview(authData, 32),
-      toVerifyHead: hexPreview(toVerify, 32),
-      toVerifyLen: toVerify.length
-    });
-  } catch(_){}
-  const ok = await verifyAssertionSignature(jwk, authData, clientData, sig).catch((e) => { try { console.log('[webauthn] verify: error', e && (e.stack || e.message || e)); } catch(_){} return false; });
-  if (!ok) return new Response('Bad signature', { status: 401 });
-
-  // Update counters and issue session
-  const now = Math.floor(Date.now()/1000);
-  await env.vidshare
-    .prepare('UPDATE credentials SET last_used = ?1, sign_count = ?2 WHERE id = ?3')
-    .bind(now, parsed.signCount || credRow.sign_count, credRow.cred_id)
-    .run();
-  await env.vidshare
-    .prepare('UPDATE users SET last_login = ?1 WHERE id = ?2')
-    .bind(now, credRow.user_id)
-    .run();
-
-  const sessionId = crypto.randomUUID();
-  const ua = req.headers.get('User-Agent') || '';
-  const expiresAt = now + 60 * 24 * 60 * 60;
-  const refreshToken = randomTokenB64(32);
-  const refreshHash = await sha256B64(refreshToken);
-  const jwt = await createJWT({ sub: credRow.user_id, username: credRow.username, iat: now, exp: now + 15*60 }, env);
-  await env.vidshare
-    .prepare('INSERT INTO sessions (id, user_id, refresh_hash, created_at, expires_at, user_agent, last_rotated_at, rotation_count) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)')
-    .bind(sessionId, credRow.user_id, refreshHash, now, expiresAt, ua, now, 0)
-    .run();
-  const headers = new Headers({ Location: '/' });
-  headers.append('Set-Cookie', cookie('session', sessionId, { httpOnly: true, sameSite: 'Lax', path: '/' }));
-  headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15*60 }));
-  headers.append('Set-Cookie', cookie('refresh', refreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60*24*60*60 }));
-  headers.append('Set-Cookie', cookie('wa_auth_chal', '', { httpOnly:true, path:'/', maxAge:0 }));
-  try { console.log('[webauthn] verify: success, user', credRow.username); } catch (_) {}
-  return new Response(null, { status: 302, headers });
-}
+// Passkey routes removed
 
 function cookie(name, value, opts = {}) {
   const parts = [`${name}=${value}`];
