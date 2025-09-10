@@ -7,6 +7,9 @@ compatibility_date = "2025-09-09"
 [observability.logs]
 enabled = true
 
+[vars]
+DOWNLOAD_API_URL = "http://74.208.79.74:3000/download"
+
 [[d1_databases]]
 binding = "vidshare"
 database_name = "vidshare"
