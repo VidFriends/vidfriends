@@ -86,8 +86,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-ap
 .container{max-width:720px;margin:0 auto;padding:16px 16px 84px}
 h1,h2,h3{margin:0 0 12px 0;font-weight:650}
 nav{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
-.bottom-nav{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;background:var(--surface);border-top:1px solid #202a3b;padding:10px;z-index:20}
-.bottom-nav a{flex:1}
+.fab{position:fixed;right:16px;bottom:16px;width:60px;height:60px;border-radius:50%;background:#0e1524;border:1px solid #202a3b;display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;font-size:24px;box-shadow:0 6px 24px rgba(0,0,0,0.35);z-index:30}
 .tabs{display:flex;gap:0;border-bottom:1px solid #202a3b;margin:8px 0 12px}
 .tabs a{flex:1;text-align:center;padding:10px 12px;color:var(--sub);text-decoration:none;border:1px solid #202a3b;border-bottom:none;border-top-left-radius:12px;border-top-right-radius:12px;background:var(--surface)}
 .tabs a.active{background:var(--muted);color:var(--text);font-weight:650}
@@ -106,9 +105,9 @@ video{width:100%;height:auto;border-radius:10px;background:#000}
 .scroll-feed{scroll-snap-type:y mandatory;height:100vh;overflow-y:auto;padding-bottom:84px;margin:0}
 .scroll-item{scroll-snap-align:start;position:relative;height:100vh}
 .scroll-item video{width:100%;height:100%;object-fit:cover;border-radius:0}
-.react-menu{position:absolute;inset:auto 12px 12px auto;background:rgba(18,24,38,0.96);border:1px solid #202a3b;border-radius:12px;padding:8px;display:none;z-index:3}
+.react-menu{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,24,38,0.96);border:1px solid #202a3b;border-radius:12px;padding:12px;display:none;z-index:3;min-width:240px}
 .react-menu button{margin:4px 6px 0 0}
-.react-backdrop{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.25);z-index:2;border-radius:10px}
+.react-backdrop{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.25);z-index:2;border-radius:0}
 .play-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1}
 .play-btn{width:74px;height:74px;border-radius:50%;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;box-shadow:0 2px 12px rgba(0,0,0,0.4)}
 .row{display:flex;gap:8px;flex-wrap:wrap}
@@ -192,7 +191,7 @@ function escapeHtml(str) {
 
 
 
-function homePage(username, opts = {}, activeTab = 'home') {
+function homePage(username, opts = {}) {
   const { outgoing = [], incoming = [], approved = [], inbox = [], sent = [] } = opts;
   const hasPending = incoming.length > 0 || outgoing.some((o) => o.status === 'pending');
   return `<!DOCTYPE html>
@@ -245,70 +244,7 @@ function homePage(username, opts = {}, activeTab = 'home') {
           })(vids[k]);
         }
 
-        // Scroll feed behaviour
-        try {
-          var feed = document.querySelector('.scroll-feed');
-          if (feed) {
-            var items = feed.querySelectorAll('.scroll-item');
-            var io = new IntersectionObserver(function(entries){
-              entries.forEach(function(entry){
-                var v = entry.target.querySelector('video');
-                if (!v) return;
-                if (entry.isIntersecting) { v.play().catch(function(){}); }
-                else { v.pause(); }
-              });
-            }, { root: feed, threshold: 0.6 });
-            for (var i=0;i<items.length;i++){ io.observe(items[i]); }
-
-            var pressTimer = null;
-            feed.addEventListener('pointerdown', function(e){
-              var item = e.target.closest('.scroll-item');
-              if (!item) return;
-              clearTimeout(pressTimer);
-              pressTimer = setTimeout(function(){
-                var backdrop = item.querySelector('.react-backdrop');
-                var menu = item.querySelector('.react-menu');
-                if (backdrop) backdrop.style.display = 'block';
-                if (menu) menu.style.display = 'block';
-              }, 500);
-            });
-            function closeMenu(item){
-              var backdrop = item.querySelector('.react-backdrop');
-              var menu = item.querySelector('.react-menu');
-              if (backdrop) backdrop.style.display = 'none';
-              if (menu) menu.style.display = 'none';
-            }
-            feed.addEventListener('pointerup', function(e){
-              if (pressTimer){
-                clearTimeout(pressTimer);
-                var item = e.target.closest('.scroll-item');
-                if (!item) return;
-                var menu = item.querySelector('.react-menu');
-                if (menu && menu.style.display === 'block') return; // already opened via long press
-                var v = item.querySelector('video');
-                if (v) { v.muted = !v.muted; }
-              }
-            });
-            feed.addEventListener('pointercancel', function(){ clearTimeout(pressTimer); });
-            feed.addEventListener('click', function(e){
-              var back = e.target.closest('.react-backdrop');
-              var item = e.target.closest('.scroll-item');
-              if (back && item) { closeMenu(item); }
-            });
-            feed.addEventListener('click', function(e){
-              var btn = e.target.closest('[data-react]');
-              if (!btn) return;
-              var item = e.target.closest('.scroll-item');
-              if (!item) return;
-              var linkId = item.getAttribute('data-link-id');
-              var val = btn.getAttribute('data-react');
-              var fd = new FormData(); fd.append('link_id', linkId); fd.append('reaction', val);
-              fetch('/links/react', { method: 'POST', body: fd, credentials: 'same-origin' })
-                .then(function(){ closeMenu(item); })
-                .catch(function(){ closeMenu(item); });
-            });
-          }
-        } catch (e) {}
+        // no scroll feed behavior on home screen
       });
     </script>
   </head>
@@ -430,11 +366,11 @@ function homePage(username, opts = {}, activeTab = 'home') {
             - from <strong>${escapeHtml(v.sender_username)}</strong>
             <form method="POST" action="/links/react" style="display:inline; margin-left:8px;">
               <input type="hidden" name="link_id" value="${escapeHtml(v.id)}" />
-              <button type="submit" name="reaction" value="❤️" title="Heart">❤️</button>
+              <button type="submit" name="reaction" value="??" title="Heart">??</button>
             </form>
             <form method="POST" action="/links/react" style="display:inline; margin-left:4px;">
               <input type="hidden" name="link_id" value="${escapeHtml(v.id)}" />
-              <button type="submit" name="reaction" value="👍" title="Thumbs up">👍</button>
+              <button type="submit" name="reaction" value="??" title="Thumbs up">??</button>
             </form>
             <form method="POST" action="/links/react" style="display:inline; margin-left:8px;">
               <input type="hidden" name="link_id" value="${escapeHtml(v.id)}" />
@@ -505,10 +441,7 @@ function homePage(username, opts = {}, activeTab = 'home') {
       <button type="submit" class="secondary">Logout</button>
     </form>
     </div>
-    <nav class="bottom-nav">
-      <a href="/"><button type="button" class="secondary">Home</button></a>
-      <a href="/scroll"><button type="button" class="secondary">Scroll</button></a>
-    </nav>
+    <a href="/scroll" class="fab" aria-label="Inbox">??</a>
   </body>
 </html>`;
 }
@@ -542,6 +475,13 @@ function scrollPage(username, list) {
     </style>
     <script>
       document.addEventListener('DOMContentLoaded', function(){
+        // Replace placeholder labels with emoji for compatibility in all encodings
+        try {
+          var ups = document.querySelectorAll('.react-menu button[title="Thumbs up"]');
+          for (var i0=0;i0<ups.length;i0++){ ups[i0].textContent='\uD83D\uDC4D'; ups[i0].setAttribute('data-react','\uD83D\uDC4D'); }
+          var hearts = document.querySelectorAll('.react-menu button[title="Heart"]');
+          for (var j0=0;j0<hearts.length;j0++){ hearts[j0].textContent='\u2764\uFE0F'; hearts[j0].setAttribute('data-react','\u2764\uFE0F'); }
+        } catch(_){}
         var items = document.querySelectorAll('.scroll-item');
         for (var i=0;i<items.length;i++){
           (function(item){
@@ -612,8 +552,8 @@ function scrollPage(username, list) {
   <body>
     <div class="scroll-feed">
       ${list.map(v => `
-        <div class=\"scroll-item\" data-link-id=\"${escapeHtml(v.id)}\">\n          <video class=\"asset-video\" data-link-id=\"${escapeHtml(v.id)}\" playsinline preload=\"metadata\">\n            <source src=\"https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4\" type=\"video/mp4\">\n          </video>\n          <div class=\"play-overlay\"><div class=\"play-btn\">&#9658;</div></div>\n          <div class=\"react-backdrop\"></div>\n          <div class=\"react-menu\">\n            <div>\n              <button data-react=\"👍\" title=\"Thumbs up\">👍</button>
-              <button data-react=\"❤️\" title=\"Heart\">❤️</button>
+        <div class=\"scroll-item\" data-link-id=\"${escapeHtml(v.id)}\">\n          <video class=\"asset-video\" data-link-id=\"${escapeHtml(v.id)}\" playsinline preload=\"metadata\">\n            <source src=\"https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4\" type=\"video/mp4\">\n          </video>\n          <div class=\"play-overlay\"><div class=\"play-btn\">&#9658;</div></div>\n          <div class=\"react-backdrop\"></div>\n          <div class=\"react-menu\">\n            <div>\n              <button data-react=\"??\" title=\"Thumbs up\">??</button>
+              <button data-react=\"??\" title=\"Heart\">??</button>
             </div>
             <div class=\"row\" style=\"margin-top:8px\">\n              <input class=\"react-input\" placeholder=\"Add reaction\" />\n              <button data-react-send>Send</button>\n            </div>
             <div class=\"row\" style=\"margin-top:8px\">\n              <button class=\"secondary\" data-save=\"${v.saved ? '0' : '1'}\">${v.saved ? 'Unsave' : 'Save'}</button>
@@ -622,10 +562,7 @@ function scrollPage(username, list) {
           </div>\n        </div>
       `).join('')}
     </div>
-    <nav class="bottom-nav">
-      <a href="/"><button type="button" class="secondary">Home</button></a>
-      <a href="/scroll"><button type="button" class="secondary">Scroll</button></a>
-    </nav>
+    <a href="/" class="fab" aria-label="Home">??</a>
   </body>
 </html>`;
 }
@@ -944,7 +881,6 @@ async function handleHome(req, env) {
   // Prefer JWT; only fall back to DB when claim missing
   const jwtToken = getCookie(req, 'jwt');
   const u = new URL(req.url);
-  const activeTab = u.searchParams.get('tab') || 'home';
   if (jwtToken) {
     try {
       const payload = await verifyJWT(jwtToken, env);
@@ -956,7 +892,7 @@ async function handleHome(req, env) {
         const sent = await fetchSentLinks(env, idFromJwt);
         const headers = new Headers({ 'Content-Type': 'text/html;charset=UTF-8' });
         try { headers.set('Permissions-Policy', 'accelerometer=(), autoplay=(), camera=(), encrypted-media=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()'); headers.set('Referrer-Policy', 'strict-origin-when-cross-origin'); headers.set('X-Content-Type-Options', 'nosniff'); } catch(_){}
-        return new Response(homePage(nameFromJwt, { ...lists, inbox, sent }, activeTab), { headers });
+        return new Response(homePage(nameFromJwt, { ...lists, inbox, sent }), { headers });
       }
       // Missing username or sub claim: fall back to DB via session cookie
       const sessionId = getCookie(req, 'session');
@@ -971,7 +907,7 @@ async function handleHome(req, env) {
           const sent = await fetchSentLinks(env, row.user_id);
           const headers = new Headers({ 'Content-Type': 'text/html;charset=UTF-8' });
           try { headers.set('Permissions-Policy', 'accelerometer=(), autoplay=(), camera=(), encrypted-media=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()'); headers.set('Referrer-Policy', 'strict-origin-when-cross-origin'); headers.set('X-Content-Type-Options', 'nosniff'); } catch(_){}
-          return new Response(homePage(row.username, { ...lists, inbox, sent }, activeTab), { headers });
+          return new Response(homePage(row.username, { ...lists, inbox, sent }), { headers });
         }
       }
     } catch (_) {
@@ -2159,3 +2095,5 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
   }
   return false;
 }
+
+

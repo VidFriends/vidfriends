@@ -11,7 +11,7 @@ share short form videos with friends
 
 
 
-vidshare is a pwa that has logins for users, and builds users an fyp that only contains videos sent from friends, and can process videos from many short form video sites, such as tiktok, facebook reels, instagram reels, youtube shorts, etc. it is designed with minimal server load in mind, currently designed to handle embedding videos directly on the user side rather than processing raw video files. in the future will look into possibly some server side compute to extract videos rather than embedding them for a cleaner view.
+vidfriends.app is a pwa that has logins for users, and builds users an fyp that only contains videos sent from friends, and can process videos from many short form video sites, such as tiktok, facebook reels, instagram reels, youtube shorts, etc. it is designed with minimal server load in mind, currently designed to handle embedding videos directly on the user side rather than processing raw video files. in the future will look into possibly some server side compute to extract videos rather than embedding them for a cleaner view.
 
 users can react to videos and send replies, and get notified when new videos are sent to them.
 
