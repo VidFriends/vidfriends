@@ -78,74 +78,94 @@ async function verifyPassword(password, stored) {
   return timingSafeEqual(hash, derived);
 }
 
-function loginPage() {
-  return `<!DOCTYPE html>
-<html lang="en">
-  <head>
+function baseHead(title) {
+  const styles = `:root{--bg:#0b0f17;--surface:#121826;--muted:#1a2333;--text:#e6edf3;--sub:#a5b1c2;--primary:#6aa1ff;--accent:#19c37d;--danger:#ff5c5c;}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+.container{max-width:720px;margin:0 auto;padding:16px}
+h1,h2,h3{margin:0 0 12px 0;font-weight:650}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+button,.btn{appearance:none;border:0;border-radius:10px;padding:10px 14px;background:var(--primary);color:#0a0d12;font-weight:600;cursor:pointer}
+button.secondary{background:var(--muted);color:var(--text)}
+button.danger{background:var(--danger);color:#0a0d12}
+input,select{width:100%;max-width:100%;background:var(--surface);border:1px solid #2a3446;color:var(--text);border-radius:10px;padding:10px}
+label{display:block;font-size:14px;color:var(--sub);margin:8px 0 4px}
+form.card{background:var(--surface);border:1px solid #202a3b;border-radius:12px;padding:16px}
+section{background:var(--surface);border:1px solid #202a3b;border-radius:12px;padding:16px;margin-top:16px}
+ul{list-style:none;padding:0;margin:0}
+li{padding:12px;border:1px solid #202a3b;border-radius:10px;background:var(--muted);margin:10px 0}
+a{color:var(--primary);text-decoration:none}
+a:hover{text-decoration:underline}
+video{width:100%;height:auto;border-radius:10px;background:#000}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row > *{flex:1 1 160px}
+@media (min-width:480px){.row > *{flex:1}}
+@media (max-width:480px){body{font-size:15px}}
+`;
+  return `
     <meta charset="UTF-8" />
-    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b0f17" />
+    <title>${escapeHtml(title)}</title>
     <link rel="icon" type="image/svg+xml" href="https://assets.vidfriends.app/favicon/favicon.svg">
     <link rel="icon" type="image/png" sizes="96x96" href="https://assets.vidfriends.app/favicon/favicon-96x96.png">
     <link rel="shortcut icon" href="https://assets.vidfriends.app/favicon/favicon.ico">
     <link rel="apple-touch-icon" href="https://assets.vidfriends.app/favicon/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
-    <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px; }
-      form { display: inline-block; padding: 16px; border: 1px solid #ddd; border-radius: 8px; }
-      label { display:block; margin-top: 8px; font-size: 14px; }
-      input { width: 240px; padding: 8px; margin-top: 4px; }
-      button { margin-top: 12px; padding: 8px 12px; }
-    </style>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>${styles}</style>
+    <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}</script>
+  `;
+}
+
+function loginPage() {
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    ${baseHead('Login — VidFriends')}
   </head>
   <body>
-    <h1>Login</h1>
-    <form method="POST" action="/login">
-      <label>Username
+    <div class="container">
+      <h1>Login</h1>
+      <form class="card" method="POST" action="/login">
+        <label>Username</label>
         <input name="username" autocomplete="username" required />
-      </label>
-      <label>Password
+        <label>Password</label>
         <input name="password" type="password" autocomplete="current-password" required />
-      </label>
-      <button type="submit">Sign In</button>
-    </form>
-    <p style="margin-top:12px;"><a href="/signup">Create an account</a></p>
+        <div style="margin-top:12px" class="row">
+          <button type="submit">Sign In</button>
+          <a class="btn secondary" href="/signup">Create an account</a>
+        </div>
+      </form>
+    </div>
   </body>
-</html>`;
+ </html>`;
 }
 
 function signupPage() {
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <title>Sign Up</title>
-    <link rel="icon" type="image/svg+xml" href="https://assets.vidfriends.app/favicon/favicon.svg">
-    <link rel="icon" type="image/png" sizes="96x96" href="https://assets.vidfriends.app/favicon/favicon-96x96.png">
-    <link rel="shortcut icon" href="https://assets.vidfriends.app/favicon/favicon.ico">
-    <link rel="apple-touch-icon" href="https://assets.vidfriends.app/favicon/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
-    <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px; }
-      form { display: inline-block; padding: 16px; border: 1px solid #ddd; border-radius: 8px; }
-      label { display:block; margin-top: 8px; font-size: 14px; }
-      input { width: 240px; padding: 8px; margin-top: 4px; }
-      button { margin-top: 12px; padding: 8px 12px; }
-    </style>
+    ${baseHead('Sign Up — VidFriends')}
   </head>
   <body>
-    <h1>Sign Up</h1>
-    <form method="POST" action="/signup">
-      <label>Username
+    <div class="container">
+      <h1>Sign Up</h1>
+      <form class="card" method="POST" action="/signup">
+        <label>Username</label>
         <input name="username" autocomplete="username" required />
-      </label>
-      <label>Password
+        <label>Password</label>
         <input name="password" type="password" autocomplete="new-password" required />
-      </label>
-      <button type="submit">Create Account</button>
-    </form>
-    <p style="margin-top:12px;"><a href="/login">Back to login</a></p>
+        <div style="margin-top:12px" class="row">
+          <button type="submit">Create Account</button>
+          <a class="btn secondary" href="/login">Back to login</a>
+        </div>
+      </form>
+    </div>
   </body>
-</html>`;
+ </html>`;
 }
 
 function escapeHtml(str) {
@@ -165,13 +185,7 @@ function homePage(username, opts = {}) {
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <title>Home</title>
-    <link rel="icon" type="image/svg+xml" href="https://assets.vidfriends.app/favicon/favicon.svg">
-    <link rel="icon" type="image/png" sizes="96x96" href="https://assets.vidfriends.app/favicon/favicon-96x96.png">
-    <link rel="shortcut icon" href="https://assets.vidfriends.app/favicon/favicon.ico">
-    <link rel="apple-touch-icon" href="https://assets.vidfriends.app/favicon/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
+    ${baseHead('VidFriends')}
     <script>
       function toggleAddFriend() {
         var f = document.getElementById('add-friend-form');
@@ -197,17 +211,19 @@ function homePage(username, opts = {}) {
     </script>
   </head>
   <body>
-    <h1>Home</h1>
-    <p>Logged in as <strong>${escapeHtml(username)}</strong></p>
-    <nav style="margin: 8px 0;">
-      <a href="/saved"><button type="button">Saved</button></a>
-      <a href="/history"><button type="button">History</button></a>
-    </nav>
-    <button type="button" onclick="toggleAddFriend()">Add Friend</button>
-    <form id="add-friend-form" method="POST" action="/friends/add" style="display:none;margin-top:8px;">
-      <input id="friend_username" name="friend_username" placeholder="friend's username" required />
-      <button type="submit">Add</button>
-    </form>
+    <div class="container">
+      <h1>VidFriends</h1>
+      <p>Logged in as <strong>${escapeHtml(username)}</strong></p>
+      <nav>
+        <a href="/saved"><button type="button" class="secondary">Saved</button></a>
+        <a href="/history"><button type="button" class="secondary">History</button></a>
+      </nav>
+      <button type="button" class="secondary" onclick="toggleAddFriend()">Add Friend</button>
+      <form class="card" id="add-friend-form" method="POST" action="/friends/add" style="display:none;margin-top:8px;">
+        <label>Friend's username</label>
+        <input id="friend_username" name="friend_username" placeholder="friend's username" required />
+        <div style="margin-top:8px"><button type="submit">Add</button></div>
+      </form>
 
     ${approved.length ? `
     <section style="margin-top:16px;">
@@ -359,8 +375,9 @@ function homePage(username, opts = {}) {
     ` : ''}
 
     <form method="POST" action="/logout">
-      <button type="submit">logout</button>
+      <button type="submit" class="secondary">Logout</button>
     </form>
+    </div>
   </body>
 </html>`;
 }
@@ -399,18 +416,43 @@ export default {
     }
     if (req.method === 'GET' && url.pathname === '/site.webmanifest') {
       const manifest = {
-        name: 'vidshare',
-        short_name: 'vidshare',
+        name: 'VidFriends',
+        short_name: 'VidFriends',
+        id: '/',
         start_url: '/',
+        scope: '/',
         display: 'standalone',
-        background_color: '#ffffff',
-        theme_color: '#000000',
+        orientation: 'portrait',
+        background_color: '#0b0f17',
+        theme_color: '#0b0f17',
+        description: 'Share and watch videos with friends',
         icons: [
-          { src: 'https://assets.vidfriends.app/favicon/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'https://assets.vidfriends.app/favicon/web-app-manifest-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'https://assets.vidfriends.app/favicon/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+          { src: 'https://assets.vidfriends.app/favicon/web-app-manifest-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
+        screenshots: [
+          { src: 'https://assets.vidfriends.app/pwa/screenshot-1.png', sizes: '1080x1920', type: 'image/png', form_factor: 'narrow' }
+        ]
       };
       return new Response(JSON.stringify(manifest), { headers: { 'Content-Type': 'application/manifest+json' } });
+    }
+
+    // Minimal service worker to enable installability & light caching
+    if (req.method === 'GET' && url.pathname === '/sw.js') {
+      const sw = `self.addEventListener('install', (e)=>{self.skipWaiting(); e.waitUntil(caches.open('vf-v1').then(c=>c.addAll(['/','/saved','/history'])))});
+self.addEventListener('activate', (e)=>{clients.claim()});
+self.addEventListener('fetch', (event)=>{
+  const req = event.request;
+  const url = new URL(req.url);
+  if (req.mode === 'navigate') {
+    event.respondWith(fetch(req).catch(()=>caches.match('/')));
+    return;
+  }
+  if (url.hostname === 'assets.vidfriends.app' && !url.pathname.startsWith('/videos/')) {
+    event.respondWith(caches.open('vf-asset').then(async (cache)=>{const cached=await cache.match(req); const resp=fetch(req).then(r=>{cache.put(req,r.clone()).catch(()=>{}); return r}); return cached||resp;}));
+  }
+});`;
+      return new Response(sw, { headers: { 'Content-Type': 'application/javascript' } });
     }
 
     if (req.method === 'POST' && url.pathname === '/login') {
@@ -762,13 +804,7 @@ function savedPage(username, list) {
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <title>Saved</title>
-    <link rel="icon" type="image/svg+xml" href="https://assets.zem.systems/favicon/favicon.svg">
-    <link rel="icon" type="image/png" sizes="96x96" href="https://assets.zem.systems/favicon/favicon-96x96.png">
-    <link rel="shortcut icon" href="https://assets.zem.systems/favicon/favicon.ico">
-    <link rel="apple-touch-icon" href="https://assets.zem.systems/favicon/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
+    ${baseHead('Saved — VidFriends')}
     <script>
       document.addEventListener('DOMContentLoaded', function(){
         var vids = document.querySelectorAll('video.asset-video');
@@ -789,23 +825,25 @@ function savedPage(username, list) {
     </script>
   </head>
   <body>
-    <h1>Saved</h1>
-    <p>Logged in as <strong>${escapeHtml(username)}</strong></p>
-    <nav style="margin:8px 0;">
-      <a href="/"><button type="button">Home</button></a>
-      <a href="/history"><button type="button">History</button></a>
-    </nav>
-    <ul>
-      ${list.map(v => `
-        <li>
-          <video class="asset-video" data-link-id="${escapeHtml(v.id)}" width="360" height="203" controls preload="metadata">
-            <source src="https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
-          - from <strong>${escapeHtml(v.sender_username)}</strong>
-          ${v.reaction ? ` - Your reaction: ${escapeHtml(v.reaction)}` : ''}
-        </li>`).join('')}
-    </ul>
+    <div class="container">
+      <h1>Saved</h1>
+      <p>Logged in as <strong>${escapeHtml(username)}</strong></p>
+      <nav>
+        <a href="/"><button type="button" class="secondary">Home</button></a>
+        <a href="/history"><button type="button" class="secondary">History</button></a>
+      </nav>
+      <ul>
+        ${list.map(v => `
+          <li>
+            <video class=\"asset-video\" data-link-id=\"${escapeHtml(v.id)}\" width=\"360\" height=\"203\" controls preload=\"metadata\">
+              <source src=\"https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4\" type=\"video/mp4\">
+              Your browser does not support the video tag.
+            </video>
+            - from <strong>${escapeHtml(v.sender_username)}</strong>
+            ${v.reaction ? ` - Your reaction: ${escapeHtml(v.reaction)}` : ''}
+          </li>`).join('')}
+      </ul>
+    </div>
   </body>
 </html>`;
 }
@@ -814,13 +852,7 @@ function historyPage(username, list) {
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <title>History</title>
-    <link rel="icon" type="image/svg+xml" href="https://assets.zem.systems/favicon/favicon.svg">
-    <link rel="icon" type="image/png" sizes="96x96" href="https://assets.zem.systems/favicon/favicon-96x96.png">
-    <link rel="shortcut icon" href="https://assets.zem.systems/favicon/favicon.ico">
-    <link rel="apple-touch-icon" href="https://assets.zem.systems/favicon/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
+    ${baseHead('History — VidFriends')}
     <script>
       document.addEventListener('DOMContentLoaded', function(){
         var vids = document.querySelectorAll('video.asset-video');
@@ -841,23 +873,25 @@ function historyPage(username, list) {
     </script>
   </head>
   <body>
-    <h1>History</h1>
-    <p>Logged in as <strong>${escapeHtml(username)}</strong></p>
-    <nav style="margin:8px 0;">
-      <a href="/"><button type="button">Home</button></a>
-      <a href="/saved"><button type="button">Saved</button></a>
-    </nav>
-    <ul>
-      ${list.map(v => `
-        <li>
-          <video class="asset-video" data-link-id="${escapeHtml(v.id)}" width="360" height="203" controls preload="metadata">
-            <source src="https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
-          - from <strong>${escapeHtml(v.sender_username)}</strong>
-          ${v.reaction ? ` - Your reaction: ${escapeHtml(v.reaction)}` : ''}
-        </li>`).join('')}
-    </ul>
+    <div class="container">
+      <h1>History</h1>
+      <p>Logged in as <strong>${escapeHtml(username)}</strong></p>
+      <nav>
+        <a href="/"><button type="button" class="secondary">Home</button></a>
+        <a href="/saved"><button type="button" class="secondary">Saved</button></a>
+      </nav>
+      <ul>
+        ${list.map(v => `
+          <li>
+            <video class=\"asset-video\" data-link-id=\"${escapeHtml(v.id)}\" width=\"360\" height=\"203\" controls preload=\"metadata\">
+              <source src=\"https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4\" type=\"video/mp4\">
+              Your browser does not support the video tag.
+            </video>
+            - from <strong>${escapeHtml(v.sender_username)}</strong>
+            ${v.reaction ? ` - Your reaction: ${escapeHtml(v.reaction)}` : ''}
+          </li>`).join('')}
+      </ul>
+    </div>
   </body>
 </html>`;
 }
