@@ -154,7 +154,48 @@ function loginPage() {
           <a class="btn secondary" href="/signup">Create an account</a>
         </div>
       </form>
+      <section style="margin-top:16px">
+        <h2>Passkey</h2>
+        <p style="color:var(--sub);font-size:14px">Use a passkey to sign in without a password.</p>
+        <div class="row" style="gap:8px">
+          <button type="button" class="secondary" id="btn-passkey-login">Sign in with Passkey</button>
+        </div>
+      </section>
     </div>
+    <script>
+      (function(){
+        function b64urlToBuf(b64){ b64=b64.replace(/-/g,'+').replace(/_/g,'/'); var pad='='.repeat((4 - (b64.length % 4)) % 4); var bin=atob(b64+pad); var out=new Uint8Array(bin.length); for (var i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i); return out.buffer; }
+        function bufToB64url(buf){ var bytes = new Uint8Array(buf), bin=''; for (var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]); return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+        async function signInWithPasskey(){
+          try{
+            var uname = (document.querySelector('input[name="username"]')||{}).value || '';
+            var r = await fetch('/passkeys/auth/options', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({ username: uname || null }) });
+            if (!r.ok) throw new Error('options');
+            var o = await r.json();
+            // Convert to proper shapes
+            o.challenge = b64urlToBuf(o.challenge);
+            if (o.allowCredentials){ for (var i=0;i<o.allowCredentials.length;i++){ o.allowCredentials[i].id = b64urlToBuf(o.allowCredentials[i].id); } }
+            var cred = await navigator.credentials.get({ publicKey: o });
+            var payload = {
+              id: cred.id,
+              type: cred.type,
+              rawId: bufToB64url(cred.rawId),
+              response: {
+                authenticatorData: bufToB64url(cred.response.authenticatorData),
+                clientDataJSON: bufToB64url(cred.response.clientDataJSON),
+                signature: bufToB64url(cred.response.signature),
+                userHandle: cred.response.userHandle ? bufToB64url(cred.response.userHandle) : null
+              }
+            };
+            var v = await fetch('/passkeys/auth/verify', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify(payload) });
+            if (v.ok) { window.location.href = '/'; return; }
+            alert('Passkey sign-in failed');
+          }catch(e){ console.error(e); alert('Passkey sign-in failed'); }
+        }
+        var btn = document.getElementById('btn-passkey-login');
+        if (btn) btn.addEventListener('click', signInWithPasskey);
+      })();
+    </script>
   </body>
  </html>`;
 }
@@ -321,6 +362,7 @@ function homePage(username, opts = {}, activeTab = 'home') {
       <nav>
         <a href="/saved"><button type="button" class="secondary">Saved</button></a>
         <a href="/history"><button type="button" class="secondary">History</button></a>
+        <button type="button" class="secondary" id="btn-register-passkey" title="Register a passkey">Add Passkey</button>
       </nav>
       <!-- Tabs removed -->
       <button type="button" class="secondary" onclick="toggleAddFriend()">Add Friend</button>
@@ -843,7 +885,19 @@ self.addEventListener('notificationclick', (event)=>{
       return handleRefresh(req, env);
     }
 
-    // Passkey routes removed
+    // Passkey routes
+    if (req.method === 'POST' && url.pathname === '/passkeys/register/options') {
+      return handlePasskeyRegisterOptions(req, env);
+    }
+    if (req.method === 'POST' && url.pathname === '/passkeys/register/verify') {
+      return handlePasskeyRegisterVerify(req, env);
+    }
+    if (req.method === 'POST' && url.pathname === '/passkeys/auth/options') {
+      return handlePasskeyAuthOptions(req, env);
+    }
+    if (req.method === 'POST' && url.pathname === '/passkeys/auth/verify') {
+      return handlePasskeyAuthVerify(req, env);
+    }
 
     if (req.method === 'GET' && url.pathname === '/links/open') {
       return handleLinkOpen(req, env);
@@ -1181,6 +1235,37 @@ function savedPage(username, list) {
             });
           })(vids[k]);
         }
+
+        // Passkey: register for logged-in user
+        (function(){
+          function b64urlToBuf(b64){ b64=b64.replace(/-/g,'+').replace(/_/g,'/'); var pad='='.repeat((4 - (b64.length % 4)) % 4); var bin=atob(b64+pad); var out=new Uint8Array(bin.length); for (var i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i); return out.buffer; }
+          function bufToB64url(buf){ var bytes = new Uint8Array(buf), bin=''; for (var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]); return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+          async function doRegisterPasskey(){
+            try{
+              var r = await fetch('/passkeys/register/options', { method:'POST', credentials:'same-origin' });
+              if (!r.ok) { alert('Failed to start passkey registration'); return; }
+              var o = await r.json();
+              o.challenge = b64urlToBuf(o.challenge);
+              o.user.id = b64urlToBuf(o.user.id);
+              if (o.excludeCredentials){ for (var i=0;i<o.excludeCredentials.length;i++){ o.excludeCredentials[i].id = b64urlToBuf(o.excludeCredentials[i].id); } }
+              var cred = await navigator.credentials.create({ publicKey: o });
+              var payload = {
+                id: cred.id,
+                type: cred.type,
+                rawId: bufToB64url(cred.rawId),
+                response: {
+                  attestationObject: bufToB64url(cred.response.attestationObject),
+                  clientDataJSON: bufToB64url(cred.response.clientDataJSON)
+                }
+              };
+              var v = await fetch('/passkeys/register/verify', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify(payload) });
+              if (v.ok) { alert('Passkey added'); }
+              else { alert('Passkey registration failed'); }
+            }catch(e){ console.error(e); alert('Passkey registration failed'); }
+          }
+          var btn = document.getElementById('btn-register-passkey');
+          if (btn) btn.addEventListener('click', doRegisterPasskey);
+        })();
       });
     </script>
   </head>
@@ -1908,46 +1993,12 @@ async function handleRefresh(req, env) {
   return new Response(null, { status: 204, headers });
 }
 
-/* Passkey/WebAuthn helpers removed
-function b64url(bytes) {
-  return base64url(bytes);
-}
+// ===== Passkeys / WebAuthn Implementation =====
+function randomB64urlBytes(n = 32){ const b = new Uint8Array(n); crypto.getRandomValues(b); return base64url(b); }
+function expectedOriginFromReq(req){ try { const u = new URL(req.url); return u.origin; } catch(_) { return null; } }
+function rpIdFromReq(req){ try { return new URL(req.url).hostname; } catch(_) { return null; } }
 
-function hexPreview(bytes, max = 16) {
-  try {
-    const len = Math.min(max, bytes.length || 0);
-    let out = '';
-    for (let i = 0; i < len; i++) {
-      const b = bytes[i].toString(16).padStart(2, '0');
-      out += b + (i + 1 < len ? '' : '');
-    }
-    return out;
-  } catch (_) { return ''; }
-}
-
-function jsonPreview(value) {
-  const seen = new WeakSet();
-  function replacer(_key, val) {
-    try {
-      if (val instanceof Uint8Array) return { type: 'Uint8Array', len: val.length, hex: hexPreview(val, 32) };
-      if (typeof val === 'string' && val.length > 256) return val.slice(0, 256) + '...';
-      if (typeof val === 'object' && val !== null) {
-        if (seen.has(val)) return '[Circular]';
-        seen.add(val);
-      }
-      return val;
-    } catch (_) { return '[Unserializable]'; }
-  }
-  try { return JSON.stringify(value, replacer); } catch (_) { return '"[JSON error]"'; }
-}
-
-function logj(tag, obj) { try { console.log(tag + ' ' + jsonPreview(obj)); } catch (_) { try { console.log(tag); } catch(__) {} } }
-
-async function sha256Bytes(bytes) {
-  const buf = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  const dig = await crypto.subtle.digest('SHA-256', buf);
-  return new Uint8Array(dig);
-}
+async function sha256BytesBuf(buf){ const arr = buf instanceof Uint8Array ? buf : new Uint8Array(buf); const dig = await crypto.subtle.digest('SHA-256', arr); return new Uint8Array(dig); }
 
 function cborDecode(data) {
   let pos = 0;
@@ -1970,7 +2021,7 @@ function cborDecode(data) {
     if (mt === 3) { const len = readUint(addl); const v = td.decode(data.subarray(pos, pos+len)); pos += len; return v; }
     if (mt === 4) { const len = readUint(addl); const arr = []; for (let i=0;i<len;i++) arr.push(decodeItem()); return arr; }
     if (mt === 5) { const len = readUint(addl); const obj = {}; for (let i=0;i<len;i++){ const k = decodeItem(); const v = decodeItem(); obj[typeof k === 'string' ? k : String(k)] = v; } return obj; }
-    if (mt === 6) { /* tag * / decodeItem(); return decodeItem(); }
+    if (mt === 6) { /* tag */ decodeItem(); return decodeItem(); }
     if (mt === 7) { if (addl === 20) return false; if (addl===21) return true; if (addl===22) return null; if (addl===23) return undefined; throw new Error('CBOR simple'); }
     throw new Error('CBOR mt');
   }
@@ -2001,231 +2052,232 @@ function coseToJwk(cose) {
   if (kty === 2 && alg === -7) { // EC2 P-256 ES256
     const x = cose['-2'];
     const y = cose['-3'];
-    const jwk = { kty: 'EC', crv: 'P-256', x: base64url(x), y: base64url(y), ext: true };
-    try { console.log('[webauthn] coseToJwk: EC2/ES256'); } catch(_){}
-    return jwk;
+    return { kty: 'EC', crv: 'P-256', x: base64url(x), y: base64url(y), ext: true };
   }
   if (kty === 1 && (alg === -8)) { // OKP Ed25519
     const x = cose['-2'];
-    const jwk = { kty: 'OKP', crv: 'Ed25519', x: base64url(x), ext: true };
-    try { console.log('[webauthn] coseToJwk: OKP/Ed25519'); } catch(_){}
-    return jwk;
+    return { kty: 'OKP', crv: 'Ed25519', x: base64url(x), ext: true };
   }
   if (kty === 3 && (alg === -257)) { // RSA RS256
     const n = cose['-1'];
     const e = cose['-2'];
-    const jwk = { kty: 'RSA', n: base64url(n), e: base64url(e), ext: true };
-    try { console.log('[webauthn] coseToJwk: RSA/RS256'); } catch(_){}
-    return jwk;
+    return { kty: 'RSA', n: base64url(n), e: base64url(e), ext: true };
   }
   throw new Error('Unsupported COSE key');
 }
 
-function hasUserPresent(flags){ return (flags & 0x01) !== 0; }
-function hasUserVerified(flags){ return (flags & 0x04) !== 0; }
-
 async function importPublicKeyFromJwk(jwk) {
   if (jwk.kty === 'EC' && jwk.crv === 'P-256') {
-    try { console.log('[webauthn] importKey EC P-256'); } catch(_){}
     return crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
   }
   if (jwk.kty === 'OKP' && jwk.crv === 'Ed25519') {
-    try { console.log('[webauthn] importKey OKP Ed25519'); } catch(_){}
     return crypto.subtle.importKey('jwk', jwk, { name: 'Ed25519' }, false, ['verify']);
   }
-  if (jwk.kty === 'RSA' && jwk.n && jwk.e) {
-    try { console.log('[webauthn] importKey RSA RS256'); } catch(_){}
+  if (jwk.kty === 'RSA') {
     return crypto.subtle.importKey('jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']);
   }
-  throw new Error('Unsupported key');
+  throw new Error('Unsupported JWK');
 }
 
-function derWriteLen(len) {
-  if (len < 128) return Uint8Array.from([len]);
-  const bytes = [];
-  while (len > 0) { bytes.unshift(len & 0xff); len >>= 8; }
-  return Uint8Array.from([0x80 | bytes.length, ...bytes]);
-}
-
-function derSeq(contents) {
-  const len = contents.length;
-  const hdr = Uint8Array.from([0x30]);
-  const l = derWriteLen(len);
-  const out = new Uint8Array(1 + l.length + len);
-  out.set(hdr, 0);
-  out.set(l, 1);
-  out.set(contents, 1 + l.length);
-  return out;
-}
-
-function derBitString(bytes) {
-  const hdr = Uint8Array.from([0x03]);
-  const body = Uint8Array.from([0x00, ...bytes]); // 0 unused bits + data
-  const l = derWriteLen(body.length);
-  const out = new Uint8Array(1 + l.length + body.length);
-  out.set(hdr, 0);
-  out.set(l, 1);
-  out.set(body, 1 + l.length);
-  return out;
-}
-
-function ecP256JwkToSpki(jwk) {
-  // Build SPKI for EC P-256 public key from x/y
-  const x = base64urlToUint8(jwk.x);
-  const y = base64urlToUint8(jwk.y);
-  const uncompressed = Uint8Array.from([0x04, ...x, ...y]);
-  // ecPublicKey OID: 1.2.840.10045.2.1 -> 06 07 2A 86 48 CE 3D 02 01
-  const oidEcPub = Uint8Array.from([0x06, 0x07, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x02, 0x01]);
-  // prime256v1 OID: 1.2.840.10045.3.1.7 -> 06 08 2A 86 48 CE 3D 03 01 07
-  const oidP256  = Uint8Array.from([0x06, 0x08, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x03, 0x01, 0x07]);
-  const algId = derSeq(new Uint8Array([...oidEcPub, ...oidP256]));
-  const pub = derBitString(uncompressed);
-  const spki = derSeq(new Uint8Array([...algId, ...pub]));
-  return spki;
+function tryRawToDer(sig){
+  // Convert 64-byte r|s to DER if needed
+  if (!(sig && sig.length === 64)) return null;
+  const r = sig.slice(0, 32);
+  const s = sig.slice(32);
+  function trimInt(buf) {
+    let i = 0; while (i < buf.length - 1 && buf[i] === 0x00) i++;
+    let v = buf.slice(i); if (v[0] & 0x80) v = Uint8Array.from([0x00, ...v]);
+    return v;
+  }
+  const rT = trimInt(r), sT = trimInt(s);
+  const seqLen = 2 + rT.length + 2 + sT.length;
+  const der = new Uint8Array(2 + seqLen);
+  let o = 0; der[o++] = 0x30; der[o++] = seqLen; der[o++] = 0x02; der[o++] = rT.length; der.set(rT, o); o += rT.length; der[o++] = 0x02; der[o++] = sT.length; der.set(sT, o);
+  return der;
 }
 
 async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJSONBytes, signatureBytes) {
-  const clientHash = await sha256Bytes(clientDataJSONBytes);
+  const clientHash = await sha256BytesBuf(clientDataJSONBytes);
   const toVerify = new Uint8Array(authenticatorDataBytes.length + clientHash.length);
-  toVerify.set(authenticatorDataBytes, 0);
-  toVerify.set(clientHash, authenticatorDataBytes.length);
+  toVerify.set(authenticatorDataBytes, 0); toVerify.set(clientHash, authenticatorDataBytes.length);
   const key = await importPublicKeyFromJwk(jwk);
-  try { console.log('[webauthn] verify(sig): prepared buffers', { authLen: authenticatorDataBytes.length, clientHash: hexPreview(clientHash, 16), toVerifyLen: toVerify.length, toVerifyHead: hexPreview(toVerify, 16) }); } catch(_){}
   if (jwk.kty === 'EC') {
-    // Some authenticators return raw r|s (64 bytes) instead of DER. Convert if needed.
     let sig = signatureBytes;
-    logj('[webauthn] verify: sig preview', { len: sig.length, der: sig[0] === 0x30, head: hexPreview(sig, 32) });
-    function derInts(sigBytes) {
-      try {
-        let p = 0;
-        if (sigBytes[p++] !== 0x30) return null;
-        let len = sigBytes[p++];
-        if (len & 0x80) { const n = len & 0x7f; len = 0; for (let i=0;i<n;i++) len = (len << 8) | sigBytes[p++]; }
-        if (sigBytes[p++] !== 0x02) return null;
-        let rLen = sigBytes[p++]; if (rLen & 0x80) { const n = rLen & 0x7f; rLen = 0; for (let i=0;i<n;i++) rLen = (rLen<<8)|sigBytes[p++]; }
-        const r = sigBytes.slice(p, p + rLen); p += rLen;
-        if (sigBytes[p++] !== 0x02) return null;
-        let sLen = sigBytes[p++]; if (sLen & 0x80) { const n = sLen & 0x7f; sLen = 0; for (let i=0;i<n;i++) sLen = (sLen<<8)|sigBytes[p++]; }
-        const s = sigBytes.slice(p, p + sLen);
-        return { r, s };
-      } catch (_) { return null; }
-    }
-    const preInts = (sig && sig[0] === 0x30) ? derInts(sig) : null;
-    if (preInts) logj('[webauthn] verify: DER ints (pre)', { r: hexPreview(preInts.r, 40), s: hexPreview(preInts.s, 40), rLen: preInts.r.length, sLen: preInts.s.length });
-    if (sig && sig.length === 65 && sig[0] === 0x00) {
-      // Occasionally signatures include a leading 0x00; strip it
-      sig = sig.slice(1);
-      logj('[webauthn] verify: stripped leading 0x00 from signature', { len: sig.length });
-    }
-    if (!(sig && sig.length > 0 && sig[0] === 0x30)) {
-      // Attempt raw(64) -> DER conversion
-      if (sig && sig.length === 64) {
-        const r = sig.slice(0, 32);
-        const s = sig.slice(32);
-        function trimInt(buf) {
-          let i = 0;
-          while (i < buf.length - 1 && buf[i] === 0x00) i++;
-          let v = buf.slice(i);
-          // If high bit set, prepend 0x00
-          if (v[0] & 0x80) v = Uint8Array.from([0x00, ...v]);
-          return v;
-        }
-        const rT = trimInt(r);
-        const sT = trimInt(s);
-        // Build DER with short-form length (safe because total < 128 for P-256)
-        const seqLen = 2 + rT.length + 2 + sT.length;
-        const der = new Uint8Array(2 + seqLen);
-        let o = 0;
-        der[o++] = 0x30; // SEQUENCE
-        der[o++] = seqLen; // length (short form)
-        der[o++] = 0x02; // INTEGER
-        der[o++] = rT.length;
-        der.set(rT, o); o += rT.length;
-        der[o++] = 0x02; // INTEGER
-        der[o++] = sT.length;
-        der.set(sT, o); o += sT.length;
-        sig = der;
-        logj('[webauthn] verify: converted raw r|s to DER', { len: sig.length, head: hexPreview(sig, 32) });
-      }
-    }
-    const postInts = (sig && sig[0] === 0x30) ? derInts(sig) : null;
-    if (postInts) logj('[webauthn] verify: DER ints (post)', { r: hexPreview(postInts.r, 40), s: hexPreview(postInts.s, 40), rLen: postInts.r.length, sLen: postInts.s.length });
-    // Use spec-compliant hash identifier object for maximum compatibility
-    let ok = await crypto.subtle.verify({ name: 'ECDSA', hash: { name: 'SHA-256' } }, key, sig, toVerify);
-    logj('[webauthn] verify: ECDSA result', { ok });
-    if (!ok && sig && sig[0] === 0x30) {
-      // Try to normalize DER by parsing and re-encoding r/s
-      try {
-        let p = 0;
-        if (sig[p++] !== 0x30) throw new Error('DER: no SEQ');
-        function readLen() {
-          let len = sig[p++];
-          if (len & 0x80) {
-            const n = len & 0x7f;
-            if (n === 0 || n > 2) throw new Error('DER: len too long');
-            len = 0;
-            for (let i = 0; i < n; i++) { len = (len << 8) | sig[p++]; }
-          }
-          return len;
-        }
-        const seqLen = readLen();
-        if (sig[p++] !== 0x02) throw new Error('DER: no INT r');
-        const rLen = readLen();
-        const r = sig.slice(p, p + rLen); p += rLen;
-        if (sig[p++] !== 0x02) throw new Error('DER: no INT s');
-        const sLen = readLen();
-        const s = sig.slice(p, p + sLen);
-        function trimInt2(buf) {
-          let i = 0;
-          while (i < buf.length - 1 && buf[i] === 0x00) i++;
-          let v = buf.slice(i);
-          if (v[0] & 0x80) v = Uint8Array.from([0x00, ...v]);
-          return v;
-        }
-        const rT = trimInt2(r);
-        const sT = trimInt2(s);
-        logj('[webauthn] verify: ECDSA normalize parts', { r: hexPreview(r, 40), s: hexPreview(s, 40), rT: hexPreview(rT, 40), sT: hexPreview(sT, 40) });
-        const nSeqLen = 2 + rT.length + 2 + sT.length;
-        const der2 = new Uint8Array(2 + nSeqLen);
-        let o2 = 0;
-        der2[o2++] = 0x30;
-        der2[o2++] = nSeqLen; // short-form length is safe here
-        der2[o2++] = 0x02;
-        der2[o2++] = rT.length;
-        der2.set(rT, o2); o2 += rT.length;
-        der2[o2++] = 0x02;
-        der2[o2++] = sT.length;
-        der2.set(sT, o2);
-        const ok2 = await crypto.subtle.verify({ name: 'ECDSA', hash: { name: 'SHA-256' } }, key, der2, toVerify);
-        logj('[webauthn] verify: ECDSA normalized result', { ok: ok2 });
-        return ok2;
-      } catch (e) {
-        logj('[webauthn] verify: ECDSA normalize error', { err: (e && (e.stack || e.message || e)) });
-      }
-    }
-    if (!ok) {
-      // Fallback: import as SPKI and verify again (some runtimes have JWK quirks)
-      try {
-        const spki = ecP256JwkToSpki(jwk);
-        const key2 = await crypto.subtle.importKey('spki', spki, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
-        const ok3 = await crypto.subtle.verify({ name: 'ECDSA', hash: { name: 'SHA-256' } }, key2, sig, toVerify);
-        logj('[webauthn] verify: ECDSA SPKI fallback result', { ok: ok3 });
-        if (ok3) return true;
-      } catch (e) {
-        logj('[webauthn] verify: ECDSA SPKI fallback error', { err: (e && (e.stack || e.message || e)) });
-      }
-    }
-    return ok;
+    if (!(sig && sig[0] === 0x30)) { const der = tryRawToDer(sig); if (der) sig = der; }
+    return crypto.subtle.verify({ name: 'ECDSA', hash: { name: 'SHA-256' } }, key, sig, toVerify);
   }
   if (jwk.kty === 'OKP' && jwk.crv === 'Ed25519') {
-    try { console.log('[webauthn] verify: Ed25519'); } catch(_){}
     return crypto.subtle.verify('Ed25519', key, signatureBytes, toVerify);
   }
   if (jwk.kty === 'RSA') {
-    const ok = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, signatureBytes, toVerify);
-    try { console.log('[webauthn] verify: RS256 result', ok); } catch(_){}
-    return ok;
+    return crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, signatureBytes, toVerify);
   }
   return false;
 }
-*/
+
+async function handlePasskeyRegisterOptions(req, env){
+  const me = await getAuthUser(req, env);
+  if (!me) return new Response('Unauthorized', { status: 401 });
+  const rpId = rpIdFromReq(req);
+  const origin = expectedOriginFromReq(req);
+  const challenge = randomB64urlBytes(32);
+  // Exclude existing credentials
+  const rows = await env.vidshare
+    .prepare('SELECT external_id FROM credentials WHERE user_id = ?1 AND type = ?2')
+    .bind(me.userId, 'passkey')
+    .all()
+    .then(r => r.results || r);
+  const excludeCredentials = rows.map(r => ({ type: 'public-key', id: r.external_id }));
+  const userIdBytes = utf8ToUint8(me.userId); // unique id
+  const opts = {
+    rp: { id: rpId, name: 'VidFriends' },
+    user: { id: base64url(userIdBytes), name: me.username || me.userId, displayName: me.username || me.userId },
+    challenge,
+    pubKeyCredParams: [ { type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }, { type: 'public-key', alg: -8 } ],
+    timeout: 60000,
+    authenticatorSelection: { residentKey: 'preferred', userVerification: 'preferred' },
+    attestation: 'none',
+  };
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  headers.append('Set-Cookie', cookie('pkc_reg', challenge, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 300 }));
+  return new Response(JSON.stringify(opts), { headers });
+}
+
+async function handlePasskeyRegisterVerify(req, env){
+  const me = await getAuthUser(req, env);
+  if (!me) return new Response('Unauthorized', { status: 401 });
+  const body = await req.json();
+  const challenge = getCookie(req, 'pkc_reg');
+  if (!challenge) return new Response('Expired challenge', { status: 400 });
+  const origin = expectedOriginFromReq(req);
+  const rpId = rpIdFromReq(req);
+  const clientData = base64urlToUint8(body.response.clientDataJSON);
+  const clientStr = new TextDecoder().decode(clientData);
+  const client = JSON.parse(clientStr);
+  if (!client || client.type !== 'webauthn.create') return new Response('Bad clientData type', { status: 400 });
+  if ((client.challenge||'') !== challenge) return new Response('Bad challenge', { status: 400 });
+  if ((client.origin||'') !== origin) return new Response('Bad origin', { status: 400 });
+  const attObj = base64urlToUint8(body.response.attestationObject);
+  const att = cborDecode(attObj);
+  const authData = att && att.authData ? new Uint8Array(att.authData) : null;
+  if (!authData) return new Response('Bad attestation', { status: 400 });
+  const parsed = parseAuthData(authData);
+  const credId = parsed.credId ? base64url(parsed.credId) : null;
+  const cose = parsed.coseKey;
+  if (!credId || !cose) return new Response('No credential', { status: 400 });
+  // Verify rpIdHash matches
+  const rpHash = await sha256BytesBuf(utf8ToUint8(rpId));
+  for (let i=0;i<32;i++){ if (parsed.rpIdHash[i] !== rpHash[i]) return new Response('Bad rpIdHash', { status: 400 }); }
+  const jwk = coseToJwk(cose);
+  // Upsert credential
+  const now = Math.floor(Date.now()/1000);
+  const exists = await env.vidshare
+    .prepare('SELECT id, user_id FROM credentials WHERE external_id = ?1 AND type = ?2')
+    .bind(credId, 'passkey')
+    .first();
+  if (exists && exists.user_id !== me.userId) return new Response('Credential in use', { status: 409 });
+  if (exists) {
+    await env.vidshare
+      .prepare('UPDATE credentials SET public_key = ?1, sign_count = ?2, last_used = ?3 WHERE id = ?4')
+      .bind(JSON.stringify(jwk), parsed.signCount||0, now, exists.id)
+      .run();
+  } else {
+    await env.vidshare
+      .prepare('INSERT INTO credentials (id, user_id, type, identifier, external_id, secret_hash, public_key, sign_count, created_at, last_used) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)')
+      .bind(crypto.randomUUID(), me.userId, 'passkey', 'passkey', credId, null, JSON.stringify(jwk), parsed.signCount||0, now, now)
+      .run();
+  }
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  headers.append('Set-Cookie', cookie('pkc_reg', '', { path: '/', httpOnly: true, maxAge: 0 }));
+  return new Response(JSON.stringify({ ok: true }), { headers });
+}
+
+async function handlePasskeyAuthOptions(req, env){
+  const body = await req.json().catch(() => ({}));
+  const username = (body && body.username && body.username.toString().trim()) || '';
+  const rpId = rpIdFromReq(req);
+  const challenge = randomB64urlBytes(32);
+  let allowCredentials = [];
+  if (username) {
+    const user = await env.vidshare
+      .prepare('SELECT id FROM users WHERE lower(username) = lower(?1)')
+      .bind(username)
+      .first();
+    if (user) {
+      const creds = await env.vidshare
+        .prepare('SELECT external_id FROM credentials WHERE user_id = ?1 AND type = ?2')
+        .bind(user.id, 'passkey')
+        .all()
+        .then(r => r.results || r);
+      allowCredentials = creds.map(r => ({ type: 'public-key', id: r.external_id }));
+    }
+  }
+  const opts = {
+    challenge,
+    rpId,
+    userVerification: 'preferred',
+    allowCredentials,
+    timeout: 60000,
+  };
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  headers.append('Set-Cookie', cookie('pkc_auth', challenge, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 300 }));
+  return new Response(JSON.stringify(opts), { headers });
+}
+
+async function handlePasskeyAuthVerify(req, env){
+  const body = await req.json();
+  const challenge = getCookie(req, 'pkc_auth');
+  if (!challenge) return new Response('Expired challenge', { status: 400 });
+  const origin = expectedOriginFromReq(req);
+  const rpId = rpIdFromReq(req);
+  const clientData = base64urlToUint8(body.response.clientDataJSON);
+  const clientStr = new TextDecoder().decode(clientData);
+  const client = JSON.parse(clientStr);
+  if (!client || client.type !== 'webauthn.get') return new Response('Bad clientData type', { status: 400 });
+  if ((client.challenge||'') !== challenge) return new Response('Bad challenge', { status: 400 });
+  if ((client.origin||'') !== origin) return new Response('Bad origin', { status: 400 });
+  const rawId = body.rawId || body.id;
+  const cred = await env.vidshare
+    .prepare('SELECT id, user_id, public_key, sign_count FROM credentials WHERE external_id = ?1 AND type = ?2')
+    .bind(rawId, 'passkey')
+    .first();
+  if (!cred) return new Response('Unknown credential', { status: 404 });
+  let jwk;
+  try { jwk = JSON.parse(cred.public_key); } catch(_) { return new Response('Bad key', { status: 500 }); }
+  const authenticatorData = base64urlToUint8(body.response.authenticatorData);
+  const sig = base64urlToUint8(body.response.signature);
+  // rpIdHash check
+  const rpHash = await sha256BytesBuf(utf8ToUint8(rpId));
+  for (let i=0;i<32;i++){ if (authenticatorData[i] !== rpHash[i]) return new Response('Bad rpIdHash', { status: 400 }); }
+  const ok = await verifyAssertionSignature(jwk, authenticatorData, clientData, sig);
+  if (!ok) return new Response('Invalid signature', { status: 401 });
+  // Parse signCount
+  const flags = authenticatorData[32];
+  const sc = (authenticatorData[33]<<24) | (authenticatorData[34]<<16) | (authenticatorData[35]<<8) | authenticatorData[36];
+  const newCount = sc >>> 0;
+  const now = Math.floor(Date.now()/1000);
+  await env.vidshare
+    .prepare('UPDATE credentials SET sign_count = ?1, last_used = ?2 WHERE id = ?3')
+    .bind(newCount, now, cred.id)
+    .run();
+  // Create session + jwt
+  const sessionId = crypto.randomUUID();
+  const ua = typeof req.headers.get === 'function' ? (req.headers.get('User-Agent') || '') : '';
+  const expiresAt = now + 60 * 24 * 60 * 60; // 60 days
+  const refreshToken = randomTokenB64(32);
+  const refreshHash = await sha256B64(refreshToken);
+  // Attempt to get username for JWT
+  let usernameForJwt;
+  try { const urow = await env.vidshare.prepare('SELECT username FROM users WHERE id = ?1').bind(cred.user_id).first(); usernameForJwt = urow && urow.username; } catch(_) {}
+  const jwt = await createJWT({ sub: cred.user_id, username: usernameForJwt, iat: now, exp: now + 15 * 60 }, env);
+  await env.vidshare
+    .prepare('INSERT INTO sessions (id, user_id, refresh_hash, created_at, expires_at, user_agent, last_rotated_at, rotation_count) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)')
+    .bind(sessionId, cred.user_id, refreshHash, now, expiresAt, ua, now, 0)
+    .run();
+  const headers = new Headers();
+  headers.append('Set-Cookie', cookie('pkc_auth', '', { path: '/', httpOnly: true, maxAge: 0 }));
+  headers.append('Set-Cookie', cookie('session', sessionId, { httpOnly: true, sameSite: 'Lax', path: '/' }));
+  headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15 * 60 }));
+  headers.append('Set-Cookie', cookie('refresh', refreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60 * 24 * 60 * 60 }));
+  return new Response(null, { status: 204, headers });
+}

@@ -1,4 +1,5 @@
 The Cloudflare D1 tables are as follows:
+//CHATGPT DO NOT EDIT: this file is for your reference for an external resource
 
 table: users
 columns: 
