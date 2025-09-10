@@ -91,6 +91,8 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 .tabs{display:flex;gap:0;border-bottom:1px solid #202a3b;margin:8px 0 12px}
 .tabs a{flex:1;text-align:center;padding:10px 12px;color:var(--sub);text-decoration:none;border:1px solid #202a3b;border-bottom:none;border-top-left-radius:12px;border-top-right-radius:12px;background:var(--surface)}
 .tabs a.active{background:var(--muted);color:var(--text);font-weight:650}
+.fab{position:fixed;right:16px;bottom:16px;width:56px;height:56px;border-radius:50%;background:var(--muted);border:1px solid #202a3b;box-shadow:0 6px 16px rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;color:var(--text);text-decoration:none;font-size:22px;z-index:40}
+.fab:hover{filter:brightness(1.05)}
 button,.btn{appearance:none;border:0;border-radius:10px;padding:10px 14px;background:var(--primary);color:#0a0d12;font-weight:600;cursor:pointer}
 button.secondary{background:var(--muted);color:var(--text)}
 button.danger{background:var(--danger);color:#0a0d12}
@@ -320,10 +322,7 @@ function homePage(username, opts = {}, activeTab = 'home') {
         <a href="/saved"><button type="button" class="secondary">Saved</button></a>
         <a href="/history"><button type="button" class="secondary">History</button></a>
       </nav>
-      <nav class="tabs">
-        <a href="/?tab=home" class="${activeTab==='home'?'active':''}">Home</a>
-        <a href="/?tab=scroll" class="${activeTab==='scroll'?'active':''}">Scroll</a>
-      </nav>
+      <!-- Tabs removed -->
       <button type="button" class="secondary" onclick="toggleAddFriend()">Add Friend</button>
       <form class="card" id="add-friend-form" method="POST" action="/friends/add" style="display:none;margin-top:8px;">
         <label>Friend's username</label>
@@ -505,10 +504,8 @@ function homePage(username, opts = {}, activeTab = 'home') {
       <button type="submit" class="secondary">Logout</button>
     </form>
     </div>
-    <nav class="bottom-nav">
-      <a href="/"><button type="button" class="secondary">Home</button></a>
-      <a href="/scroll"><button type="button" class="secondary">Scroll</button></a>
-    </nav>
+    <!-- Bottom nav removed; floating action button added -->
+    ${activeTab==='scroll' ? `<a href="/" class="fab" aria-label="Home">🏠</a>` : `<a href="/scroll" class="fab" aria-label="Inbox">📥</a>`}
   </body>
 </html>`;
 }
@@ -622,10 +619,8 @@ function scrollPage(username, list) {
           </div>\n        </div>
       `).join('')}
     </div>
-    <nav class="bottom-nav">
-      <a href="/"><button type="button" class="secondary">Home</button></a>
-      <a href="/scroll"><button type="button" class="secondary">Scroll</button></a>
-    </nav>
+    <!-- Bottom nav removed; floating action button added -->
+    <a href="/" class="fab" aria-label="Home">🏠</a>
   </body>
 </html>`;
 }
