@@ -585,11 +585,12 @@ function scrollPage(username, list) {
       .fab-rail{position:fixed;right:16px;bottom:16px;width:56px;background:var(--muted);border:1px solid #202a3b;border-radius:28px;box-shadow:0 6px 16px rgba(0,0,0,0.45);display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0;z-index:40}
       .fab-rail button,.fab-rail a{width:40px;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--text);border:0;cursor:pointer;text-decoration:none;font-size:20px;position:relative}
       .fab-rail a.home{font-size:18px}
-      .fab-react-panel{position:fixed;right:84px;bottom:16px;background:rgba(18,24,38,0.96);border:1px solid #202a3b;border-radius:12px;padding:8px;display:none;z-index:41;min-width:220px}
-      .fab-react-panel .row{display:flex;gap:8px}
-      .fab-react-panel input{flex:1}
-      /* Reaction highlight indicator */
-      .fab-rail button.active::after{content:'';position:absolute;bottom:-3px;width:8px;height:8px;border-radius:50%;background:#fff}
+      .fab-react-panel{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.25);z-index:41}
+      .fab-react-panel .panel-box{background:rgba(18,24,38,0.96);border:1px solid #202a3b;border-radius:12px;padding:12px;width:90vw;max-width:640px}
+      .fab-react-panel textarea.react-input{width:100%;min-height:36vh;background:var(--surface);border:1px solid #2a3446;color:var(--text);border-radius:10px;padding:12px;resize:vertical}
+      .fab-react-panel .row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+      /* Reaction highlight indicator: full circle behind emoji */
+      .fab-rail button.active{background:#ffffff;color:inherit}
       /* Hide reaction buttons and input in double-tap menu on scroll page */
       .scroll-item .react-menu [data-react],
       .scroll-item .react-menu [data-react-send],
@@ -756,7 +757,7 @@ function scrollPage(username, list) {
   <body>
     <div class="scroll-feed">
       ${list.map(v => `
-        <div class=\"scroll-item\" data-link-id=\"${escapeHtml(v.id)}\">\n          <video class=\"asset-video\" data-link-id=\"${escapeHtml(v.id)}\" playsinline preload=\"metadata\">\n            <source src=\"https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4\" type=\"video/mp4\">\n          </video>\n          <div class=\"react-backdrop\"></div>\n          <div class=\"react-menu\">\n            <div>\n              <button data-react=\"??\" title=\"Thumbs up\">??</button>
+        <div class=\"scroll-item\" data-link-id=\"${escapeHtml(v.id)}\" data-reaction=\"${escapeHtml(v.reaction || '')}\">\n          <video class=\"asset-video\" data-link-id=\"${escapeHtml(v.id)}\" playsinline preload=\"metadata\">\n            <source src=\"https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4\" type=\"video/mp4\">\n          </video>\n          <div class=\"react-backdrop\"></div>\n          <div class=\"react-menu\">\n            <div>\n              <button data-react=\"??\" title=\"Thumbs up\">??</button>
               <button data-react=\"??\" title=\"Heart\">??</button>
             </div>
             <div class=\"row\" style=\"margin-top:8px\">\n              <input class=\"react-input\" placeholder=\"Add reaction\" />\n              <button data-react-send>Send</button>\n            </div>
@@ -2312,4 +2313,5 @@ async function handlePasskeyAuthVerify(req, env){
   headers.append('Set-Cookie', cookie('refresh', refreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60 * 24 * 60 * 60 }));
   return new Response(null, { status: 204, headers });
 }
+
 
