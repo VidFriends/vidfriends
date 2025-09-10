@@ -667,12 +667,12 @@ function scrollPage(username, list) {
         } catch(_){}
 
         // Replace floating circle with vertical rail
-        try {
-          var fab = document.querySelector('a.fab');
-          if (fab) fab.style.display = 'none';
-          var rail = document.createElement('div');
-          rail.className = 'fab-rail';
-          rail.innerHTML = '\n            <a href="/" class="fab-rail-btn" aria-label="Home" title="Home">🏠</a>\n            <button class="fab-rail-btn" data-react-text aria-label="Add reaction text" title="Add reaction text">💬</button>\n            <button class="fab-rail-btn" data-react="👍" aria-label="Thumbs up" title="Thumbs up">👍</button>\n            <button class="fab-rail-btn" data-react="❤️" aria-label="Heart" title="Heart">❤️</button>\n          ';
+            try {
+              var fab = document.querySelector('a.fab');
+              if (fab) fab.style.display = 'none';
+              var rail = document.createElement('div');
+              rail.className = 'fab-rail';
+              rail.innerHTML = '\n            <button class="fab-rail-btn" data-react="❤️" aria-label="Heart" title="Heart">❤️</button>\n            <button class="fab-rail-btn" data-react="👍" aria-label="Thumbs up" title="Thumbs up">👍</button>\n            <button class="fab-rail-btn" data-react-text aria-label="Add reaction text" title="Add reaction text">💬</button>\n            <a href="/" class="fab-rail-btn" aria-label="Home" title="Home">🏠</a>\n          ';
           document.body.appendChild(rail);
         } catch(_){}
 
