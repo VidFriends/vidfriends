@@ -124,7 +124,7 @@ function loginPage() {
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
-    ${baseHead('Login — VidFriends')}
+    ${baseHead('Login - VidFriends')}
   </head>
   <body>
     <div class="container">
@@ -192,7 +192,31 @@ function homePage(username, opts = {}) {
         f.style.display = f.style.display === 'none' ? 'block' : 'none';
         if (f.style.display === 'block') document.getElementById('friend_username').focus();
       }
+      async function registerPush() {
+        try {
+          if (!('serviceWorker' in navigator)) return;
+          var reg = await navigator.serviceWorker.ready;
+          var r = await fetch('/push/vapid');
+          var j = await r.json();
+          if (!j || !j.publicKey) return;
+          var b64 = j.publicKey;
+          function b64ToBytes(b64){ b64=b64.replace(/-/g,'+').replace(/_/g,'/'); var pad='='.repeat((4 - (b64.length % 4)) % 4); var bin=atob(b64+pad); var out=new Uint8Array(bin.length); for (var i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i); return out; }
+          var sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(b64) });
+          await fetch('/push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sub) });
+        } catch (e) {}
+      }
+      async function ensureNotifications() {
+        try {
+          if (!('Notification' in window)) return;
+          if (Notification.permission === 'granted') { await registerPush(); return; }
+          if (Notification.permission === 'default') {
+            var perm = await Notification.requestPermission();
+            if (perm === 'granted') { await registerPush(); }
+          }
+        } catch (e) {}
+      }
       document.addEventListener('DOMContentLoaded', function(){
+        ensureNotifications();
         var vids = document.querySelectorAll('video.asset-video');
         for (var k = 0; k < vids.length; k++) {
           (function(v){
@@ -382,8 +406,27 @@ function homePage(username, opts = {}) {
 </html>`;
 }
 
+function welcomePage() {
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    ${baseHead('Welcome — VidFriends')}
+  </head>
+  <body>
+    <div class="container">
+      <h1>Welcome to VidFriends</h1>
+      <p style="color:var(--sub);margin-bottom:16px;">Share and watch videos with friends.</p>
+      <nav>
+        <a href="/signup"><button>Sign Up</button></a>
+        <a href="/login"><button class="secondary">Log In</button></a>
+      </nav>
+    </div>
+  </body>
+</html>`;
+}
+
 export default {
-  async fetch(req, env) {
+  async fetch(req, env, ctx) {
     const url = new URL(req.url);
     function applySecurityHeaders(headers) {
       try {
@@ -451,6 +494,27 @@ self.addEventListener('fetch', (event)=>{
   if (url.hostname === 'assets.vidfriends.app' && !url.pathname.startsWith('/videos/')) {
     event.respondWith(caches.open('vf-asset').then(async (cache)=>{const cached=await cache.match(req); const resp=fetch(req).then(r=>{cache.put(req,r.clone()).catch(()=>{}); return r}); return cached||resp;}));
   }
+});
+self.addEventListener('push', (event)=>{
+  event.waitUntil((async ()=>{
+    try{
+      const r = await fetch('/push/inbox', { credentials: 'include' });
+      if (!r.ok) return;
+      const list = await r.json();
+      for (const n of list) {
+        await self.registration.showNotification(n.title||'VidFriends', { body: n.body||'', data: n.data||{}, icon: 'https://assets.vidfriends.app/favicon/android-chrome-192x192.png', badge: 'https://assets.vidfriends.app/favicon/android-chrome-192x192.png' });
+      }
+    }catch(e){}
+  })());
+});
+self.addEventListener('notificationclick', (event)=>{
+  event.notification.close();
+  const data = event.notification && event.notification.data || {};
+  const url = data && data.type === 'new_video' && data.link_id ? '/?open='+encodeURIComponent(data.link_id) : '/';
+  event.waitUntil(clients.matchAll({ type:'window', includeUncontrolled:true }).then((cl)=>{
+    for (const c of cl) { if ('focus' in c) { c.navigate(url); return c.focus(); } }
+    if (clients.openWindow) return clients.openWindow(url);
+  }));
 });`;
       return new Response(sw, { headers: { 'Content-Type': 'application/javascript' } });
     }
@@ -478,6 +542,19 @@ self.addEventListener('fetch', (event)=>{
 
     if (req.method === 'GET' && url.pathname === '/history') {
       return handleHistory(req, env);
+    }
+
+    // Push notification endpoints
+    if (req.method === 'GET' && url.pathname === '/push/vapid') {
+      const pk = env.VAPID_PUBLIC_KEY || '';
+      if (!pk) return new Response(JSON.stringify({ error: 'vapid not configured' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ publicKey: pk }), { headers: { 'Content-Type': 'application/json' } });
+    }
+    if (req.method === 'POST' && url.pathname === '/push/subscribe') {
+      return handlePushSubscribe(req, env);
+    }
+    if (req.method === 'GET' && url.pathname === '/push/inbox') {
+      return handlePushInbox(req, env);
     }
 
     if (req.method === 'POST' && url.pathname === '/logout') {
@@ -524,11 +601,11 @@ self.addEventListener('fetch', (event)=>{
     }
 
     if (req.method === 'POST' && url.pathname === '/links/send') {
-      return handleLinkSend(req, env);
+      return handleLinkSend(req, env, ctx);
     }
 
     if (req.method === 'POST' && url.pathname === '/links/react') {
-      return handleLinkReact(req, env);
+      return handleLinkReact(req, env, ctx);
     }
     if (req.method === 'POST' && url.pathname === '/links/unsend') {
       return handleLinkUnsend(req, env);
@@ -690,7 +767,10 @@ async function handleHome(req, env) {
       // Invalid/expired JWT: do not fall back per request
     }
   }
-  return new Response(null, { status: 302, headers: { Location: '/login' } });
+  // Not signed in -> show welcome page instead of redirecting
+  const headers = new Headers({ 'Content-Type': 'text/html;charset=UTF-8' });
+  try { headers.set('Permissions-Policy', 'accelerometer=(), autoplay=(), camera=(), encrypted-media=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()'); headers.set('Referrer-Policy', 'strict-origin-when-cross-origin'); headers.set('X-Content-Type-Options', 'nosniff'); } catch(_){}
+  return new Response(welcomePage(), { headers });
 }
 
 async function fetchFriendLists(env, meId) {
@@ -937,6 +1017,163 @@ async function getAuthUser(req, env) {
   return null;
 }
 
+// Push notifications
+async function ensurePushTables(env) {
+  await env.vidshare.prepare(`CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    endpoint TEXT,
+    p256dh TEXT,
+    auth TEXT,
+    created_at INTEGER
+  )`).run();
+  await env.vidshare.prepare(`CREATE TABLE IF NOT EXISTS notifications (
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    title TEXT,
+    body TEXT,
+    data TEXT,
+    delivered INTEGER,
+    created_at INTEGER
+  )`).run();
+}
+
+async function handlePushSubscribe(req, env) {
+  if (!env || !env.vidshare) return new Response('Database unavailable', { status: 500 });
+  const me = await getAuthUser(req, env);
+  if (!me) return new Response('Unauthorized', { status: 401 });
+  await ensurePushTables(env);
+  const sub = await req.json();
+  const ep = sub && sub.endpoint;
+  const keys = sub && sub.keys || {};
+  if (!ep || !keys.p256dh || !keys.auth) return new Response('Bad request', { status: 400 });
+  const now = Math.floor(Date.now() / 1000);
+  // Upsert by endpoint
+  const existing = await env.vidshare.prepare('SELECT id FROM push_subscriptions WHERE endpoint = ?1').bind(ep).first();
+  const id = existing ? existing.id : crypto.randomUUID();
+  if (existing) {
+    await env.vidshare
+      .prepare('UPDATE push_subscriptions SET user_id = ?1, p256dh = ?2, auth = ?3, created_at = ?4 WHERE id = ?5')
+      .bind(me.userId, keys.p256dh, keys.auth, now, id)
+      .run();
+  } else {
+    await env.vidshare
+      .prepare('INSERT INTO push_subscriptions (id, user_id, endpoint, p256dh, auth, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)')
+      .bind(id, me.userId, ep, keys.p256dh, keys.auth, now)
+      .run();
+  }
+  return new Response(JSON.stringify({ ok: true }), { headers: { 'Content-Type': 'application/json' } });
+}
+
+async function handlePushInbox(req, env) {
+  if (!env || !env.vidshare) return new Response('Database unavailable', { status: 500 });
+  const me = await getAuthUser(req, env);
+  if (!me) return new Response('Unauthorized', { status: 401 });
+  await ensurePushTables(env);
+  const rows = await env.vidshare
+    .prepare('SELECT id, title, body, data, created_at FROM notifications WHERE user_id = ?1 AND delivered = 0 ORDER BY created_at ASC')
+    .bind(me.userId)
+    .all()
+    .then(r => r.results || r);
+  const ids = rows.map(r => r.id);
+  for (const nid of ids) {
+    await env.vidshare
+      .prepare('UPDATE notifications SET delivered = 1 WHERE id = ?1')
+      .bind(nid)
+      .run();
+  }
+  return new Response(JSON.stringify(rows.map(r => ({ id: r.id, title: r.title, body: r.body, data: r.data && JSON.parse(r.data) }))), { headers: { 'Content-Type': 'application/json' } });
+}
+
+async function createNotification(env, userId, { title, body, data }) {
+  await ensurePushTables(env);
+  const id = crypto.randomUUID();
+  const now = Math.floor(Date.now() / 1000);
+  const dataStr = data ? JSON.stringify(data) : null;
+  await env.vidshare
+    .prepare('INSERT INTO notifications (id, user_id, title, body, data, delivered, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)')
+    .bind(id, userId, title || '', body || '', dataStr, 0, now)
+    .run();
+  return id;
+}
+
+function uint8ToB64url(bytes) { return base64url(bytes); }
+function b64urlToUint8(str) { return base64urlToUint8(str); }
+
+async function jwsEs256(input, jwk) {
+  const key = await crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+  const sigDer = await crypto.subtle.sign({ name: 'ECDSA', hash: { name: 'SHA-256' } }, key, new TextEncoder().encode(input));
+  const sigBytes = new Uint8Array(sigDer);
+  function derInts(sigBytes) {
+    try {
+      let p = 0;
+      if (sigBytes[p++] !== 0x30) return null;
+      let len = sigBytes[p++];
+      if (len & 0x80) { const n = len & 0x7f; len = 0; for (let i=0;i<n;i++) len = (len << 8) | sigBytes[p++]; }
+      if (sigBytes[p++] !== 0x02) return null;
+      let rLen = sigBytes[p++]; if (rLen & 0x80) { const n = rLen & 0x7f; rLen = 0; for (let i=0;i<n;i++) rLen = (rLen<<8)|sigBytes[p++]; }
+      const r = sigBytes.slice(p, p + rLen); p += rLen;
+      if (sigBytes[p++] !== 0x02) return null;
+      let sLen = sigBytes[p++]; if (sLen & 0x80) { const n = sLen & 0x7f; sLen = 0; for (let i=0;i<n;i++) sLen = (sLen<<8)|sigBytes[p++]; }
+      const s = sigBytes.slice(p, p + sLen);
+      return { r, s };
+    } catch (_) { return null; }
+  }
+  const ints = derInts(sigBytes) || { r: new Uint8Array(0), s: new Uint8Array(0) };
+  function leftPad32(b) { const out = new Uint8Array(32); out.set(b.slice(Math.max(0, b.length-32)), 32 - Math.min(32, b.length)); return out; }
+  const rPad = leftPad32(ints.r);
+  const sPad = leftPad32(ints.s);
+  const raw = new Uint8Array(64);
+  raw.set(rPad, 0); raw.set(sPad, 32);
+  return uint8ToB64url(raw);
+}
+
+async function sendPushToUser(env, userId) {
+  if (!(env && env.vidshare)) return false;
+  await ensurePushTables(env);
+  const subs = await env.vidshare
+    .prepare('SELECT id, endpoint FROM push_subscriptions WHERE user_id = ?1')
+    .bind(userId)
+    .all()
+    .then(r => r.results || r);
+  if (!subs.length) return false;
+  const pubB64 = env.VAPID_PUBLIC_KEY || '';
+  const privB64 = env.VAPID_PRIVATE_KEY || '';
+  if (!pubB64 || !privB64) return false;
+  const pub = b64urlToUint8(pubB64);
+  const d = b64urlToUint8(privB64);
+  if (!(pub && pub.length === 65 && d && d.length === 32)) return false;
+  const x = pub.slice(1, 33);
+  const y = pub.slice(33);
+  const jwk = { kty: 'EC', crv: 'P-256', d: base64url(d), x: base64url(x), y: base64url(y) };
+  let delivered = false;
+  for (const s of subs) {
+    try {
+      const endpoint = s.endpoint;
+      const u = new URL(endpoint);
+      const aud = `${u.protocol}//${u.host}`;
+      const now = Math.floor(Date.now() / 1000);
+      const header = { alg: 'ES256', typ: 'JWT' };
+      const payload = { aud, exp: now + 12 * 60 * 60, sub: env.VAPID_SUBJECT || 'mailto:support@vidfriends.app' };
+      const enc = (obj) => base64url(utf8ToUint8(JSON.stringify(obj)));
+      const unsigned = `${enc(header)}.${enc(payload)}`;
+      const signature = await jwsEs256(unsigned, jwk);
+      const jwt = `${unsigned}.${signature}`;
+      const headers = new Headers();
+      headers.set('Authorization', `WebPush ${jwt}`);
+      headers.set('Crypto-Key', `p256ecdsa=${pubB64}`);
+      headers.set('TTL', '60');
+      const r = await fetch(endpoint, { method: 'POST', headers, body: '' });
+      if (r.status === 404 || r.status === 410) {
+        await env.vidshare.prepare('DELETE FROM push_subscriptions WHERE id = ?1').bind(s.id).run();
+      } else if (r.ok || r.status === 201 || r.status === 202 || r.status === 204) {
+        delivered = true;
+      }
+    } catch (_) {}
+  }
+  return delivered;
+}
+
 async function handleFriendAdd(req, env) {
   if (!env || !env.vidshare) return new Response('Database unavailable', { status: 500 });
   const me = await getAuthUser(req, env);
@@ -1062,7 +1299,7 @@ function isLikelyValidUrl(url) {
   }
 }
 
-async function handleLinkSend(req, env) {
+async function handleLinkSend(req, env, ctx) {
   if (!env || !env.vidshare) return new Response('Database unavailable', { status: 500 });
   const me = await getAuthUser(req, env);
   if (!me) return new Response('Unauthorized', { status: 401 });
@@ -1106,10 +1343,39 @@ async function handleLinkSend(req, env) {
   } catch (e) {
     try { console.log('[download-api] error', e && (e.stack || e.message || e.toString())); } catch (_) {}
   }
+
+  // Background: poll asset availability and notify recipient when ready
+  try {
+    const senderRow = await env.vidshare
+      .prepare('SELECT username FROM users WHERE id = ?1')
+      .bind(me.userId)
+      .first();
+    const senderName = (senderRow && senderRow.username) || 'Someone';
+    const assetUrl = `https://assets.vidfriends.app/videos/${linkId}.mp4`;
+    const doPoll = async () => {
+      const maxTries = 8; // ~24s total
+      for (let i=0;i<maxTries;i++){
+        try {
+          const r = await fetch(assetUrl, { method: 'HEAD', cf: { cacheTtl: 0 } });
+          if (r.status === 200) {
+            await createNotification(env, recipientId, {
+              title: 'New video received',
+              body: `From ${senderName}`,
+              data: { type: 'new_video', link_id: linkId }
+            });
+            await sendPushToUser(env, recipientId);
+            return;
+          }
+        } catch (_) {}
+        await new Promise(res => setTimeout(res, 3000));
+      }
+    };
+    if (ctx && ctx.waitUntil) ctx.waitUntil(doPoll()); else doPoll();
+  } catch (_) {}
   return new Response(null, { status: 302, headers: { Location: '/' } });
 }
 
-async function handleLinkReact(req, env) {
+async function handleLinkReact(req, env, ctx) {
   if (!env || !env.vidshare) return new Response('Database unavailable', { status: 500 });
   const me = await getAuthUser(req, env);
   if (!me) return new Response('Unauthorized', { status: 401 });
@@ -1128,6 +1394,22 @@ async function handleLinkReact(req, env) {
     .prepare('UPDATE links SET reaction = ?1 WHERE id = ?2')
     .bind(value, linkId)
     .run();
+  // Notify sender about reaction
+  try {
+    const row2 = await env.vidshare
+      .prepare('SELECT sender_id FROM links WHERE id = ?1')
+      .bind(linkId)
+      .first();
+    if (row2 && row2.sender_id) {
+      await createNotification(env, row2.sender_id, {
+        title: 'Reaction received',
+        body: 'Your shared video got a reaction',
+        data: { type: 'reaction', link_id: linkId }
+      });
+      const work = sendPushToUser(env, row2.sender_id);
+      if (ctx && ctx.waitUntil) ctx.waitUntil(work); else await work;
+    }
+  } catch (_) {}
   return new Response(null, { status: 302, headers: { Location: '/' } });
 }
 
