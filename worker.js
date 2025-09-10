@@ -1,4 +1,4 @@
-﻿function getCookie(req, name) {
+function getCookie(req, name) {
   const cookie = req.headers.get('Cookie') || '';
   const match = cookie.match(new RegExp('(^|;)\\s*' + name + '=([^;]+)'));
   return match ? match.pop() : null;
@@ -204,7 +204,7 @@ function signupPage() {
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
-    ${baseHead('Sign Up — VidFriends')}
+    ${baseHead('Sign Up â€” VidFriends')}
   </head>
   <body>
     <div class="container">
@@ -378,7 +378,7 @@ function homePage(username, opts = {}, activeTab = 'home') {
       <form method="POST" action="/links/send">
         <input name="video_url" placeholder="https://example.com/video" style="min-width:300px;" required />
         <select name="recipient_id" required>
-          <option value="">Select friend…</option>
+          <option value="">Select friendâ€¦</option>
           ${approved
             .map((f) => `<option value="${escapeHtml(f.user_id)}">${escapeHtml(f.username)}</option>`) 
             .join('')}
@@ -402,7 +402,7 @@ function homePage(username, opts = {}, activeTab = 'home') {
               <button data-react="??" title="Heart">??</button>
               <button data-react="??" title="Thumbs up">??</button>
             </div>
-            <div style="color:var(--sub);margin-top:6px">from <strong>${escapeHtml(v.sender_username)}</strong>${v.reaction ? ` — Your reaction: ${escapeHtml(v.reaction)}` : ''}</div>
+            <div style="color:var(--sub);margin-top:6px">from <strong>${escapeHtml(v.sender_username)}</strong>${v.reaction ? ` â€” Your reaction: ${escapeHtml(v.reaction)}` : ''}</div>
           </div>
         `).join('')}
       </div>
@@ -436,7 +436,7 @@ function homePage(username, opts = {}, activeTab = 'home') {
           .map(
             (r) => `
           <li>
-            <strong>${escapeHtml(r.username)}</strong> — pending
+            <strong>${escapeHtml(r.username)}</strong> â€” pending
           </li>`
           )
           .join('')}
@@ -450,7 +450,7 @@ function homePage(username, opts = {}, activeTab = 'home') {
       <ul>
         ${outgoing.filter((r)=> r.status === 'declined')
           .map((r) => `
-            <li><strong>${escapeHtml(r.username)}</strong> — declined</li>
+            <li><strong>${escapeHtml(r.username)}</strong> â€” declined</li>
           `).join('')}
       </ul>
     </section>
@@ -504,9 +504,9 @@ function homePage(username, opts = {}, activeTab = 'home') {
             (s) => `
           <li>
             <a href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(s.url)}</a>
-            — to <strong>${escapeHtml(s.recipient_username)}</strong>
-            — Watched: ${s.watched ? 'Yes' : 'No'}
-            — Reaction: ${s.reaction ? escapeHtml(s.reaction) : '-'}
+            â€” to <strong>${escapeHtml(s.recipient_username)}</strong>
+            â€” Watched: ${s.watched ? 'Yes' : 'No'}
+            â€” Reaction: ${s.reaction ? escapeHtml(s.reaction) : '-'}
             <form method="POST" action="/links/unsend" style="display:inline; margin-left:8px;">
               <input type="hidden" name="link_id" value="${escapeHtml(s.id)}" />
               <button>Unsend</button>
@@ -556,7 +556,7 @@ function welcomePage() {
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
-    ${baseHead('Welcome — VidFriends')}
+    ${baseHead('Welcome â€” VidFriends')}
   </head>
   <body>
     <div class="container">
@@ -670,11 +670,11 @@ function scrollPage(username, list) {
           var rail = document.createElement('div');
           rail.className = 'fab-rail';
           rail.setAttribute('aria-label','Reactions and Home');
-          rail.innerHTML = '<button class="btn-heart" title="Heart">❤️</button>'+
-                           '<button class="btn-like" title="Thumbs up">👍</button>'+
-                           '<button class="btn-text" title="Text reaction">💬</button>'+
-                           '<button class="btn-play" title="Play/Pause">▶️</button>'+
-                           '<a href="/" class="home" aria-label="Home">🏠</a>';
+          rail.innerHTML = '<button class="btn-heart" title="Heart">â¤ï¸</button>'+
+                           '<button class="btn-like" title="Thumbs up">ðŸ‘</button>'+
+                           '<button class="btn-text" title="Text reaction">ðŸ’¬</button>'+
+                           '<button class="btn-play" title="Play/Pause">â–¶ï¸</button>'+
+                           '<a href="/" class="home" aria-label="Home">ðŸ </a>';
           document.body.appendChild(rail);
           var panel = document.createElement('div');
           panel.className = 'fab-react-panel';
@@ -704,8 +704,8 @@ function scrollPage(username, list) {
               var linkId = item.getAttribute('data-link-id');
               var val = reactionMap[linkId] || '';
               [heartBtn, likeBtn, textBtn].forEach(function(b){ if(b){ b.classList.remove('active'); }});
-              if (val === '❤️' && heartBtn) heartBtn.classList.add('active');
-              else if (val === '👍' && likeBtn) likeBtn.classList.add('active');
+              if (val === 'â¤ï¸' && heartBtn) heartBtn.classList.add('active');
+              else if (val === 'ðŸ‘' && likeBtn) likeBtn.classList.add('active');
               else if (val === 'text' && textBtn) textBtn.classList.add('active');
             }catch(e){}
           }
@@ -732,7 +732,7 @@ function scrollPage(username, list) {
             fetch('/links/react', { method:'POST', body: fd, credentials:'same-origin' }).then(function(){ panelInput.value=''; panel.style.display='none'; setActiveReactionFor(linkId, 'text'); }).catch(function(){});
           });
           function getActiveVideo(){ var it = getActiveItem(); return it ? it.querySelector('video') : null; }
-          function updatePlayIcon(){ try{ if (!playBtn) return; var v = getActiveVideo(); playBtn.textContent = (v && !v.paused) ? '⏸️' : '▶️'; }catch(e){} }
+          function updatePlayIcon(){ try{ if (!playBtn) return; var v = getActiveVideo(); playBtn.textContent = (v && !v.paused) ? 'â¸ï¸' : 'â–¶ï¸'; }catch(e){} }
           if (playBtn) playBtn.addEventListener('click', function(){ var v = getActiveVideo(); if (!v) return; if (v.paused) { v.play().catch(function(){}); } else { v.pause(); } updatePlayIcon(); });
           document.addEventListener('click', function(e){
             var inPanel = e.target.closest('.fab-react-panel');
@@ -1250,7 +1250,7 @@ function savedPage(username, list) {
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
-    ${baseHead('Saved — VidFriends')}
+    ${baseHead('Saved â€” VidFriends')}
     <script>
       document.addEventListener('DOMContentLoaded', function(){
         var vids = document.querySelectorAll('video.asset-video');
@@ -1329,7 +1329,7 @@ function historyPage(username, list) {
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
-    ${baseHead('History — VidFriends')}
+    ${baseHead('History â€” VidFriends')}
     <script>
       document.addEventListener('DOMContentLoaded', function(){
         var vids = document.querySelectorAll('video.asset-video');
