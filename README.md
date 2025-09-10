@@ -15,6 +15,6 @@ vidfriends.app is a pwa that has logins for users, and builds users an fyp that 
 
 users can react to videos and send replies, and get notified when new videos are sent to them.
 
-this platform is privacy focused, storing little to no data on users, allowing flexible login types such as only passkeys, or only username/password, as well as social logins, to choose the level of privacy.
+this platform is privacy focused, storing little to no data on users, allowing flexible login types such as username/password and social logins to choose the level of privacy.
 
 Development goal of this program is for the whole service to be run on cloudflare free tier services, and if the userbase grows too much then it can expand to paid cloudflare tiers. no ads, but may eventually charge a subscription if we exceed free tier. will probably move to native app before this happens.

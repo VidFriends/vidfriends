@@ -536,6 +536,20 @@ function scrollPage(username, list) {
     ${baseHead('Scroll - VidFriends')}
     <style>
       body{background:#000}
+      /* Center the double-tap menu on the video */
+      .scroll-item .react-menu{left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,-50%)}
+      /* Vertical pill rail for reactions + home */
+      .fab{display:none!important}
+      .fab-rail{position:fixed;right:16px;bottom:16px;width:56px;background:var(--muted);border:1px solid #202a3b;border-radius:28px;box-shadow:0 6px 16px rgba(0,0,0,0.45);display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0;z-index:40}
+      .fab-rail button,.fab-rail a{width:40px;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--text);border:0;cursor:pointer;text-decoration:none;font-size:20px}
+      .fab-rail a.home{font-size:18px}
+      .fab-react-panel{position:fixed;right:84px;bottom:16px;background:rgba(18,24,38,0.96);border:1px solid #202a3b;border-radius:12px;padding:8px;display:none;z-index:41;min-width:220px}
+      .fab-react-panel .row{display:flex;gap:8px}
+      .fab-react-panel input{flex:1}
+      /* Hide reaction buttons and input in double-tap menu on scroll page */
+      .scroll-item .react-menu [data-react],
+      .scroll-item .react-menu [data-react-send],
+      .scroll-item .react-menu .react-input{display:none!important}
     </style>
     <script>
       document.addEventListener('DOMContentLoaded', function(){
@@ -603,6 +617,66 @@ function scrollPage(username, list) {
             });
           })(items[i]);
         }
+
+        // Inject vertical reaction rail and panel
+        try {
+          var oldFab = document.querySelector('a.fab');
+          if (oldFab) { oldFab.style.display = 'none'; }
+          var rail = document.createElement('div');
+          rail.className = 'fab-rail';
+          rail.setAttribute('aria-label','Reactions and Home');
+          rail.innerHTML = '<button class="btn-heart" title="Heart">❤️</button>'+
+                           '<button class="btn-like" title="Thumbs up">👍</button>'+
+                           '<button class="btn-text" title="Text reaction">💬</button>'+
+                           '<a href="/" class="home" aria-label="Home">🏠</a>';
+          document.body.appendChild(rail);
+          var panel = document.createElement('div');
+          panel.className = 'fab-react-panel';
+          panel.innerHTML = '<div class="row">'+
+                              '<input class="react-input" placeholder="Add reaction" />'+
+                              '<button data-react-send>Send</button>'+
+                            '</div>';
+          document.body.appendChild(panel);
+
+          function getActiveItem(){
+            var items = document.querySelectorAll('.scroll-item');
+            var midY = window.innerHeight / 2;
+            var best = null; var bestDist = Infinity;
+            for (var i=0;i<items.length;i++){
+              var r = items[i].getBoundingClientRect();
+              var center = r.top + r.height/2;
+              var dist = Math.abs(center - midY);
+              if (dist < bestDist) { bestDist = dist; best = items[i]; }
+            }
+            return best;
+          }
+          function sendReaction(val){
+            var item = getActiveItem(); if (!item) return;
+            var linkId = item.getAttribute('data-link-id');
+            var fd = new FormData(); fd.append('link_id', linkId); fd.append('reaction', val);
+            fetch('/links/react', { method:'POST', body: fd, credentials:'same-origin' }).catch(function(){});
+          }
+          var likeBtn = rail.querySelector('.btn-like');
+          var heartBtn = rail.querySelector('.btn-heart');
+          var textBtn = rail.querySelector('.btn-text');
+          var panelInput = panel.querySelector('.react-input');
+          var panelSend = panel.querySelector('[data-react-send]');
+          if (likeBtn) likeBtn.addEventListener('click', function(){ sendReaction('👍'); });
+          if (heartBtn) heartBtn.addEventListener('click', function(){ sendReaction('❤️'); });
+          if (textBtn) textBtn.addEventListener('click', function(){ panel.style.display = panel.style.display==='block'?'none':'block'; if (panel.style.display==='block' && panelInput) panelInput.focus(); });
+          if (panelSend) panelSend.addEventListener('click', function(){
+            var item = getActiveItem(); if (!item) return;
+            var text = (panelInput.value||'').trim(); if (!text) return;
+            var linkId = item.getAttribute('data-link-id');
+            var fd = new FormData(); fd.append('link_id', linkId); fd.append('reaction_text', text);
+            fetch('/links/react', { method:'POST', body: fd, credentials:'same-origin' }).then(function(){ panelInput.value=''; panel.style.display='none'; }).catch(function(){});
+          });
+          document.addEventListener('click', function(e){
+            var inPanel = e.target.closest('.fab-react-panel');
+            var inBtn = e.target.closest('.fab-rail .btn-text');
+            if (!inPanel && !inBtn) panel.style.display='none';
+          });
+        } catch (e) {}
       });
     </script>
   </head>
@@ -1834,7 +1908,7 @@ async function handleRefresh(req, env) {
   return new Response(null, { status: 204, headers });
 }
 
-// ========== WebAuthn helpers ==========
+/* Passkey/WebAuthn helpers removed
 function b64url(bytes) {
   return base64url(bytes);
 }
@@ -2154,3 +2228,4 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
   }
   return false;
 }
+*/
