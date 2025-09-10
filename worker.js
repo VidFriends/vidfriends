@@ -157,52 +157,7 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
-function youtubeEmbedHTML(url, linkId) {
-  try {
-    const u = new URL(url);
-    let vid = null;
-    if (u.hostname.includes('youtu.be')) {
-      vid = u.pathname.slice(1);
-    } else if (u.hostname.includes('youtube.com')) {
-      if (u.pathname.startsWith('/watch')) vid = u.searchParams.get('v');
-      else if (u.pathname.startsWith('/shorts/')) vid = u.pathname.split('/')[2];
-      else if (u.pathname.startsWith('/embed/')) vid = u.pathname.split('/')[2];
-    }
-    if (!vid) return null;
-    const src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(vid)}?enablejsapi=1&rel=0`;
-    return `<iframe class="yt-embed" data-link-id="${escapeHtml(linkId)}" width="360" height="203" src="${src}" title="YouTube video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
-  } catch (_) {
-    return null;
-  }
-}
 
-function tiktokEmbedHTML(url, linkId) {
-  try {
-    const u = new URL(url);
-    const host = u.hostname.toLowerCase();
-    if (host.includes('tiktok.com')) {
-      // Pattern: /@username/video/VIDEO_ID
-      const parts = u.pathname.split('/').filter(Boolean);
-      const idx = parts.findIndex((p) => p === 'video');
-      if (idx !== -1 && parts[idx + 1]) {
-        const videoId = parts[idx + 1];
-        const cite = url;
-        return `<blockquote class="tiktok-embed" cite="${escapeHtml(cite)}" data-video-id="${escapeHtml(videoId)}" style="max-width: 360px; min-width: 225px;" data-link-id="${escapeHtml(linkId)}"><section></section></blockquote>`;
-      }
-    }
-    return null;
-  } catch (_) {
-    return null;
-  }
-}
-
-function renderVideoHTML(link) {
-  const yt = youtubeEmbedHTML(link.url, link.id);
-  if (yt) return yt;
-  const tt = tiktokEmbedHTML(link.url, link.id);
-  if (tt) return tt;
-  return `<a href="/links/open?id=${escapeHtml(link.id)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.url)}</a>`;
-}
 
 function homePage(username, opts = {}) {
   const { outgoing = [], incoming = [], approved = [], inbox = [], sent = [] } = opts;
@@ -223,105 +178,20 @@ function homePage(username, opts = {}) {
         f.style.display = f.style.display === 'none' ? 'block' : 'none';
         if (f.style.display === 'block') document.getElementById('friend_username').focus();
       }
-      // YouTube embed play tracking -> POST /links/watched
-      var ytPlayers = [];
-      function onYouTubeIframeAPIReady() {
-        var iframes = document.querySelectorAll('iframe.yt-embed');
-        for (var i = 0; i < iframes.length; i++) {
-          (function(fr){
-            var linkId = fr.getAttribute('data-link-id');
-            var p = new YT.Player(fr, {
-              events: {
-                onStateChange: function(e){
-                  if (e.data === 1 && fr.getAttribute('data-played') !== '1') {
-                    fr.setAttribute('data-played','1');
-                    var fd = new FormData();
-                    fd.append('link_id', linkId);
-                    fetch('/links/watched', { method: 'POST', body: fd, credentials: 'same-origin' });
-                  }
-                }
+      document.addEventListener('DOMContentLoaded', function(){
+        var vids = document.querySelectorAll('video.asset-video');
+        for (var k = 0; k < vids.length; k++) {
+          (function(v){
+            var linkId = v.getAttribute('data-link-id');
+            v.addEventListener('play', function(){
+              if (v.getAttribute('data-played') !== '1') {
+                v.setAttribute('data-played','1');
+                var fd = new FormData();
+                fd.append('link_id', linkId);
+                fetch('/links/watched', { method: 'POST', body: fd, credentials: 'same-origin' });
               }
             });
-            ytPlayers.push(p);
-          })(iframes[i]);
-        }
-      }
-      (function(){
-        var tag = document.createElement('script');
-        tag.src = 'https://www.youtube.com/iframe_api';
-        var first = document.getElementsByTagName('script')[0];
-        first.parentNode.insertBefore(tag, first);
-        window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-      })();
-
-      // Convert YouTube links in inbox to embeds
-      document.addEventListener('DOMContentLoaded', function(){
-        var anchors = document.querySelectorAll('section ul li a[href^="/links/open?id="]');
-        for (var i=0;i<anchors.length;i++){
-          var a = anchors[i];
-          var linkId = (new URL(a.getAttribute('href'), window.location.origin)).searchParams.get('id');
-          var urlText = a.textContent || '';
-          try{
-            var u = new URL(urlText);
-            var host = u.hostname || '';
-            var vid = null;
-            if (host.indexOf('youtu.be') !== -1) { vid = u.pathname.slice(1); }
-            else if (host.indexOf('youtube.com') !== -1) {
-              if (u.pathname.indexOf('/watch') === 0) vid = u.searchParams.get('v');
-              else if (u.pathname.indexOf('/shorts/') === 0) vid = u.pathname.split('/')[2];
-              else if (u.pathname.indexOf('/embed/') === 0) vid = u.pathname.split('/')[2];
-            }
-            if (vid) {
-              var iframe = document.createElement('iframe');
-              iframe.className = 'yt-embed';
-              iframe.setAttribute('data-link-id', linkId);
-              iframe.width = '360';
-              iframe.height = '203';
-              iframe.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(vid) + '?enablejsapi=1&rel=0';
-              iframe.title = 'YouTube video';
-              iframe.frameBorder = '0';
-              iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-              iframe.allowFullscreen = true;
-              a.insertAdjacentElement('afterend', iframe);
-            }
-          }catch(e){}
-        }
-
-        // Ensure TikTok embed.js is present
-        var ttScript = document.querySelector('script[src^="https://www.tiktok.com/embed.js"]');
-        if (!ttScript) {
-          ttScript = document.createElement('script');
-          ttScript.src = 'https://www.tiktok.com/embed.js';
-          ttScript.async = true;
-          document.head.appendChild(ttScript);
-        }
-
-        // Convert TikTok links to embed blockquotes if possible
-        var tiktokAnchors = document.querySelectorAll('section ul li a[href^="/links/open?id="]');
-        for (var j=0;j<tiktokAnchors.length;j++){
-          var ta = tiktokAnchors[j];
-          var linkId2 = (new URL(ta.getAttribute('href'), window.location.origin)).searchParams.get('id');
-          var urlText2 = ta.textContent || '';
-          try{
-            var u2 = new URL(urlText2);
-            if (u2.hostname.indexOf('tiktok.com') !== -1 && u2.pathname.indexOf('/video/') !== -1) {
-              var parts = u2.pathname.split('/').filter(Boolean);
-              var idx = parts.indexOf('video');
-              if (idx !== -1 && parts[idx+1]){
-                var videoId2 = parts[idx+1];
-                var bq = document.createElement('blockquote');
-                bq.className = 'tiktok-embed';
-                bq.setAttribute('cite', urlText2);
-                bq.setAttribute('data-video-id', videoId2);
-                bq.setAttribute('data-link-id', linkId2);
-                bq.style.maxWidth = '360px';
-                bq.style.minWidth = '225px';
-                var sec = document.createElement('section');
-                bq.appendChild(sec);
-                ta.insertAdjacentElement('afterend', bq);
-              }
-            }
-          }catch(e){}
+          })(vids[k]);
         }
       });
     </script>
@@ -410,8 +280,11 @@ function homePage(username, opts = {}) {
           .map(
             (v) => `
           <li>
-            <a href="/links/open?id=${escapeHtml(v.id)}" target="_blank" rel="noopener noreferrer">${escapeHtml(v.url)}</a>
-            — from <strong>${escapeHtml(v.sender_username)}</strong>
+            <video class="asset-video" data-link-id="${escapeHtml(v.id)}" width="360" height="203" controls preload="metadata">
+              <source src="https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            - from <strong>${escapeHtml(v.sender_username)}</strong>
             <form method="POST" action="/links/react" style="display:inline; margin-left:8px;">
               <input type="hidden" name="link_id" value="${escapeHtml(v.id)}" />
               <button type="submit" name="reaction" value="❤️" title="Heart">❤️</button>
@@ -897,19 +770,22 @@ function savedPage(username, list) {
     <link rel="apple-touch-icon" href="https://assets.zem.systems/favicon/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
     <script>
-      var ytPlayers = [];
-      function onYouTubeIframeAPIReady() {
-        var iframes = document.querySelectorAll('iframe.yt-embed');
-        for (var i = 0; i < iframes.length; i++) {
-          (function(fr){
-            var linkId = fr.getAttribute('data-link-id');
-            var p = new YT.Player(fr, { events: { onStateChange: function(e){ if (e.data === 1 && fr.getAttribute('data-played') !== '1') { fr.setAttribute('data-played','1'); var fd=new FormData(); fd.append('link_id', linkId); fetch('/links/watched', { method: 'POST', body: fd, credentials: 'same-origin' }); } } } });
-            ytPlayers.push(p);
-          })(iframes[i]);
+      document.addEventListener('DOMContentLoaded', function(){
+        var vids = document.querySelectorAll('video.asset-video');
+        for (var k = 0; k < vids.length; k++) {
+          (function(v){
+            var linkId = v.getAttribute('data-link-id');
+            v.addEventListener('play', function(){
+              if (v.getAttribute('data-played') !== '1') {
+                v.setAttribute('data-played','1');
+                var fd = new FormData();
+                fd.append('link_id', linkId);
+                fetch('/links/watched', { method: 'POST', body: fd, credentials: 'same-origin' });
+              }
+            });
+          })(vids[k]);
         }
-      }
-      (function(){ var s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api'; var f=document.getElementsByTagName('script')[0]; f.parentNode.insertBefore(s,f); window.onYouTubeIframeAPIReady=onYouTubeIframeAPIReady; })();
-      (function(){ var t=document.createElement('script'); t.src='https://www.tiktok.com/embed.js'; t.async=true; document.head.appendChild(t); })();
+      });
     </script>
   </head>
   <body>
@@ -922,7 +798,10 @@ function savedPage(username, list) {
     <ul>
       ${list.map(v => `
         <li>
-          ${youtubeEmbedHTML(v.url, v.id) || tiktokEmbedHTML(v.url, v.id) || `<a href="/links/open?id=${escapeHtml(v.id)}" target="_blank" rel="noopener noreferrer">${escapeHtml(v.url)}</a>`}
+          <video class="asset-video" data-link-id="${escapeHtml(v.id)}" width="360" height="203" controls preload="metadata">
+            <source src="https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
           - from <strong>${escapeHtml(v.sender_username)}</strong>
           ${v.reaction ? ` - Your reaction: ${escapeHtml(v.reaction)}` : ''}
         </li>`).join('')}
@@ -943,19 +822,22 @@ function historyPage(username, list) {
     <link rel="apple-touch-icon" href="https://assets.zem.systems/favicon/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
     <script>
-      var ytPlayers = [];
-      function onYouTubeIframeAPIReady() {
-        var iframes = document.querySelectorAll('iframe.yt-embed');
-        for (var i = 0; i < iframes.length; i++) {
-          (function(fr){
-            var linkId = fr.getAttribute('data-link-id');
-            var p = new YT.Player(fr, { events: { onStateChange: function(e){ if (e.data === 1 && fr.getAttribute('data-played') !== '1') { fr.setAttribute('data-played','1'); var fd=new FormData(); fd.append('link_id', linkId); fetch('/links/watched', { method: 'POST', body: fd, credentials: 'same-origin' }); } } } });
-            ytPlayers.push(p);
-          })(iframes[i]);
+      document.addEventListener('DOMContentLoaded', function(){
+        var vids = document.querySelectorAll('video.asset-video');
+        for (var k = 0; k < vids.length; k++) {
+          (function(v){
+            var linkId = v.getAttribute('data-link-id');
+            v.addEventListener('play', function(){
+              if (v.getAttribute('data-played') !== '1') {
+                v.setAttribute('data-played','1');
+                var fd = new FormData();
+                fd.append('link_id', linkId);
+                fetch('/links/watched', { method: 'POST', body: fd, credentials: 'same-origin' });
+              }
+            });
+          })(vids[k]);
         }
-      }
-      (function(){ var s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api'; var f=document.getElementsByTagName('script')[0]; f.parentNode.insertBefore(s,f); window.onYouTubeIframeAPIReady=onYouTubeIframeAPIReady; })();
-      (function(){ var t=document.createElement('script'); t.src='https://www.tiktok.com/embed.js'; t.async=true; document.head.appendChild(t); })();
+      });
     </script>
   </head>
   <body>
@@ -968,7 +850,10 @@ function historyPage(username, list) {
     <ul>
       ${list.map(v => `
         <li>
-          ${youtubeEmbedHTML(v.url, v.id) || tiktokEmbedHTML(v.url, v.id) || `<a href="/links/open?id=${escapeHtml(v.id)}" target="_blank" rel="noopener noreferrer">${escapeHtml(v.url)}</a>`}
+          <video class="asset-video" data-link-id="${escapeHtml(v.id)}" width="360" height="203" controls preload="metadata">
+            <source src="https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
           - from <strong>${escapeHtml(v.sender_username)}</strong>
           ${v.reaction ? ` - Your reaction: ${escapeHtml(v.reaction)}` : ''}
         </li>`).join('')}
@@ -1168,10 +1053,25 @@ async function handleLinkSend(req, env) {
     .first();
   if (!friendship) return new Response('Not friends', { status: 403 });
   const now = Math.floor(Date.now() / 1000);
+  const linkId = crypto.randomUUID();
   await env.vidshare
     .prepare('INSERT INTO links (id, url, sender_id, recipient_id, created_at, watched, saved) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)')
-    .bind(crypto.randomUUID(), videoUrl, me.userId, recipientId, now, 0, 0)
+    .bind(linkId, videoUrl, me.userId, recipientId, now, 0, 0)
     .run();
+
+  // Kick off background download to assets service
+  try {
+    const apiUrl = (env && env.DOWNLOAD_API_URL) || 'http://74.208.79.74:3000/download';
+    const payload = { url: videoUrl, filename: `${linkId}.mp4` };
+    const resp = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    try { if (!resp.ok) console.log('[download-api] non-200', resp.status); } catch (_) {}
+  } catch (e) {
+    try { console.log('[download-api] error', e && (e.stack || e.message || e.toString())); } catch (_) {}
+  }
   return new Response(null, { status: 302, headers: { Location: '/' } });
 }
 
