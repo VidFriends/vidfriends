@@ -1970,7 +1970,7 @@ function cborDecode(data) {
     if (mt === 3) { const len = readUint(addl); const v = td.decode(data.subarray(pos, pos+len)); pos += len; return v; }
     if (mt === 4) { const len = readUint(addl); const arr = []; for (let i=0;i<len;i++) arr.push(decodeItem()); return arr; }
     if (mt === 5) { const len = readUint(addl); const obj = {}; for (let i=0;i<len;i++){ const k = decodeItem(); const v = decodeItem(); obj[typeof k === 'string' ? k : String(k)] = v; } return obj; }
-    if (mt === 6) { /* tag */ decodeItem(); return decodeItem(); }
+    if (mt === 6) { /* tag * / decodeItem(); return decodeItem(); }
     if (mt === 7) { if (addl === 20) return false; if (addl===21) return true; if (addl===22) return null; if (addl===23) return undefined; throw new Error('CBOR simple'); }
     throw new Error('CBOR mt');
   }
