@@ -9,6 +9,9 @@ enabled = true
 
 [vars]
 DOWNLOAD_API_URL = "https://api-request.zem.systems/download"
+VAPID_PUBLIC_KEY = ""
+VAPID_PRIVATE_KEY = ""
+VAPID_SUBJECT = "mailto:support@vidfriends.app"
 
 [[d1_databases]]
 binding = "vidshare"
