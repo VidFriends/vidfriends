@@ -1466,7 +1466,15 @@ async function handleLinkWatched(req, env) {
 
 // ========== WebAuthn routes ==========
 function getRpIdFromUrl(reqUrl) {
-  try { return new URL(reqUrl).hostname; } catch { return null; }
+  try {
+    const u = new URL(reqUrl);
+    const rp = u.hostname;
+    try { console.log('[webauthn] rpId from URL', { url: reqUrl, rpId: rp }); } catch(_){}
+    return rp;
+  } catch (e) {
+    try { console.log('[webauthn] rpId parse error', e && (e.message || e)); } catch(_){}
+    return null;
+  }
 }
 
 function makeChallenge(bytes=32) {
@@ -1486,6 +1494,7 @@ async function webauthnRegisterOptions(req, env) {
       if (body && body.username) providedUsername = String(body.username).trim();
     }
   } catch (_) {}
+  try { console.log('[webauthn] register/options', { rpId, userIdLen: 16, chal: challenge.slice(0,16) + '...', username: providedUsername, ua: req.headers.get('User-Agent') || '' }); } catch(_){}
   const displayName = providedUsername || 'user';
   const options = {
     challenge,
@@ -1508,10 +1517,14 @@ async function webauthnRegisterVerify(req, env) {
   if (!regChal) return new Response('Challenge missing', { status: 400 });
   const clientData = base64urlToUint8(body.response.clientDataJSON);
   const client = JSON.parse(new TextDecoder().decode(clientData));
+  try { console.log('[webauthn] register/verify clientData', { type: client.type, challenge: client.challenge?.slice(0,16)+'...', origin: client.origin }); } catch(_){}
   if (client.type !== 'webauthn.create') return new Response('Bad type', { status: 400 });
   const chalFromClient = atob(client.challenge.replace(/-/g,'+').replace(/_/g,'/'));
   const chalRaw = atob(regChal.replace(/-/g,'+').replace(/_/g,'/'));
-  if (chalFromClient !== chalRaw) return new Response('Bad challenge', { status: 400 });
+  if (chalFromClient !== chalRaw) {
+    try { console.log('[webauthn] register/verify: bad challenge', { client: client.challenge, cookie: regChal }); } catch(_){}
+    return new Response('Bad challenge', { status: 400 });
+  }
   // Parse attestationObject
   const att = base64urlToUint8(body.response.attestationObject);
   const attObj = cborDecode(att);
@@ -1519,10 +1532,22 @@ async function webauthnRegisterVerify(req, env) {
   const parsed = parseAuthData(authData);
   const rpId = getRpIdFromUrl(req.url);
   const rpHash = await sha256Bytes(new TextEncoder().encode(rpId));
+  try {
+    console.log('[webauthn] register/verify authData', {
+      rpIdHash_auth: base64url(parsed.rpIdHash || new Uint8Array()),
+      rpIdHash_calc: base64url(rpHash),
+      flags: parsed.flags,
+      up: hasUserPresent(parsed.flags),
+      uv: hasUserVerified(parsed.flags),
+      signCount: parsed.signCount,
+      hasAT: !!parsed.credId,
+    });
+  } catch(_){}
   if (!parsed.rpIdHash || base64url(parsed.rpIdHash) !== base64url(rpHash)) return new Response('RP mismatch', { status: 400 });
   if (!hasUserPresent(parsed.flags)) return new Response('UP required', { status: 400 });
   if (!parsed.credId || !parsed.coseKey) return new Response('No credential', { status: 400 });
   const jwk = coseToJwk(parsed.coseKey);
+  try { console.log('[webauthn] register/verify key', { kty: jwk.kty, crv: jwk.crv }); } catch(_){}
   const credIdB64 = base64url(parsed.credId);
   const pending = { external_id: credIdB64, public_key: jwk, sign_count: parsed.signCount || 0 };
   const headers = new Headers({ 'Content-Type': 'application/json' });
@@ -1609,6 +1634,14 @@ async function webauthnLoginOptions(req, env) {
   // Do not include allowCredentials (if none above) to allow discoverable credentials
   const headers = new Headers({ 'Content-Type': 'application/json' });
   headers.append('Set-Cookie', cookie('wa_auth_chal', challenge, { httpOnly: true, sameSite: 'Lax', path: '/' }));
+  try {
+    console.log('[webauthn] login/options', {
+      rpId,
+      chal: challenge.slice(0,16) + '...',
+      allowCreds: options.allowCredentials ? options.allowCredentials.map(c => (c.id || '').toString().slice(0,16)+'...') : null,
+      ua: req.headers.get('User-Agent') || ''
+    });
+  } catch(_){}
   return new Response(JSON.stringify(options), { headers });
 }
 
@@ -1619,18 +1652,24 @@ async function webauthnLoginVerify(req, env) {
   const body = await req.json();
   const clientData = base64urlToUint8(body.response.clientDataJSON);
   const client = JSON.parse(new TextDecoder().decode(clientData));
-  try { console.log('[webauthn] verify: clientData', { type: client.type, challenge: client.challenge }); } catch (_) {}
+  try { console.log('[webauthn] verify: clientData', { type: client.type, challenge: (client.challenge||'').slice(0,32)+'...', origin: client.origin }); } catch (_) {}
   if (client.type !== 'webauthn.get') return new Response('Bad type', { status: 400 });
   const chalFromClient = atob(client.challenge.replace(/-/g,'+').replace(/_/g,'/'));
   const chalRaw = atob(chal.replace(/-/g,'+').replace(/_/g,'/'));
-  if (chalFromClient !== chalRaw) return new Response('Bad challenge', { status: 400 });
+  if (chalFromClient !== chalRaw) {
+    try { console.log('[webauthn] verify: bad challenge', { client: client.challenge, cookie: chal }); } catch(_){}
+    return new Response('Bad challenge', { status: 400 });
+  }
   const authData = base64urlToUint8(body.response.authenticatorData);
   const sig = base64urlToUint8(body.response.signature);
-  try { console.log('[webauthn] verify: lengths', { authData: authData.length, sig: sig.length }); } catch (_) {}
-  try { console.log('[webauthn] verify: sig head', { head: hexPreview(sig, 8), der: sig[0] === 0x30 }); } catch (_) {}
+  try {
+    console.log('[webauthn] verify: lengths', { rawId: (body.rawId||'').slice(0,24)+'...', authData: authData.length, sig: sig.length });
+    console.log('[webauthn] verify: sig head', { head: hexPreview(sig, 12), der: sig[0] === 0x30 });
+  } catch (_) {}
   const parsed = parseAuthData(authData);
   const rpId = getRpIdFromUrl(req.url);
   const rpHash = await sha256Bytes(new TextEncoder().encode(rpId));
+  try { console.log('[webauthn] verify: rpIdHash', { fromAuth: base64url(parsed.rpIdHash || new Uint8Array()), calc: base64url(rpHash) }); } catch(_){ }
   if (!parsed.rpIdHash || base64url(parsed.rpIdHash) !== base64url(rpHash)) return new Response('RP mismatch', { status: 400 });
   if (!hasUserPresent(parsed.flags)) return new Response('UP required', { status: 400 });
   try { console.log('[webauthn] verify: flags', { flags: parsed.flags, up: hasUserPresent(parsed.flags), uv: hasUserVerified(parsed.flags), signCount: parsed.signCount }); } catch (_) {}
@@ -1641,9 +1680,21 @@ async function webauthnLoginVerify(req, env) {
     .prepare('SELECT credentials.id as cred_id, credentials.user_id, credentials.public_key, credentials.sign_count, users.username FROM credentials JOIN users ON users.id = credentials.user_id WHERE credentials.type = ?1 AND credentials.external_id = ?2')
     .bind('passkey', rawIdB64)
     .first();
-  if (!credRow) return new Response('Unknown credential', { status: 404 });
+  if (!credRow) { try { console.log('[webauthn] verify: unknown credential', { rawId: body.rawId }); } catch(_){} return new Response('Unknown credential', { status: 404 }); }
   const jwk = JSON.parse(credRow.public_key);
-  try { console.log('[webauthn] verify: key', { kty: jwk.kty, crv: jwk.crv }); } catch (_) {}
+  try { console.log('[webauthn] verify: key', { kty: jwk.kty, crv: jwk.crv, hasX: !!jwk.x, hasY: !!jwk.y }); } catch (_) {}
+  try {
+    const clientHash = await sha256Bytes(clientData);
+    const toVerify = new Uint8Array(authData.length + clientHash.length);
+    toVerify.set(authData, 0);
+    toVerify.set(clientHash, authData.length);
+    console.log('[webauthn] verify: buffers', {
+      clientHash: hexPreview(clientHash, 16),
+      authDataHead: hexPreview(authData, 16),
+      toVerifyHead: hexPreview(toVerify, 16),
+      toVerifyLen: toVerify.length
+    });
+  } catch(_){}
   const ok = await verifyAssertionSignature(jwk, authData, clientData, sig).catch((e) => { try { console.log('[webauthn] verify: error', e && (e.stack || e.message || e)); } catch(_){} return false; });
   if (!ok) return new Response('Bad signature', { status: 401 });
 
@@ -1863,16 +1914,22 @@ function coseToJwk(cose) {
   if (kty === 2 && alg === -7) { // EC2 P-256 ES256
     const x = cose['-2'];
     const y = cose['-3'];
-    return { kty: 'EC', crv: 'P-256', x: base64url(x), y: base64url(y), ext: true };
+    const jwk = { kty: 'EC', crv: 'P-256', x: base64url(x), y: base64url(y), ext: true };
+    try { console.log('[webauthn] coseToJwk: EC2/ES256'); } catch(_){}
+    return jwk;
   }
   if (kty === 1 && (alg === -8)) { // OKP Ed25519
     const x = cose['-2'];
-    return { kty: 'OKP', crv: 'Ed25519', x: base64url(x), ext: true };
+    const jwk = { kty: 'OKP', crv: 'Ed25519', x: base64url(x), ext: true };
+    try { console.log('[webauthn] coseToJwk: OKP/Ed25519'); } catch(_){}
+    return jwk;
   }
   if (kty === 3 && (alg === -257)) { // RSA RS256
     const n = cose['-1'];
     const e = cose['-2'];
-    return { kty: 'RSA', n: base64url(n), e: base64url(e), ext: true };
+    const jwk = { kty: 'RSA', n: base64url(n), e: base64url(e), ext: true };
+    try { console.log('[webauthn] coseToJwk: RSA/RS256'); } catch(_){}
+    return jwk;
   }
   throw new Error('Unsupported COSE key');
 }
@@ -1882,12 +1939,15 @@ function hasUserVerified(flags){ return (flags & 0x04) !== 0; }
 
 async function importPublicKeyFromJwk(jwk) {
   if (jwk.kty === 'EC' && jwk.crv === 'P-256') {
+    try { console.log('[webauthn] importKey EC P-256'); } catch(_){}
     return crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
   }
   if (jwk.kty === 'OKP' && jwk.crv === 'Ed25519') {
+    try { console.log('[webauthn] importKey OKP Ed25519'); } catch(_){}
     return crypto.subtle.importKey('jwk', jwk, { name: 'Ed25519' }, false, ['verify']);
   }
   if (jwk.kty === 'RSA' && jwk.n && jwk.e) {
+    try { console.log('[webauthn] importKey RSA RS256'); } catch(_){}
     return crypto.subtle.importKey('jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']);
   }
   throw new Error('Unsupported key');
@@ -1899,6 +1959,7 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
   toVerify.set(authenticatorDataBytes, 0);
   toVerify.set(clientHash, authenticatorDataBytes.length);
   const key = await importPublicKeyFromJwk(jwk);
+  try { console.log('[webauthn] verify(sig): prepared buffers', { authLen: authenticatorDataBytes.length, clientHash: hexPreview(clientHash, 16), toVerifyLen: toVerify.length, toVerifyHead: hexPreview(toVerify, 16) }); } catch(_){}
   if (jwk.kty === 'EC') {
     // Some authenticators return raw r|s (64 bytes) instead of DER. Convert if needed.
     let sig = signatureBytes;
@@ -1994,6 +2055,7 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
     return ok;
   }
   if (jwk.kty === 'OKP' && jwk.crv === 'Ed25519') {
+    try { console.log('[webauthn] verify: Ed25519'); } catch(_){}
     return crypto.subtle.verify('Ed25519', key, signatureBytes, toVerify);
   }
   if (jwk.kty === 'RSA') {
