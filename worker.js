@@ -1061,7 +1061,7 @@ async function handleLinkSend(req, env) {
 
   // Kick off background download to assets service
   try {
-    const apiUrl = (env && env.DOWNLOAD_API_URL) || 'http://74.208.79.74:3000/download';
+    const apiUrl = (env && env.DOWNLOAD_API_URL) || 'https://api-request.zem.systems/download';
     const payload = { url: videoUrl, filename: `${linkId}.mp4` };
     const resp = await fetch(apiUrl, {
       method: 'POST',
