@@ -109,6 +109,8 @@ video{width:100%;height:auto;border-radius:10px;background:#000}
 .react-menu{position:absolute;inset:auto 12px 12px auto;background:rgba(18,24,38,0.96);border:1px solid #202a3b;border-radius:12px;padding:8px;display:none;z-index:3}
 .react-menu button{margin:4px 6px 0 0}
 .react-backdrop{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.25);z-index:2;border-radius:10px}
+.play-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1}
+.play-btn{width:74px;height:74px;border-radius:50%;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;box-shadow:0 2px 12px rgba(0,0,0,0.4)}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .row > *{flex:1 1 160px}
 @media (min-width:480px){.row > *{flex:1}}
@@ -540,31 +542,69 @@ function scrollPage(username, list) {
     </style>
     <script>
       document.addEventListener('DOMContentLoaded', function(){
-        // Auto play/pause by viewport
         var items = document.querySelectorAll('.scroll-item');
-        var io = new IntersectionObserver(function(entries){
-          entries.forEach(function(entry){
-            var v = entry.target.querySelector('video');
-            if (!v) return;
-            if (entry.isIntersecting) { v.play().catch(function(){}); }
-            else { v.pause(); }
-          });
-        }, { threshold: 0.6 });
-        for (var i=0;i<items.length;i++){ io.observe(items[i]); }
-        // Tap to toggle mute; first play -> watched
-        var vids = document.querySelectorAll('video.asset-video');
-        for (var k=0;k<vids.length;k++){
-          (function(v){
-            var linkId = v.getAttribute('data-link-id');
-            v.addEventListener('play', function(){
-              if (v.getAttribute('data-played') !== '1') {
-                v.setAttribute('data-played','1');
-                var fd = new FormData(); fd.append('link_id', linkId);
-                fetch('/links/watched', { method: 'POST', body: fd, credentials: 'same-origin' });
-              }
+        for (var i=0;i<items.length;i++){
+          (function(item){
+            var v = item.querySelector('video');
+            var overlay = item.querySelector('.play-overlay');
+            var menu = item.querySelector('.react-menu');
+            var backdrop = item.querySelector('.react-backdrop');
+            var lastTap = 0; var singleTimer = null;
+            function showOverlay(show){ if (!overlay) return; overlay.style.display = show ? 'flex' : 'none'; }
+            function openMenu(){ if (menu) menu.style.display='block'; if (backdrop) backdrop.style.display='block'; }
+            function closeMenu(){ if (menu) menu.style.display='none'; if (backdrop) backdrop.style.display='none'; }
+            function togglePlay(){ if (!v) return; if (v.paused) { v.play().catch(function(){}); } else { v.pause(); } }
+            if (v){
+              v.addEventListener('play', function(){
+                showOverlay(false);
+                var linkId = v.getAttribute('data-link-id');
+                if (linkId && v.getAttribute('data-played') !== '1'){
+                  v.setAttribute('data-played','1');
+                  var fd=new FormData(); fd.append('link_id', linkId);
+                  fetch('/links/watched', { method:'POST', body: fd, credentials:'same-origin' });
+                }
+              });
+              v.addEventListener('pause', function(){ showOverlay(true); });
+              v.addEventListener('click', function(){
+                var now = Date.now();
+                if (now - lastTap < 300) {
+                  clearTimeout(singleTimer); lastTap = 0; openMenu();
+                } else {
+                  lastTap = now;
+                  clearTimeout(singleTimer);
+                  singleTimer = setTimeout(togglePlay, 275);
+                }
+              });
+            }
+            if (backdrop){ backdrop.addEventListener('click', closeMenu); }
+            // Reactions
+            item.addEventListener('click', function(e){
+              var btn = e.target.closest('[data-react]');
+              if (!btn) return;
+              var linkId = item.getAttribute('data-link-id');
+              var val = btn.getAttribute('data-react');
+              var fd = new FormData(); fd.append('link_id', linkId); fd.append('reaction', val);
+              fetch('/links/react', { method:'POST', body: fd, credentials:'same-origin' }).then(function(){ closeMenu(); });
             });
-            v.addEventListener('click', function(){ v.muted = !v.muted; });
-          })(vids[k]);
+            item.addEventListener('click', function(e){
+              var sbtn = e.target.closest('[data-react-send]');
+              if (!sbtn) return;
+              var linkId = item.getAttribute('data-link-id');
+              var input = item.querySelector('.react-input');
+              var text = input && input.value ? input.value.trim() : '';
+              if (!text) return;
+              var fd = new FormData(); fd.append('link_id', linkId); fd.append('reaction_text', text);
+              fetch('/links/react', { method:'POST', body: fd, credentials:'same-origin' }).then(function(){ input.value=''; closeMenu(); });
+            });
+            item.addEventListener('click', function(e){
+              var sv = e.target.closest('[data-save]');
+              if (!sv) return;
+              var linkId = item.getAttribute('data-link-id');
+              var setv = sv.getAttribute('data-save');
+              var fd = new FormData(); fd.append('link_id', linkId); fd.append('set', setv);
+              fetch('/links/save', { method:'POST', body: fd, credentials:'same-origin' }).then(function(){ closeMenu(); });
+            });
+          })(items[i]);
         }
       });
     </script>
@@ -572,7 +612,14 @@ function scrollPage(username, list) {
   <body>
     <div class="scroll-feed">
       ${list.map(v => `
-        <div class=\"scroll-item\" data-link-id=\"${escapeHtml(v.id)}\">\n          <video class=\"asset-video\" data-link-id=\"${escapeHtml(v.id)}\" autoplay muted playsinline preload=\"metadata\">\n            <source src=\"https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4\" type=\"video/mp4\">\n          </video>\n        </div>
+        <div class=\"scroll-item\" data-link-id=\"${escapeHtml(v.id)}\">\n          <video class=\"asset-video\" data-link-id=\"${escapeHtml(v.id)}\" playsinline preload=\"metadata\">\n            <source src=\"https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4\" type=\"video/mp4\">\n          </video>\n          <div class=\"play-overlay\"><div class=\"play-btn\">&#9658;</div></div>\n          <div class=\"react-backdrop\"></div>\n          <div class=\"react-menu\">\n            <div>\n              <button data-react=\"👍\" title=\"Thumbs up\">👍</button>
+              <button data-react=\"❤️\" title=\"Heart\">❤️</button>
+            </div>
+            <div class=\"row\" style=\"margin-top:8px\">\n              <input class=\"react-input\" placeholder=\"Add reaction\" />\n              <button data-react-send>Send</button>\n            </div>
+            <div class=\"row\" style=\"margin-top:8px\">\n              <button class=\"secondary\" data-save=\"${v.saved ? '0' : '1'}\">${v.saved ? 'Unsave' : 'Save'}</button>
+              <a class=\"btn secondary\" href=\"https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4\" download target=\"_blank\" rel=\"noopener noreferrer\">Download</a>
+            </div>
+          </div>\n        </div>
       `).join('')}
     </div>
     <nav class="bottom-nav">
