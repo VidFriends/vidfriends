@@ -93,6 +93,9 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 .tabs a.active{background:var(--muted);color:var(--text);font-weight:650}
 .fab{position:fixed;right:16px;bottom:16px;width:56px;height:56px;border-radius:50%;background:var(--muted);border:1px solid #202a3b;box-shadow:0 6px 16px rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;color:var(--text);text-decoration:none;font-size:22px;z-index:40}
 .fab:hover{filter:brightness(1.05)}
+.fab-rail{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;background:var(--muted);border:1px solid #202a3b;border-radius:999px;padding:8px;box-shadow:0 6px 16px rgba(0,0,0,0.45);z-index:40}
+.fab-rail .fab-rail-btn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:transparent;border:0;color:var(--text);text-decoration:none;font-size:20px;cursor:pointer}
+.fab-rail .fab-rail-btn:hover{filter:brightness(1.08)}
 button,.btn{appearance:none;border:0;border-radius:10px;padding:10px 14px;background:var(--primary);color:#0a0d12;font-weight:600;cursor:pointer}
 button.secondary{background:var(--muted);color:var(--text)}
 button.danger{background:var(--danger);color:#0a0d12}
@@ -108,7 +111,8 @@ video{width:100%;height:auto;border-radius:10px;background:#000}
 .scroll-feed{scroll-snap-type:y mandatory;height:100vh;overflow-y:auto;padding-bottom:84px;margin:0}
 .scroll-item{scroll-snap-align:start;position:relative;height:100vh}
 .scroll-item video{width:100%;height:100%;object-fit:cover;border-radius:0}
-.react-menu{position:absolute;inset:auto 12px 12px auto;background:rgba(18,24,38,0.96);border:1px solid #202a3b;border-radius:12px;padding:8px;display:none;z-index:3}
+.react-menu{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,24,38,0.96);border:1px solid #202a3b;border-radius:12px;padding:12px;display:none;z-index:3;min-width:240px}
+.scroll-view .react-menu > div:first-child,.scroll-view .react-menu > div:nth-child(2){display:none}
 .react-menu button{margin:4px 6px 0 0}
 .react-backdrop{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.25);z-index:2;border-radius:10px}
 .play-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1}
@@ -252,11 +256,12 @@ function homePage(username, opts = {}, activeTab = 'home') {
           var feed = document.querySelector('.scroll-feed');
           if (feed) {
             var items = feed.querySelectorAll('.scroll-item');
+            var currentItem = null;
             var io = new IntersectionObserver(function(entries){
               entries.forEach(function(entry){
                 var v = entry.target.querySelector('video');
                 if (!v) return;
-                if (entry.isIntersecting) { v.play().catch(function(){}); }
+                if (entry.isIntersecting) { currentItem = entry.target; v.play().catch(function(){}); }
                 else { v.pause(); }
               });
             }, { root: feed, threshold: 0.6 });
@@ -309,6 +314,52 @@ function homePage(username, opts = {}, activeTab = 'home') {
                 .then(function(){ closeMenu(item); })
                 .catch(function(){ closeMenu(item); });
             });
+            // Save from centered menu
+            feed.addEventListener('click', function(e){
+              var sv = e.target.closest('[data-save]');
+              if (!sv) return;
+              var item = e.target.closest('.scroll-item');
+              if (!item) return;
+              var linkId = item.getAttribute('data-link-id');
+              var setv = sv.getAttribute('data-save');
+              var fd = new FormData(); fd.append('link_id', linkId); fd.append('set', setv);
+              fetch('/links/save', { method:'POST', body: fd, credentials:'same-origin' }).then(function(){ closeMenu(item); });
+            });
+
+            // Replace floating circle with vertical rail in scroll view
+            try {
+              var fab = document.querySelector('a.fab');
+              if (fab) fab.style.display = 'none';
+              var rail = document.createElement('div');
+              rail.className = 'fab-rail';
+              rail.innerHTML = '\n                <button class="fab-rail-btn" data-react="❤️" aria-label="Heart" title="Heart">❤️</button>\n                <button class="fab-rail-btn" data-react="👍" aria-label="Thumbs up" title="Thumbs up">👍</button>\n                <button class="fab-rail-btn" data-react-text aria-label="Add reaction text" title="Add reaction text">💬</button>\n                <a href="/" class="fab-rail-btn" aria-label="Home" title="Home">🏠</a>\n              ';
+              document.body.appendChild(rail);
+            } catch(_){}
+
+            // Handle rail actions (reactions and text)
+            document.addEventListener('click', function(e){
+              var rbtn = e.target.closest('.fab-rail [data-react]');
+              if (rbtn) {
+                var item = currentItem || feed.querySelector('.scroll-item');
+                if (!item) return;
+                var linkId = item.getAttribute('data-link-id');
+                var val = rbtn.getAttribute('data-react');
+                var fd = new FormData(); fd.append('link_id', linkId); fd.append('reaction', val);
+                fetch('/links/react', { method:'POST', body: fd, credentials:'same-origin' });
+                return;
+              }
+              var tbtn = e.target.closest('.fab-rail [data-react-text]');
+              if (tbtn) {
+                var item2 = currentItem || feed.querySelector('.scroll-item');
+                if (!item2) return;
+                var linkId2 = item2.getAttribute('data-link-id');
+                var text = prompt('Add reaction');
+                if (text && text.trim()) {
+                  var fd2 = new FormData(); fd2.append('link_id', linkId2); fd2.append('reaction_text', text.trim());
+                  fetch('/links/react', { method:'POST', body: fd2, credentials:'same-origin' });
+                }
+              }
+            });
           }
         } catch (e) {}
       });
@@ -357,8 +408,10 @@ function homePage(username, opts = {}, activeTab = 'home') {
               <source src="https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4" type="video/mp4">
             </video>
             <div class="react-menu">
-              <button data-react="??" title="Heart">??</button>
-              <button data-react="??" title="Thumbs up">??</button>
+              <div class="row" style="margin-top:0">
+                <button class="secondary" data-save="${v.saved ? '0' : '1'}">${v.saved ? 'Unsave' : 'Save'}</button>
+                <a class="btn secondary" href="https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4" download target="_blank" rel="noopener noreferrer">Download</a>
+              </div>
             </div>
             <div style="color:var(--sub);margin-top:6px">from <strong>${escapeHtml(v.sender_username)}</strong>${v.reaction ? ` — Your reaction: ${escapeHtml(v.reaction)}` : ''}</div>
           </div>
@@ -504,7 +557,7 @@ function homePage(username, opts = {}, activeTab = 'home') {
       <button type="submit" class="secondary">Logout</button>
     </form>
     </div>
-    <!-- Bottom nav removed; floating action button added -->
+    <!-- Bottom nav removed; action control updated -->
     ${activeTab==='scroll' ? `<a href="/" class="fab" aria-label="Home">🏠</a>` : `<a href="/scroll" class="fab" aria-label="Inbox">📥</a>`}
   </body>
 </html>`;
@@ -603,10 +656,54 @@ function scrollPage(username, list) {
             });
           })(items[i]);
         }
+
+        // Track current visible item for rail actions
+        var currentItem = null;
+        try {
+          var io2 = new IntersectionObserver(function(entries){
+            entries.forEach(function(entry){ if (entry.isIntersecting) { currentItem = entry.target; } });
+          }, { root: null, threshold: 0.6 });
+          for (var j=0;j<items.length;j++){ io2.observe(items[j]); }
+        } catch(_){}
+
+        // Replace floating circle with vertical rail
+        try {
+          var fab = document.querySelector('a.fab');
+          if (fab) fab.style.display = 'none';
+          var rail = document.createElement('div');
+          rail.className = 'fab-rail';
+          rail.innerHTML = '\n            <a href="/" class="fab-rail-btn" aria-label="Home" title="Home">🏠</a>\n            <button class="fab-rail-btn" data-react-text aria-label="Add reaction text" title="Add reaction text">💬</button>\n            <button class="fab-rail-btn" data-react="👍" aria-label="Thumbs up" title="Thumbs up">👍</button>\n            <button class="fab-rail-btn" data-react="❤️" aria-label="Heart" title="Heart">❤️</button>\n          ';
+          document.body.appendChild(rail);
+        } catch(_){}
+
+        // Rail click handlers (reactions + text)
+        document.addEventListener('click', function(e){
+          var rbtn = e.target.closest('.fab-rail [data-react]');
+          if (rbtn) {
+            var item = currentItem || document.querySelector('.scroll-item');
+            if (!item) return;
+            var linkId = item.getAttribute('data-link-id');
+            var val = rbtn.getAttribute('data-react');
+            var fd = new FormData(); fd.append('link_id', linkId); fd.append('reaction', val);
+            fetch('/links/react', { method:'POST', body: fd, credentials:'same-origin' });
+            return;
+          }
+          var tbtn = e.target.closest('.fab-rail [data-react-text]');
+          if (tbtn) {
+            var item2 = currentItem || document.querySelector('.scroll-item');
+            if (!item2) return;
+            var linkId2 = item2.getAttribute('data-link-id');
+            var text = prompt('Add reaction');
+            if (text && text.trim()) {
+              var fd2 = new FormData(); fd2.append('link_id', linkId2); fd2.append('reaction_text', text.trim());
+              fetch('/links/react', { method:'POST', body: fd2, credentials:'same-origin' });
+            }
+          }
+        });
       });
     </script>
   </head>
-  <body>
+  <body class="scroll-view">
     <div class="scroll-feed">
       ${list.map(v => `
         <div class=\"scroll-item\" data-link-id=\"${escapeHtml(v.id)}\">\n          <video class=\"asset-video\" data-link-id=\"${escapeHtml(v.id)}\" playsinline preload=\"metadata\">\n            <source src=\"https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4\" type=\"video/mp4\">\n          </video>\n          <div class=\"play-overlay\"><div class=\"play-btn\">&#9658;</div></div>\n          <div class=\"react-backdrop\"></div>\n          <div class=\"react-menu\">\n            <div>\n              <button data-react=\"👍\" title=\"Thumbs up\">👍</button>
@@ -619,7 +716,7 @@ function scrollPage(username, list) {
           </div>\n        </div>
       `).join('')}
     </div>
-    <!-- Bottom nav removed; floating action button added -->
+    <!-- Bottom nav removed; action control updated -->
     <a href="/" class="fab" aria-label="Home">🏠</a>
   </body>
 </html>`;
