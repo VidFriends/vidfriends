@@ -581,6 +581,11 @@ export default {
       return headers;
     }
 
+    if (req.method === 'GET' && url.pathname === '/welcome') {
+      const headers = applySecurityHeaders(new Headers({ 'Content-Type': 'text/html;charset=UTF-8' }));
+      return new Response(welcomePage(), { headers });
+    }
+
     if (req.method === 'GET' && url.pathname === '/login') {
       const headers = applySecurityHeaders(new Headers({ 'Content-Type': 'text/html;charset=UTF-8' }));
       return new Response(loginPage(), { headers });
@@ -914,10 +919,8 @@ async function handleHome(req, env) {
       // Invalid/expired JWT: do not fall back per request
     }
   }
-  // Not signed in -> show welcome page instead of redirecting
-  const headers = new Headers({ 'Content-Type': 'text/html;charset=UTF-8' });
-  try { headers.set('Permissions-Policy', 'accelerometer=(), autoplay=(), camera=(), encrypted-media=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()'); headers.set('Referrer-Policy', 'strict-origin-when-cross-origin'); headers.set('X-Content-Type-Options', 'nosniff'); } catch(_){}
-  return new Response(welcomePage(), { headers });
+  // Not signed in -> redirect to /welcome
+  return new Response(null, { status: 302, headers: { Location: '/welcome' } });
 }
 
 async function fetchFriendLists(env, meId) {
