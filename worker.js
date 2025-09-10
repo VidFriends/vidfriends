@@ -1976,6 +1976,23 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
     // Some authenticators return raw r|s (64 bytes) instead of DER. Convert if needed.
     let sig = signatureBytes;
     logj('[webauthn] verify: sig preview', { len: sig.length, der: sig[0] === 0x30, head: hexPreview(sig, 32) });
+    function derInts(sigBytes) {
+      try {
+        let p = 0;
+        if (sigBytes[p++] !== 0x30) return null;
+        let len = sigBytes[p++];
+        if (len & 0x80) { const n = len & 0x7f; len = 0; for (let i=0;i<n;i++) len = (len << 8) | sigBytes[p++]; }
+        if (sigBytes[p++] !== 0x02) return null;
+        let rLen = sigBytes[p++]; if (rLen & 0x80) { const n = rLen & 0x7f; rLen = 0; for (let i=0;i<n;i++) rLen = (rLen<<8)|sigBytes[p++]; }
+        const r = sigBytes.slice(p, p + rLen); p += rLen;
+        if (sigBytes[p++] !== 0x02) return null;
+        let sLen = sigBytes[p++]; if (sLen & 0x80) { const n = sLen & 0x7f; sLen = 0; for (let i=0;i<n;i++) sLen = (sLen<<8)|sigBytes[p++]; }
+        const s = sigBytes.slice(p, p + sLen);
+        return { r, s };
+      } catch (_) { return null; }
+    }
+    const preInts = (sig && sig[0] === 0x30) ? derInts(sig) : null;
+    if (preInts) logj('[webauthn] verify: DER ints (pre)', { r: hexPreview(preInts.r, 40), s: hexPreview(preInts.s, 40), rLen: preInts.r.length, sLen: preInts.s.length });
     if (sig && sig.length === 65 && sig[0] === 0x00) {
       // Occasionally signatures include a leading 0x00; strip it
       sig = sig.slice(1);
@@ -2012,6 +2029,8 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
         logj('[webauthn] verify: converted raw r|s to DER', { len: sig.length, head: hexPreview(sig, 32) });
       }
     }
+    const postInts = (sig && sig[0] === 0x30) ? derInts(sig) : null;
+    if (postInts) logj('[webauthn] verify: DER ints (post)', { r: hexPreview(postInts.r, 40), s: hexPreview(postInts.s, 40), rLen: postInts.r.length, sLen: postInts.s.length });
     // Use spec-compliant hash identifier object for maximum compatibility
     let ok = await crypto.subtle.verify({ name: 'ECDSA', hash: { name: 'SHA-256' } }, key, sig, toVerify);
     logj('[webauthn] verify: ECDSA result', { ok });
@@ -2046,6 +2065,7 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
         }
         const rT = trimInt2(r);
         const sT = trimInt2(s);
+        logj('[webauthn] verify: ECDSA normalize parts', { r: hexPreview(r, 40), s: hexPreview(s, 40), rT: hexPreview(rT, 40), sT: hexPreview(sT, 40) });
         const nSeqLen = 2 + rT.length + 2 + sT.length;
         const der2 = new Uint8Array(2 + nSeqLen);
         let o2 = 0;
