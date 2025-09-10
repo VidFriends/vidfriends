@@ -471,11 +471,11 @@ function homePage(username, opts = {}, activeTab = 'home') {
             - from <strong>${escapeHtml(v.sender_username)}</strong>
             <form method="POST" action="/links/react" style="display:inline; margin-left:8px;">
               <input type="hidden" name="link_id" value="${escapeHtml(v.id)}" />
-              <button type="submit" name="reaction" value="❤️" title="Heart">❤️</button>
+              <button type="submit" name="reaction" value="??" title="Heart">??</button>
             </form>
             <form method="POST" action="/links/react" style="display:inline; margin-left:4px;">
               <input type="hidden" name="link_id" value="${escapeHtml(v.id)}" />
-              <button type="submit" name="reaction" value="👍" title="Thumbs up">👍</button>
+              <button type="submit" name="reaction" value="??" title="Thumbs up">??</button>
             </form>
             <form method="POST" action="/links/react" style="display:inline; margin-left:8px;">
               <input type="hidden" name="link_id" value="${escapeHtml(v.id)}" />
@@ -547,7 +547,7 @@ function homePage(username, opts = {}, activeTab = 'home') {
     </form>
     </div>
     <!-- Bottom nav removed; floating action button added -->
-    ${activeTab==='scroll' ? `<a href="/" class="fab" aria-label="Home">🏠</a>` : `<a href="/scroll" class="fab" aria-label="Inbox">📥</a>`}
+    ${activeTab==='scroll' ? `<a href="/" class="fab" aria-label="Home">??</a>` : `<a href="/scroll" class="fab" aria-label="Inbox">??</a>`}
   </body>
 </html>`;
 }
@@ -583,11 +583,13 @@ function scrollPage(username, list) {
       /* Vertical pill rail for reactions + home */
       .fab{display:none!important}
       .fab-rail{position:fixed;right:16px;bottom:16px;width:56px;background:var(--muted);border:1px solid #202a3b;border-radius:28px;box-shadow:0 6px 16px rgba(0,0,0,0.45);display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0;z-index:40}
-      .fab-rail button,.fab-rail a{width:40px;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--text);border:0;cursor:pointer;text-decoration:none;font-size:20px}
+      .fab-rail button,.fab-rail a{width:40px;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--text);border:0;cursor:pointer;text-decoration:none;font-size:20px;position:relative}
       .fab-rail a.home{font-size:18px}
       .fab-react-panel{position:fixed;right:84px;bottom:16px;background:rgba(18,24,38,0.96);border:1px solid #202a3b;border-radius:12px;padding:8px;display:none;z-index:41;min-width:220px}
       .fab-react-panel .row{display:flex;gap:8px}
       .fab-react-panel input{flex:1}
+      /* Reaction highlight indicator */
+      .fab-rail button.active::after{content:'';position:absolute;bottom:-3px;width:8px;height:8px;border-radius:50%;background:#fff}
       /* Hide reaction buttons and input in double-tap menu on scroll page */
       .scroll-item .react-menu [data-react],
       .scroll-item .react-menu [data-react-send],
@@ -670,6 +672,7 @@ function scrollPage(username, list) {
           rail.innerHTML = '<button class="btn-heart" title="Heart">❤️</button>'+
                            '<button class="btn-like" title="Thumbs up">👍</button>'+
                            '<button class="btn-text" title="Text reaction">💬</button>'+
+                           '<button class="btn-play" title="Play/Pause">▶️</button>'+
                            '<a href="/" class="home" aria-label="Home">🏠</a>';
           document.body.appendChild(rail);
           var panel = document.createElement('div');
@@ -692,15 +695,29 @@ function scrollPage(username, list) {
             }
             return best;
           }
+          var reactionMap = Object.create(null);
+          function setActiveReactionFor(linkId, val){ reactionMap[linkId] = val; updateHighlights(); }
+          function updateHighlights(){
+            try{
+              var item = getActiveItem(); if (!item) return;
+              var linkId = item.getAttribute('data-link-id');
+              var val = reactionMap[linkId] || '';
+              [heartBtn, likeBtn, textBtn].forEach(function(b){ if(b){ b.classList.remove('active'); }});
+              if (val === '❤️' && heartBtn) heartBtn.classList.add('active');
+              else if (val === '👍' && likeBtn) likeBtn.classList.add('active');
+              else if (val === 'text' && textBtn) textBtn.classList.add('active');
+            }catch(e){}
+          }
           function sendReaction(val){
             var item = getActiveItem(); if (!item) return;
             var linkId = item.getAttribute('data-link-id');
             var fd = new FormData(); fd.append('link_id', linkId); fd.append('reaction', val);
-            fetch('/links/react', { method:'POST', body: fd, credentials:'same-origin' }).catch(function(){});
+            fetch('/links/react', { method:'POST', body: fd, credentials:'same-origin' }).then(function(){ setActiveReactionFor(linkId, val); }).catch(function(){});
           }
           var likeBtn = rail.querySelector('.btn-like');
           var heartBtn = rail.querySelector('.btn-heart');
           var textBtn = rail.querySelector('.btn-text');
+          var playBtn = rail.querySelector('.btn-play');
           var panelInput = panel.querySelector('.react-input');
           var panelSend = panel.querySelector('[data-react-send]');
           if (likeBtn) likeBtn.addEventListener('click', function(){ sendReaction('👍'); });
@@ -711,13 +728,27 @@ function scrollPage(username, list) {
             var text = (panelInput.value||'').trim(); if (!text) return;
             var linkId = item.getAttribute('data-link-id');
             var fd = new FormData(); fd.append('link_id', linkId); fd.append('reaction_text', text);
-            fetch('/links/react', { method:'POST', body: fd, credentials:'same-origin' }).then(function(){ panelInput.value=''; panel.style.display='none'; }).catch(function(){});
+            fetch('/links/react', { method:'POST', body: fd, credentials:'same-origin' }).then(function(){ panelInput.value=''; panel.style.display='none'; setActiveReactionFor(linkId, 'text'); }).catch(function(){});
           });
+          function getActiveVideo(){ var it = getActiveItem(); return it ? it.querySelector('video') : null; }
+          function updatePlayIcon(){ try{ if (!playBtn) return; var v = getActiveVideo(); playBtn.textContent = (v && !v.paused) ? '⏸️' : '▶️'; }catch(e){} }
+          if (playBtn) playBtn.addEventListener('click', function(){ var v = getActiveVideo(); if (!v) return; if (v.paused) { v.play().catch(function(){}); } else { v.pause(); } updatePlayIcon(); });
           document.addEventListener('click', function(e){
             var inPanel = e.target.closest('.fab-react-panel');
             var inBtn = e.target.closest('.fab-rail .btn-text');
             if (!inPanel && !inBtn) panel.style.display='none';
           });
+          // keep UI in sync with current item and playback
+          var feedEl = document.querySelector('.scroll-feed');
+          function syncUI(){ updatePlayIcon(); updateHighlights(); }
+          if (feedEl) feedEl.addEventListener('scroll', function(){ syncUI(); });
+          // Also reflect native play/pause events
+          var vidsAll = document.querySelectorAll('video.asset-video');
+          for (var vi=0; vi<vidsAll.length; vi++){
+            vidsAll[vi].addEventListener('play', syncUI);
+            vidsAll[vi].addEventListener('pause', syncUI);
+          }
+          syncUI();
         } catch (e) {}
       });
     </script>
@@ -725,8 +756,8 @@ function scrollPage(username, list) {
   <body>
     <div class="scroll-feed">
       ${list.map(v => `
-        <div class=\"scroll-item\" data-link-id=\"${escapeHtml(v.id)}\">\n          <video class=\"asset-video\" data-link-id=\"${escapeHtml(v.id)}\" playsinline preload=\"metadata\">\n            <source src=\"https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4\" type=\"video/mp4\">\n          </video>\n          <div class=\"play-overlay\"><div class=\"play-btn\">&#9658;</div></div>\n          <div class=\"react-backdrop\"></div>\n          <div class=\"react-menu\">\n            <div>\n              <button data-react=\"👍\" title=\"Thumbs up\">👍</button>
-              <button data-react=\"❤️\" title=\"Heart\">❤️</button>
+        <div class=\"scroll-item\" data-link-id=\"${escapeHtml(v.id)}\">\n          <video class=\"asset-video\" data-link-id=\"${escapeHtml(v.id)}\" playsinline preload=\"metadata\">\n            <source src=\"https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4\" type=\"video/mp4\">\n          </video>\n          <div class=\"react-backdrop\"></div>\n          <div class=\"react-menu\">\n            <div>\n              <button data-react=\"??\" title=\"Thumbs up\">??</button>
+              <button data-react=\"??\" title=\"Heart\">??</button>
             </div>
             <div class=\"row\" style=\"margin-top:8px\">\n              <input class=\"react-input\" placeholder=\"Add reaction\" />\n              <button data-react-send>Send</button>\n            </div>
             <div class=\"row\" style=\"margin-top:8px\">\n              <button class=\"secondary\" data-save=\"${v.saved ? '0' : '1'}\">${v.saved ? 'Unsave' : 'Save'}</button>
@@ -736,7 +767,7 @@ function scrollPage(username, list) {
       `).join('')}
     </div>
     <!-- Bottom nav removed; floating action button added -->
-    <a href="/" class="fab" aria-label="Home">🏠</a>
+    <a href="/" class="fab" aria-label="Home">??</a>
   </body>
 </html>`;
 }
@@ -2281,3 +2312,4 @@ async function handlePasskeyAuthVerify(req, env){
   headers.append('Set-Cookie', cookie('refresh', refreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60 * 24 * 60 * 60 }));
   return new Response(null, { status: 204, headers });
 }
+
