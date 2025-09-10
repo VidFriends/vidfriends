@@ -1676,7 +1676,9 @@ async function webauthnLoginVerify(req, env) {
     .first();
   if (!credRow) { logj('[webauthn] verify: unknown credential', { rawId: body.rawId }); return new Response('Unknown credential', { status: 404 }); }
   const jwk = JSON.parse(credRow.public_key);
-  logj('[webauthn] verify: key', { kty: jwk.kty, crv: jwk.crv, x: jwk.x && jwk.x.slice(0,24)+'...', y: jwk.y && jwk.y.slice(0,24)+'...' });
+  let xLen = undefined, yLen = undefined;
+  try { if (jwk && jwk.x) xLen = base64urlToUint8(jwk.x).length; if (jwk && jwk.y) yLen = base64urlToUint8(jwk.y).length; } catch(_){}
+  logj('[webauthn] verify: key', { kty: jwk.kty, crv: jwk.crv, x: jwk.x && jwk.x.slice(0,24)+'...', y: jwk.y && jwk.y.slice(0,24)+'...', xLen, yLen });
   try {
     const clientHash = await sha256Bytes(clientData);
     const toVerify = new Uint8Array(authData.length + clientHash.length);
@@ -1965,6 +1967,50 @@ async function importPublicKeyFromJwk(jwk) {
   throw new Error('Unsupported key');
 }
 
+function derWriteLen(len) {
+  if (len < 128) return Uint8Array.from([len]);
+  const bytes = [];
+  while (len > 0) { bytes.unshift(len & 0xff); len >>= 8; }
+  return Uint8Array.from([0x80 | bytes.length, ...bytes]);
+}
+
+function derSeq(contents) {
+  const len = contents.length;
+  const hdr = Uint8Array.from([0x30]);
+  const l = derWriteLen(len);
+  const out = new Uint8Array(1 + l.length + len);
+  out.set(hdr, 0);
+  out.set(l, 1);
+  out.set(contents, 1 + l.length);
+  return out;
+}
+
+function derBitString(bytes) {
+  const hdr = Uint8Array.from([0x03]);
+  const body = Uint8Array.from([0x00, ...bytes]); // 0 unused bits + data
+  const l = derWriteLen(body.length);
+  const out = new Uint8Array(1 + l.length + body.length);
+  out.set(hdr, 0);
+  out.set(l, 1);
+  out.set(body, 1 + l.length);
+  return out;
+}
+
+function ecP256JwkToSpki(jwk) {
+  // Build SPKI for EC P-256 public key from x/y
+  const x = base64urlToUint8(jwk.x);
+  const y = base64urlToUint8(jwk.y);
+  const uncompressed = Uint8Array.from([0x04, ...x, ...y]);
+  // ecPublicKey OID: 1.2.840.10045.2.1 -> 06 07 2A 86 48 CE 3D 02 01
+  const oidEcPub = Uint8Array.from([0x06, 0x07, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x02, 0x01]);
+  // prime256v1 OID: 1.2.840.10045.3.1.7 -> 06 08 2A 86 48 CE 3D 03 01 07
+  const oidP256  = Uint8Array.from([0x06, 0x08, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x03, 0x01, 0x07]);
+  const algId = derSeq(new Uint8Array([...oidEcPub, ...oidP256]));
+  const pub = derBitString(uncompressed);
+  const spki = derSeq(new Uint8Array([...algId, ...pub]));
+  return spki;
+}
+
 async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJSONBytes, signatureBytes) {
   const clientHash = await sha256Bytes(clientDataJSONBytes);
   const toVerify = new Uint8Array(authenticatorDataBytes.length + clientHash.length);
@@ -2082,6 +2128,18 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
         return ok2;
       } catch (e) {
         logj('[webauthn] verify: ECDSA normalize error', { err: (e && (e.stack || e.message || e)) });
+      }
+    }
+    if (!ok) {
+      // Fallback: import as SPKI and verify again (some runtimes have JWK quirks)
+      try {
+        const spki = ecP256JwkToSpki(jwk);
+        const key2 = await crypto.subtle.importKey('spki', spki, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+        const ok3 = await crypto.subtle.verify({ name: 'ECDSA', hash: { name: 'SHA-256' } }, key2, sig, toVerify);
+        logj('[webauthn] verify: ECDSA SPKI fallback result', { ok: ok3 });
+        if (ok3) return true;
+      } catch (e) {
+        logj('[webauthn] verify: ECDSA SPKI fallback error', { err: (e && (e.stack || e.message || e)) });
       }
     }
     return ok;
