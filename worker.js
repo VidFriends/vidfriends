@@ -495,11 +495,20 @@ function homePage(username, opts = {}) {
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
+    function applySecurityHeaders(headers) {
+      try {
+        // Avoid unsupported Privacy Sandbox features to silence console warnings
+        headers.set('Permissions-Policy', 'accelerometer=(), autoplay=(), camera=(), encrypted-media=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()');
+        // Light, broadly compatible security headers
+        headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        headers.set('X-Content-Type-Options', 'nosniff');
+      } catch (_) {}
+      return headers;
+    }
 
     if (req.method === 'GET' && url.pathname === '/login') {
-      return new Response(loginPage(), {
-        headers: { 'Content-Type': 'text/html;charset=UTF-8' },
-      });
+      const headers = applySecurityHeaders(new Headers({ 'Content-Type': 'text/html;charset=UTF-8' }));
+      return new Response(loginPage(), { headers });
     }
 
     // Favicon and manifest endpoints
@@ -536,9 +545,8 @@ export default {
     }
 
     if (req.method === 'GET' && url.pathname === '/signup') {
-      return new Response(signupPage(), {
-        headers: { 'Content-Type': 'text/html;charset=UTF-8' },
-      });
+      const headers = applySecurityHeaders(new Headers({ 'Content-Type': 'text/html;charset=UTF-8' }));
+      return new Response(signupPage(), { headers });
     }
 
     if (req.method === 'POST' && url.pathname === '/signup') {
@@ -743,9 +751,9 @@ async function handleHome(req, env) {
         const lists = await fetchFriendLists(env, idFromJwt);
         const inbox = await fetchInboxLinks(env, idFromJwt);
         const sent = await fetchSentLinks(env, idFromJwt);
-        return new Response(homePage(nameFromJwt, { ...lists, inbox, sent }), {
-          headers: { 'Content-Type': 'text/html;charset=UTF-8' },
-        });
+        const headers = new Headers({ 'Content-Type': 'text/html;charset=UTF-8' });
+        try { headers.set('Permissions-Policy', 'accelerometer=(), autoplay=(), camera=(), encrypted-media=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()'); headers.set('Referrer-Policy', 'strict-origin-when-cross-origin'); headers.set('X-Content-Type-Options', 'nosniff'); } catch(_){}
+        return new Response(homePage(nameFromJwt, { ...lists, inbox, sent }), { headers });
       }
       // Missing username or sub claim: fall back to DB via session cookie
       const sessionId = getCookie(req, 'session');
@@ -758,9 +766,9 @@ async function handleHome(req, env) {
           const lists = await fetchFriendLists(env, row.user_id);
           const inbox = await fetchInboxLinks(env, row.user_id);
           const sent = await fetchSentLinks(env, row.user_id);
-          return new Response(homePage(row.username, { ...lists, inbox, sent }), {
-            headers: { 'Content-Type': 'text/html;charset=UTF-8' },
-          });
+          const headers = new Headers({ 'Content-Type': 'text/html;charset=UTF-8' });
+          try { headers.set('Permissions-Policy', 'accelerometer=(), autoplay=(), camera=(), encrypted-media=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()'); headers.set('Referrer-Policy', 'strict-origin-when-cross-origin'); headers.set('X-Content-Type-Options', 'nosniff'); } catch(_){}
+          return new Response(homePage(row.username, { ...lists, inbox, sent }), { headers });
         }
       }
     } catch (_) {
@@ -973,14 +981,18 @@ async function handleSaved(req, env) {
   const me = await getAuthUser(req, env);
   if (!me || !env || !env.vidshare) return new Response(null, { status: 302, headers: { Location: '/login' } });
   const list = await fetchSavedLinks(env, me.userId);
-  return new Response(savedPage(me.username || '', list), { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
+  const headers = new Headers({ 'Content-Type': 'text/html;charset=UTF-8' });
+  try { headers.set('Permissions-Policy', 'accelerometer=(), autoplay=(), camera=(), encrypted-media=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()'); headers.set('Referrer-Policy', 'strict-origin-when-cross-origin'); headers.set('X-Content-Type-Options', 'nosniff'); } catch(_){}
+  return new Response(savedPage(me.username || '', list), { headers });
 }
 
 async function handleHistory(req, env) {
   const me = await getAuthUser(req, env);
   if (!me || !env || !env.vidshare) return new Response(null, { status: 302, headers: { Location: '/login' } });
   const list = await fetchHistoryLinks(env, me.userId);
-  return new Response(historyPage(me.username || '', list), { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
+  const headers = new Headers({ 'Content-Type': 'text/html;charset=UTF-8' });
+  try { headers.set('Permissions-Policy', 'accelerometer=(), autoplay=(), camera=(), encrypted-media=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()'); headers.set('Referrer-Policy', 'strict-origin-when-cross-origin'); headers.set('X-Content-Type-Options', 'nosniff'); } catch(_){}
+  return new Response(historyPage(me.username || '', list), { headers });
 }
 
 async function getAuthUser(req, env) {
