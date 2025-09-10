@@ -83,9 +83,11 @@ function baseHead(title) {
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-.container{max-width:720px;margin:0 auto;padding:16px}
+.container{max-width:720px;margin:0 auto;padding:16px 16px 84px}
 h1,h2,h3{margin:0 0 12px 0;font-weight:650}
 nav{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;background:var(--surface);border-top:1px solid #202a3b;padding:10px;z-index:20}
+.bottom-nav a{flex:1}
 .tabs{display:flex;gap:0;border-bottom:1px solid #202a3b;margin:8px 0 12px}
 .tabs a{flex:1;text-align:center;padding:10px 12px;color:var(--sub);text-decoration:none;border:1px solid #202a3b;border-bottom:none;border-top-left-radius:12px;border-top-right-radius:12px;background:var(--surface)}
 .tabs a.active{background:var(--muted);color:var(--text);font-weight:650}
@@ -101,8 +103,9 @@ li{padding:12px;border:1px solid #202a3b;border-radius:10px;background:var(--mut
 a{color:var(--primary);text-decoration:none}
 a:hover{text-decoration:underline}
 video{width:100%;height:auto;border-radius:10px;background:#000}
-.scroll-feed{scroll-snap-type:y mandatory;max-height:calc(100vh - 220px);overflow-y:auto}
-.scroll-item{scroll-snap-align:start;position:relative}
+.scroll-feed{scroll-snap-type:y mandatory;height:100vh;overflow-y:auto;padding-bottom:84px;margin:0}
+.scroll-item{scroll-snap-align:start;position:relative;height:100vh}
+.scroll-item video{width:100%;height:100%;object-fit:cover;border-radius:0}
 .react-menu{position:absolute;inset:auto 12px 12px auto;background:rgba(18,24,38,0.96);border:1px solid #202a3b;border-radius:12px;padding:8px;display:none;z-index:3}
 .react-menu button{margin:4px 6px 0 0}
 .react-backdrop{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.25);z-index:2;border-radius:10px}
@@ -500,6 +503,10 @@ function homePage(username, opts = {}, activeTab = 'home') {
       <button type="submit" class="secondary">Logout</button>
     </form>
     </div>
+    <nav class="bottom-nav">
+      <a href="/"><button type="button" class="secondary">Home</button></a>
+      <a href="/scroll"><button type="button" class="secondary">Scroll</button></a>
+    </nav>
   </body>
 </html>`;
 }
@@ -519,6 +526,59 @@ function welcomePage() {
         <a href="/login"><button class="secondary">Log In</button></a>
       </nav>
     </div>
+  </body>
+</html>`;
+}
+
+function scrollPage(username, list) {
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    ${baseHead('Scroll - VidFriends')}
+    <style>
+      body{background:#000}
+    </style>
+    <script>
+      document.addEventListener('DOMContentLoaded', function(){
+        // Auto play/pause by viewport
+        var items = document.querySelectorAll('.scroll-item');
+        var io = new IntersectionObserver(function(entries){
+          entries.forEach(function(entry){
+            var v = entry.target.querySelector('video');
+            if (!v) return;
+            if (entry.isIntersecting) { v.play().catch(function(){}); }
+            else { v.pause(); }
+          });
+        }, { threshold: 0.6 });
+        for (var i=0;i<items.length;i++){ io.observe(items[i]); }
+        // Tap to toggle mute; first play -> watched
+        var vids = document.querySelectorAll('video.asset-video');
+        for (var k=0;k<vids.length;k++){
+          (function(v){
+            var linkId = v.getAttribute('data-link-id');
+            v.addEventListener('play', function(){
+              if (v.getAttribute('data-played') !== '1') {
+                v.setAttribute('data-played','1');
+                var fd = new FormData(); fd.append('link_id', linkId);
+                fetch('/links/watched', { method: 'POST', body: fd, credentials: 'same-origin' });
+              }
+            });
+            v.addEventListener('click', function(){ v.muted = !v.muted; });
+          })(vids[k]);
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <div class="scroll-feed">
+      ${list.map(v => `
+        <div class=\"scroll-item\" data-link-id=\"${escapeHtml(v.id)}\">\n          <video class=\"asset-video\" data-link-id=\"${escapeHtml(v.id)}\" autoplay muted playsinline preload=\"metadata\">\n            <source src=\"https://assets.vidfriends.app/videos/${escapeHtml(v.id)}.mp4\" type=\"video/mp4\">\n          </video>\n        </div>
+      `).join('')}
+    </div>
+    <nav class="bottom-nav">
+      <a href="/"><button type="button" class="secondary">Home</button></a>
+      <a href="/scroll"><button type="button" class="secondary">Scroll</button></a>
+    </nav>
   </body>
 </html>`;
 }
@@ -580,7 +640,7 @@ export default {
 
     // Minimal service worker to enable installability & light caching
     if (req.method === 'GET' && url.pathname === '/sw.js') {
-      const sw = `self.addEventListener('install', (e)=>{self.skipWaiting(); e.waitUntil(caches.open('vf-v1').then(c=>c.addAll(['/','/saved','/history'])))});
+      const sw = `self.addEventListener('install', (e)=>{self.skipWaiting(); e.waitUntil(caches.open('vf-v1').then(c=>c.addAll(['/','/saved','/history','/scroll'])))});
 self.addEventListener('activate', (e)=>{clients.claim()});
 self.addEventListener('fetch', (event)=>{
   const req = event.request;
@@ -632,6 +692,10 @@ self.addEventListener('notificationclick', (event)=>{
 
     if (req.method === 'GET' && url.pathname === '/') {
       return handleHome(req, env);
+    }
+
+    if (req.method === 'GET' && url.pathname === '/scroll') {
+      return handleScroll(req, env);
     }
 
     if (req.method === 'GET' && url.pathname === '/saved') {
@@ -1115,6 +1179,15 @@ async function getAuthUser(req, env) {
     }
   } catch (_) {}
   return null;
+}
+
+async function handleScroll(req, env) {
+  const me = await getAuthUser(req, env);
+  if (!me || !env || !env.vidshare) return new Response(null, { status: 302, headers: { Location: '/login' } });
+  const list = await fetchInboxLinks(env, me.userId);
+  const headers = new Headers({ 'Content-Type': 'text/html;charset=UTF-8' });
+  try { headers.set('Permissions-Policy', 'accelerometer=(), autoplay=(), camera=(), encrypted-media=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()'); headers.set('Referrer-Policy', 'strict-origin-when-cross-origin'); headers.set('X-Content-Type-Options', 'nosniff'); } catch(_){}
+  return new Response(scrollPage(me.username || '', list), { headers });
 }
 
 // Push notifications
