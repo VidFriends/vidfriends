@@ -828,10 +828,11 @@ async function handleSignup(req, env) {
     .bind(sessionId, userId, refreshHash, now, expiresAt, ua, now, 0)
     .run();
 
+  const isHttps = (new URL(req.url)).protocol === 'https:';
   const headers = new Headers({ Location: '/' });
-  headers.append('Set-Cookie', cookie('session', sessionId, { httpOnly: true, sameSite: 'Lax', path: '/' }));
-  headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15 * 60 }));
-  headers.append('Set-Cookie', cookie('refresh', refreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60 * 24 * 60 * 60 }));
+  headers.append('Set-Cookie', cookie('session', sessionId, { httpOnly: true, sameSite: 'Lax', path: '/', secure: isHttps }));
+  headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15 * 60, secure: isHttps }));
+  headers.append('Set-Cookie', cookie('refresh', refreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60 * 24 * 60 * 60, secure: isHttps }));
   return new Response(null, { status: 302, headers });
 }
 
@@ -875,10 +876,11 @@ async function handleLogin(req, env) {
     )
     .bind(sessionId, cred.user_id, refreshHash, now, expiresAt, ua, now, 0)
     .run();
+  const isHttps = (new URL(req.url)).protocol === 'https:';
   const headers = new Headers({ Location: '/' });
-  headers.append('Set-Cookie', cookie('session', sessionId, { httpOnly: true, sameSite: 'Lax', path: '/' }));
-  headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15 * 60 }));
-  headers.append('Set-Cookie', cookie('refresh', refreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60 * 24 * 60 * 60 }));
+  headers.append('Set-Cookie', cookie('session', sessionId, { httpOnly: true, sameSite: 'Lax', path: '/', secure: isHttps }));
+  headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15 * 60, secure: isHttps }));
+  headers.append('Set-Cookie', cookie('refresh', refreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60 * 24 * 60 * 60, secure: isHttps }));
   return new Response(null, { status: 302, headers });
 }
 
@@ -916,7 +918,22 @@ async function handleHome(req, env) {
         }
       }
     } catch (_) {
-      // Invalid/expired JWT: do not fall back per request
+      // Invalid/expired JWT: fall back via session cookie
+      const sessionId = getCookie(req, 'session');
+      if (sessionId && env && env.vidshare) {
+        const row = await env.vidshare
+          .prepare('SELECT users.id as user_id, users.username FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.id = ?1')
+          .bind(sessionId)
+          .first();
+        if (row && row.username && row.user_id) {
+          const lists = await fetchFriendLists(env, row.user_id);
+          const inbox = await fetchInboxLinks(env, row.user_id);
+          const sent = await fetchSentLinks(env, row.user_id);
+          const headers = new Headers({ 'Content-Type': 'text/html;charset=UTF-8' });
+          try { headers.set('Permissions-Policy', 'accelerometer=(), autoplay=(), camera=(), encrypted-media=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()'); headers.set('Referrer-Policy', 'strict-origin-when-cross-origin'); headers.set('X-Content-Type-Options', 'nosniff'); } catch(_){}
+          return new Response(homePage(row.username, { ...lists, inbox, sent }), { headers });
+        }
+      }
     }
   }
   // Not signed in -> redirect to /welcome
@@ -1772,9 +1789,10 @@ async function handleRefresh(req, env) {
     if (row && row.username) usernameForJwt = row.username;
   } catch (_) {}
   const jwt = await createJWT({ sub: session.user_id, username: usernameForJwt, iat: now, exp: now + 15 * 60 }, env);
+  const isHttps = (new URL(req.url)).protocol === 'https:';
   const headers = new Headers();
-  headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15 * 60 }));
-  headers.append('Set-Cookie', cookie('refresh', newRefreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60 * 24 * 60 * 60 }));
+  headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15 * 60, secure: isHttps }));
+  headers.append('Set-Cookie', cookie('refresh', newRefreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60 * 24 * 60 * 60, secure: isHttps }));
   return new Response(null, { status: 204, headers });
 }
 
