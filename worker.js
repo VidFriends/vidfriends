@@ -1928,7 +1928,7 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
         const der = new Uint8Array(2 + seqLen);
         let o = 0;
         der[o++] = 0x30; // SEQUENCE
-        der[o++] = seqLen; // length
+        der[o++] = seqLen; // length (short form)
         der[o++] = 0x02; // INTEGER
         der[o++] = rT.length;
         der.set(rT, o); o += rT.length;
@@ -1939,19 +1939,30 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
         try { console.log('[webauthn] verify: converted raw r|s to DER', { len: sig.length, head: hexPreview(sig, 8) }); } catch(_){}
       }
     }
-    let ok = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, sig, toVerify);
+    // Use spec-compliant hash identifier object for maximum compatibility
+    let ok = await crypto.subtle.verify({ name: 'ECDSA', hash: { name: 'SHA-256' } }, key, sig, toVerify);
     try { console.log('[webauthn] verify: ECDSA result', ok); } catch(_){}
     if (!ok && sig && sig[0] === 0x30) {
       // Try to normalize DER by parsing and re-encoding r/s
       try {
         let p = 0;
         if (sig[p++] !== 0x30) throw new Error('DER: no SEQ');
-        const seqLen = sig[p++];
+        function readLen() {
+          let len = sig[p++];
+          if (len & 0x80) {
+            const n = len & 0x7f;
+            if (n === 0 || n > 2) throw new Error('DER: len too long');
+            len = 0;
+            for (let i = 0; i < n; i++) { len = (len << 8) | sig[p++]; }
+          }
+          return len;
+        }
+        const seqLen = readLen();
         if (sig[p++] !== 0x02) throw new Error('DER: no INT r');
-        const rLen = sig[p++];
+        const rLen = readLen();
         const r = sig.slice(p, p + rLen); p += rLen;
         if (sig[p++] !== 0x02) throw new Error('DER: no INT s');
-        const sLen = sig[p++];
+        const sLen = readLen();
         const s = sig.slice(p, p + sLen);
         function trimInt2(buf) {
           let i = 0;
@@ -1966,14 +1977,14 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
         const der2 = new Uint8Array(2 + nSeqLen);
         let o2 = 0;
         der2[o2++] = 0x30;
-        der2[o2++] = nSeqLen;
+        der2[o2++] = nSeqLen; // short-form length is safe here
         der2[o2++] = 0x02;
         der2[o2++] = rT.length;
         der2.set(rT, o2); o2 += rT.length;
         der2[o2++] = 0x02;
         der2[o2++] = sT.length;
         der2.set(sT, o2);
-        const ok2 = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, der2, toVerify);
+        const ok2 = await crypto.subtle.verify({ name: 'ECDSA', hash: { name: 'SHA-256' } }, key, der2, toVerify);
         try { console.log('[webauthn] verify: ECDSA normalized result', ok2); } catch(_){}
         return ok2;
       } catch (e) {
