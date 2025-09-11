@@ -78,7 +78,8 @@ async function verifyPassword(password, stored) {
   return timingSafeEqual(hash, derived);
 }
 
-function baseHead(title) {
+// Note: UI functions moved to src/*.js; legacy kept to avoid breakage during refactor
+function baseHead_legacy(title) {
   const styles = `:root{--bg:#0b0f17;--surface:#121826;--muted:#1a2333;--text:#e6edf3;--sub:#a5b1c2;--primary:#6aa1ff;--accent:#19c37d;--danger:#ff5c5c;}
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -224,7 +225,7 @@ function signupPage() {
  </html>`;
 }
 
-function escapeHtml(str) {
+function escapeHtml_legacy(str) {
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -235,7 +236,7 @@ function escapeHtml(str) {
 
 
 
-function homePage(username, opts = {}, activeTab = 'home') {
+function homePage_legacy(username, opts = {}, activeTab = 'home') {
   const { outgoing = [], incoming = [], approved = [], inbox = [], sent = [] } = opts;
   const hasPending = incoming.length > 0 || outgoing.some((o) => o.status === 'pending');
   return `<!DOCTYPE html>
@@ -606,7 +607,7 @@ function welcomeLegacyPage() {
 </html>`;
 }
 
-function welcomePage(mode = 'signup') {
+function welcomePage_legacy(mode = 'signup') {
   const initialMode = mode === 'login' ? 'login' : 'signup';
   return `<!DOCTYPE html>
 <html lang="en">
@@ -718,7 +719,7 @@ function welcomePage(mode = 'signup') {
 </html>`;
 }
 
-function scrollPage(username, list) {
+function scrollPage_legacy(username, list) {
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -960,6 +961,11 @@ function scrollPage(username, list) {
   </body>
 </html>`;
 }
+
+import { baseHead, escapeHtml } from './src/base.js';
+import { homePage } from './src/homePage.js';
+import { welcomePage } from './src/welcomePage.js';
+import { scrollPage } from './src/scrollPage.js';
 
 export default {
   async fetch(req, env, ctx) {
