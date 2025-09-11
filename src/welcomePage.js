@@ -35,7 +35,7 @@ export function welcomePage() {
         async function registerPasskey(){
           try{
             var uname = (document.getElementById('username')||{}).value || '';
-            var ro = await fetch('/passkeys/register/options', { method:'POST', credentials:'same-origin' });
+            var ro = await fetch('/passkeys/register/options', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({ username: uname || null }) });
             if (!ro.ok) throw new Error('options');
             var o = await ro.json();
             o.challenge = b64urlToBuf(o.challenge);
