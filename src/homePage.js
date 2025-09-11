@@ -346,8 +346,8 @@ export function homePage(username, opts = {}, activeTab = 'home') {
       <button type="submit" class="secondary">Logout</button>
     </form>
     </div>
-    <!-- Bottom nav removed; floating action button added -->
+    
     ${activeTab==='scroll' ? `<a href="/" class="fab" aria-label="Home">🏠</a>` : `<a href="/scroll" class="fab" aria-label="Scroll">🎥</a>`}
   </body>
 </html>`;
-    ${activeTab==='scroll' ? `<a href=/ class=fab aria-label=Home>&#127968;</a>` : `<a href=/scroll class=fab aria-label=Scroll>&#127909;</a>`}
+    
