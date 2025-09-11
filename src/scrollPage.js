@@ -7,9 +7,7 @@ export function scrollPage(username, list) {
     ${baseHead('Scroll - VidFriends')}
     <style>
       body{background:#000}
-      /* Center the double-tap menu on the video */
       .scroll-item .react-menu{left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,-50%)}
-      /* Vertical pill rail for reactions + home */
       .fab{display:none!important}
       .fab-rail{position:fixed;right:16px;bottom:16px;width:56px;background:var(--muted);border:1px solid #202a3b;border-radius:28px;box-shadow:0 6px 16px rgba(0,0,0,0.45);display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0;z-index:40}
       .fab-rail button,.fab-rail a{width:40px;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--text);border:0;cursor:pointer;text-decoration:none;font-size:20px;position:relative}
@@ -18,9 +16,7 @@ export function scrollPage(username, list) {
       .fab-react-panel .panel-box{background:rgba(18,24,38,0.96);border:1px solid #202a3b;border-radius:12px;padding:12px;width:90vw;max-width:640px}
       .fab-react-panel textarea.react-input{width:100%;min-height:36vh;background:var(--surface);border:1px solid #2a3446;color:var(--text);border-radius:10px;padding:12px;resize:vertical}
       .fab-react-panel .row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
-      /* Reaction highlight indicator: full circle behind emoji */
       .fab-rail button.active{background:#ffffff;color:inherit}
-      /* Hide reaction buttons and input in double-tap menu on scroll page */
       .scroll-item .react-menu [data-react],
       .scroll-item .react-menu [data-react-send],
       .scroll-item .react-menu .react-input{display:none!important}

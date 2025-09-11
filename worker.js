@@ -78,7 +78,6 @@ async function verifyPassword(password, stored) {
   return timingSafeEqual(hash, derived);
 }
 
-// Note: UI functions moved to src/*.js; legacy kept to avoid breakage during refactor
 function baseHead_legacy(title) {
   const styles = `:root{--bg:#0b0f17;--surface:#121826;--muted:#1a2333;--text:#e6edf3;--sub:#a5b1c2;--primary:#6aa1ff;--accent:#19c37d;--danger:#ff5c5c;}
 *{box-sizing:border-box}
