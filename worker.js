@@ -2342,35 +2342,51 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
 
 async function handlePasskeyRegisterOptions(req, env){
   const me = await getAuthUser(req, env);
-  if (!me) return new Response('Unauthorized', { status: 401 });
+  const body = await req.json().catch(() => ({}));
+  const inputUsername = body && body.username ? String(body.username).trim() : '';
   const rpId = rpIdFromReq(req);
-  const origin = expectedOriginFromReq(req);
   const challenge = randomB64urlBytes(32);
-  // Exclude existing credentials
-  const rows = await env.vidshare
-    .prepare('SELECT external_id FROM credentials WHERE user_id = ?1 AND type = ?2')
-    .bind(me.userId, 'passkey')
-    .all()
-    .then(r => r.results || r);
-  const excludeCredentials = rows.map(r => ({ type: 'public-key', id: r.external_id }));
-  const userIdBytes = utf8ToUint8(me.userId); // unique id
+  let userId = null;
+  let username = null;
+  let excludeCredentials = [];
+  if (me) {
+    userId = me.userId;
+    username = me.username || '';
+    const rows = await env.vidshare
+      .prepare('SELECT external_id FROM credentials WHERE user_id = ?1 AND type = ?2')
+      .bind(me.userId, 'passkey')
+      .all()
+      .then(r => r.results || r);
+    excludeCredentials = rows.map(r => ({ type: 'public-key', id: r.external_id }));
+  } else {
+    if (!inputUsername) return new Response('Username required', { status: 400 });
+    const existing = await env.vidshare
+      .prepare('SELECT id FROM users WHERE lower(username) = lower(?1)')
+      .bind(inputUsername)
+      .first();
+    if (existing) return new Response('Username taken', { status: 409 });
+    userId = crypto.randomUUID();
+    username = inputUsername;
+  }
+  const userIdBytes = utf8ToUint8(userId);
   const opts = {
     rp: { id: rpId, name: 'VidFriends' },
-    user: { id: base64url(userIdBytes), name: me.username || me.userId, displayName: me.username || me.userId },
+    user: { id: base64url(userIdBytes), name: username || userId, displayName: username || userId },
     challenge,
     pubKeyCredParams: [ { type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }, { type: 'public-key', alg: -8 } ],
     timeout: 60000,
     authenticatorSelection: { residentKey: 'preferred', userVerification: 'preferred' },
     attestation: 'none',
+    excludeCredentials,
   };
   const headers = new Headers({ 'Content-Type': 'application/json' });
   headers.append('Set-Cookie', cookie('pkc_reg', challenge, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 300 }));
+  headers.append('Set-Cookie', cookie('pkc_reg_uid', userId, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 300 }));
+  if (username) headers.append('Set-Cookie', cookie('pkc_reg_uname', encodeURIComponent(username).slice(0,128), { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 300 }));
   return new Response(JSON.stringify(opts), { headers });
 }
 
 async function handlePasskeyRegisterVerify(req, env){
-  const me = await getAuthUser(req, env);
-  if (!me) return new Response('Unauthorized', { status: 401 });
   const body = await req.json();
   const challenge = getCookie(req, 'pkc_reg');
   if (!challenge) return new Response('Expired challenge', { status: 400 });
@@ -2390,30 +2406,65 @@ async function handlePasskeyRegisterVerify(req, env){
   const credId = parsed.credId ? base64url(parsed.credId) : null;
   const cose = parsed.coseKey;
   if (!credId || !cose) return new Response('No credential', { status: 400 });
-  // Verify rpIdHash matches
   const rpHash = await sha256BytesBuf(utf8ToUint8(rpId));
   for (let i=0;i<32;i++){ if (parsed.rpIdHash[i] !== rpHash[i]) return new Response('Bad rpIdHash', { status: 400 }); }
   const jwk = coseToJwk(cose);
-  // Upsert credential
   const now = Math.floor(Date.now()/1000);
-  const exists = await env.vidshare
+  const me = await getAuthUser(req, env);
+  let targetUserId = me && me.userId ? me.userId : (getCookie(req, 'pkc_reg_uid') || '');
+  let targetUsername = me && me.username ? me.username : decodeURIComponent(getCookie(req, 'pkc_reg_uname') || '');
+  if (!targetUserId) return new Response('No user context', { status: 400 });
+  // Create user if needed
+  if (!me) {
+    if (!targetUsername) return new Response('No username', { status: 400 });
+    const existsUser = await env.vidshare
+      .prepare('SELECT id FROM users WHERE id = ?1 OR lower(username) = lower(?2)')
+      .bind(targetUserId, targetUsername)
+      .first();
+    if (!existsUser) {
+      await env.vidshare
+        .prepare('INSERT INTO users (id, username, created_at, last_login) VALUES (?1, ?2, ?3, ?4)')
+        .bind(targetUserId, targetUsername, now, now)
+        .run();
+    }
+  }
+  // Upsert credential bound to targetUserId
+  const existing = await env.vidshare
     .prepare('SELECT id, user_id FROM credentials WHERE external_id = ?1 AND type = ?2')
     .bind(credId, 'passkey')
     .first();
-  if (exists && exists.user_id !== me.userId) return new Response('Credential in use', { status: 409 });
-  if (exists) {
+  if (existing && existing.user_id !== targetUserId) return new Response('Credential in use', { status: 409 });
+  if (existing) {
     await env.vidshare
       .prepare('UPDATE credentials SET public_key = ?1, sign_count = ?2, last_used = ?3 WHERE id = ?4')
-      .bind(JSON.stringify(jwk), parsed.signCount||0, now, exists.id)
+      .bind(JSON.stringify(jwk), parsed.signCount||0, now, existing.id)
       .run();
   } else {
     await env.vidshare
       .prepare('INSERT INTO credentials (id, user_id, type, identifier, external_id, secret_hash, public_key, sign_count, created_at, last_used) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)')
-      .bind(crypto.randomUUID(), me.userId, 'passkey', 'passkey', credId, null, JSON.stringify(jwk), parsed.signCount||0, now, now)
+      .bind(crypto.randomUUID(), targetUserId, 'passkey', 'passkey', credId, null, JSON.stringify(jwk), parsed.signCount||0, now, now)
       .run();
   }
   const headers = new Headers({ 'Content-Type': 'application/json' });
   headers.append('Set-Cookie', cookie('pkc_reg', '', { path: '/', httpOnly: true, maxAge: 0 }));
+  headers.append('Set-Cookie', cookie('pkc_reg_uid', '', { path: '/', httpOnly: true, maxAge: 0 }));
+  headers.append('Set-Cookie', cookie('pkc_reg_uname', '', { path: '/', httpOnly: true, maxAge: 0 }));
+  // If new user, create session
+  if (!me) {
+    const sessionId = crypto.randomUUID();
+    const ua = typeof req.headers.get === 'function' ? (req.headers.get('User-Agent') || '') : '';
+    const expiresAt = now + 60 * 24 * 60 * 60;
+    const refreshToken = randomTokenB64(32);
+    const refreshHash = await sha256B64(refreshToken);
+    const jwt = await createJWT({ sub: targetUserId, username: targetUsername, iat: now, exp: now + 15 * 60 }, env);
+    await env.vidshare
+      .prepare('INSERT INTO sessions (id, user_id, refresh_hash, created_at, expires_at, user_agent, last_rotated_at, rotation_count) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)')
+      .bind(sessionId, targetUserId, refreshHash, now, expiresAt, ua, now, 0)
+      .run();
+    headers.append('Set-Cookie', cookie('session', sessionId, { httpOnly: true, sameSite: 'Lax', path: '/' }));
+    headers.append('Set-Cookie', cookie('jwt', jwt, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 15 * 60 }));
+    headers.append('Set-Cookie', cookie('refresh', refreshToken, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 60 * 24 * 60 * 60 }));
+  }
   return new Response(JSON.stringify({ ok: true }), { headers });
 }
 
