@@ -272,7 +272,22 @@ function homePage(username, opts = {}, activeTab = 'home') {
         } catch (e) {}
       }
       document.addEventListener('DOMContentLoaded', function(){
+        // Fix missing emoji in any pre-rendered reaction buttons
+        try {
+          var heartBtns = document.querySelectorAll('.react-menu button[title="Heart"]');
+          for (var i=0;i<heartBtns.length;i++){ heartBtns[i].textContent='❤️'; heartBtns[i].setAttribute('data-react','❤️'); }
+          var likeBtns = document.querySelectorAll('.react-menu button[title="Thumbs up"]');
+          for (var j=0;j<likeBtns.length;j++){ likeBtns[j].textContent='👍'; likeBtns[j].setAttribute('data-react','👍'); }
+          var fab = document.querySelector('a.fab'); if (fab && (!fab.textContent || fab.textContent==='??')) fab.textContent='🏠';
+        } catch (_) {}
         ensureNotifications();
+        // Ensure reaction buttons show proper emoji where missing
+        try {
+          var heartBtns = document.querySelectorAll('.react-menu button[title="Heart"]');
+          for (var i=0;i<heartBtns.length;i++){ heartBtns[i].textContent='❤️'; heartBtns[i].setAttribute('data-react','❤️'); }
+          var likeBtns = document.querySelectorAll('.react-menu button[title="Thumbs up"]');
+          for (var j=0;j<likeBtns.length;j++){ likeBtns[j].textContent='👍'; likeBtns[j].setAttribute('data-react','👍'); }
+        } catch (_) {}
         // Clean up friend selector placeholder text on some encodings
         try {
           var friendSel = document.querySelector('select[name="recipient_id"]');
@@ -284,6 +299,14 @@ function homePage(username, opts = {}, activeTab = 'home') {
             placeholder.textContent = 'Select a friend';
             friendSel.insertBefore(placeholder, friendSel.firstChild);
           }
+        } catch (_) {}
+        // Final emoji normalization using Unicode escapes (robust to encoding)
+        try {
+          var hb = document.querySelectorAll('button[title="Heart"]');
+          for (var ii=0; ii<hb.length; ii++) { hb[ii].textContent='\u2764\uFE0F'; hb[ii].setAttribute('data-react','\u2764\uFE0F'); if (hb[ii].name==='reaction') hb[ii].value='\u2764\uFE0F'; }
+          var lb = document.querySelectorAll('button[title="Thumbs up"]');
+          for (var jj=0; jj<lb.length; jj++) { lb[jj].textContent='\uD83D\uDC4D'; lb[jj].setAttribute('data-react','\uD83D\uDC4D'); if (lb[jj].name==='reaction') lb[jj].value='\uD83D\uDC4D'; }
+          var fab2 = document.querySelector('a.fab'); if (fab2) fab2.textContent='\uD83C\uDFE0';
         } catch (_) {}
         var vids = document.querySelectorAll('video.asset-video');
         for (var k = 0; k < vids.length; k++) {
@@ -722,6 +745,14 @@ function scrollPage(username, list) {
     </style>
     <script>
       document.addEventListener('DOMContentLoaded', function(){
+        // Normalize any placeholder emoji to proper values
+        try {
+          var hb = document.querySelectorAll('.react-menu button[title="Heart"]');
+          for (var ii=0; ii<hb.length; ii++) { hb[ii].textContent='\u2764\uFE0F'; hb[ii].setAttribute('data-react','\u2764\uFE0F'); }
+          var lb = document.querySelectorAll('.react-menu button[title="Thumbs up"]');
+          for (var jj=0; jj<lb.length; jj++) { lb[jj].textContent='\uD83D\uDC4D'; lb[jj].setAttribute('data-react','\uD83D\uDC4D'); }
+          var fab = document.querySelector('a.fab'); if (fab) fab.textContent='\uD83C\uDFE0';
+        } catch (_) {}
         var items = document.querySelectorAll('.scroll-item');
         for (var i=0;i<items.length;i++){
           (function(item){
