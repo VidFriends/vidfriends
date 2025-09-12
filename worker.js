@@ -387,6 +387,38 @@ function homePage_legacy(username, opts = {}, activeTab = 'home') {
             });
           }
         } catch (e) {}
+
+        // Passkey: register for logged-in user (home page)
+        (function(){
+          function b64urlToBuf(b64){ try{ b64=b64.replace(/-/g,'+').replace(/_/g,'/'); var pad='='.repeat((4 - (b64.length % 4)) % 4); var bin=atob(b64+pad); var out=new Uint8Array(bin.length); for (var i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i); return out.buffer; } catch(_) { return new ArrayBuffer(0); } }
+          function bufToB64url(buf){ var bytes = new Uint8Array(buf), bin=''; for (var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]); return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+          async function doRegisterPasskey(){
+            try{
+              var r = await fetch('/passkeys/register/options', { method:'POST', credentials:'same-origin' });
+              if (!r.ok) { alert('Failed to start passkey registration'); return; }
+              var o = await r.json();
+              // normalize binary fields
+              if (o && o.challenge) o.challenge = b64urlToBuf(o.challenge);
+              if (o && o.user && o.user.id) o.user.id = b64urlToBuf(o.user.id);
+              if (o && o.excludeCredentials){ for (var i=0;i<o.excludeCredentials.length;i++){ if (o.excludeCredentials[i] && o.excludeCredentials[i].id) { o.excludeCredentials[i].id = b64urlToBuf(o.excludeCredentials[i].id); } } }
+              var cred = await navigator.credentials.create({ publicKey: o });
+              var payload = {
+                id: cred.id,
+                type: cred.type,
+                rawId: bufToB64url(cred.rawId),
+                response: {
+                  attestationObject: bufToB64url(cred.response.attestationObject),
+                  clientDataJSON: bufToB64url(cred.response.clientDataJSON)
+                }
+              };
+              var v = await fetch('/passkeys/register/verify', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify(payload) });
+              if (v.ok) { alert('Passkey added'); }
+              else { alert('Passkey registration failed'); }
+            }catch(e){ console.error(e); alert('Passkey registration failed'); }
+          }
+          var btn = document.getElementById('btn-register-passkey');
+          if (btn) btn.addEventListener('click', doRegisterPasskey);
+        })();
       });
     </script>
   </head>
