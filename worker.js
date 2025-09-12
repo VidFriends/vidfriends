@@ -2359,9 +2359,16 @@ async function verifyAssertionSignature(jwk, authenticatorDataBytes, clientDataJ
   toVerify.set(authenticatorDataBytes, 0); toVerify.set(clientHash, authenticatorDataBytes.length);
   const key = await importPublicKeyFromJwk(jwk);
   if (jwk.kty === 'EC') {
-    let sig = signatureBytes;
-    if (!(sig && sig[0] === 0x30)) { const der = tryRawToDer(sig); if (der) sig = der; }
-    return crypto.subtle.verify({ name: 'ECDSA', hash: { name: 'SHA-256' } }, key, sig, toVerify);
+    // Try as-is first (DER in most cases), then fallback to converted DER from raw 64-byte r|s
+    const algo = { name: 'ECDSA', hash: { name: 'SHA-256' } };
+    try {
+      if (await crypto.subtle.verify(algo, key, signatureBytes, toVerify)) return true;
+    } catch (_) {}
+    const der = tryRawToDer(signatureBytes);
+    if (der) {
+      try { if (await crypto.subtle.verify(algo, key, der, toVerify)) return true; } catch (_) {}
+    }
+    return false;
   }
   if (jwk.kty === 'OKP' && jwk.crv === 'Ed25519') {
     return crypto.subtle.verify('Ed25519', key, signatureBytes, toVerify);
