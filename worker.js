@@ -165,7 +165,7 @@ function loginPage() {
     <script>
       (function(){
         function b64urlToBuf(b64){ b64=b64.replace(/-/g,'+').replace(/_/g,'/'); var pad='='.repeat((4 - (b64.length % 4)) % 4); var bin=atob(b64+pad); var out=new Uint8Array(bin.length); for (var i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i); return out.buffer; }
-        function bufToB64url(buf){ var bytes = new Uint8Array(buf), bin=''; for (var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]); return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+        function bufToB64url(buf){ var bytes = new Uint8Array(buf), bin=''; for (var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]); var s=btoa(bin); s=s.split('+').join('-'); s=s.split('/').join('_'); return s.replace(/=+$/,''); }
         async function signInWithPasskey(){
           try{
             var uname = (document.querySelector('input[name="username"]')||{}).value || '';
@@ -391,7 +391,7 @@ function homePage_legacy(username, opts = {}, activeTab = 'home') {
         // Passkey: register for logged-in user (home page)
         (function(){
           function b64urlToBuf(b64){ try{ b64=b64.replace(/-/g,'+').replace(/_/g,'/'); var pad='='.repeat((4 - (b64.length % 4)) % 4); var bin=atob(b64+pad); var out=new Uint8Array(bin.length); for (var i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i); return out.buffer; } catch(_) { return new ArrayBuffer(0); } }
-          function bufToB64url(buf){ var bytes = new Uint8Array(buf), bin=''; for (var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]); return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+          function bufToB64url(buf){ var bytes = new Uint8Array(buf), bin=''; for (var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]); var s=btoa(bin); s=s.split('+').join('-'); s=s.split('/').join('_'); return s.replace(/=+$/,''); }
           async function doRegisterPasskey(){
             try{
               var r = await fetch('/passkeys/register/options', { method:'POST', credentials:'same-origin' });
@@ -716,7 +716,7 @@ function welcomePage_legacy(mode = 'signup') {
 
         // Passkey sign-in
         function b64urlToBuf(b64){ b64=b64.replace(/-/g,'+').replace(/_/g,'/'); var pad='='.repeat((4 - (b64.length % 4)) % 4); var bin=atob(b64+pad); var out=new Uint8Array(bin.length); for (var i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i); return out.buffer; }
-        function bufToB64url(buf){ var bytes = new Uint8Array(buf), bin=''; for (var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]); return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+        function bufToB64url(buf){ var bytes = new Uint8Array(buf), bin=''; for (var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]); var s=btoa(bin); s=s.split('+').join('-'); s=s.split('/').join('_'); return s.replace(/=+$/,''); }
         async function signInWithPasskey(){
           try{
             var uname = (document.querySelector('#panel-login input[name="username"]')||{}).value || '';
@@ -1496,7 +1496,7 @@ function savedPage(username, list) {
         // Passkey: register for logged-in user
         (function(){
           function b64urlToBuf(b64){ b64=b64.replace(/-/g,'+').replace(/_/g,'/'); var pad='='.repeat((4 - (b64.length % 4)) % 4); var bin=atob(b64+pad); var out=new Uint8Array(bin.length); for (var i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i); return out.buffer; }
-          function bufToB64url(buf){ var bytes = new Uint8Array(buf), bin=''; for (var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]); return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+          function bufToB64url(buf){ var bytes = new Uint8Array(buf), bin=''; for (var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]); var s=btoa(bin); s=s.split('+').join('-'); s=s.split('/').join('_'); return s.replace(/=+$/,''); }
           async function doRegisterPasskey(){
             try{
               var r = await fetch('/passkeys/register/options', { method:'POST', credentials:'same-origin' });
