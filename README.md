@@ -1,20 +1,83 @@
-# vidshare
-share short form videos with friends
+# VidShare
 
-1) Create a new repo, push files.
-2) On Cloudflare dashboard → Pages → Create a project → connect repo.
-3) Build command: `npm run build`; Publish directory: `dist`
-4) Add environment variable VITE_API_BASE if you'll point to Workers on a custom route (optional).
-5) Copy `public/service-worker.js` (or built service worker) to root so it's available at /service-worker.js
-6) Deploy.
+VidShare is a containerised full-stack application for sharing short-form videos with friends. The backend is written in Go, powered by PostgreSQL and `yt-dlp` for pulling video metadata. A React + TypeScript frontend delivers a responsive experience for managing friends and sharing links.
 
+## Features
 
+- User registration and session-based authentication
+- Friend management with mutual relationships
+- Share videos with notes and receive a personalised feed
+- Automatic metadata lookups via `yt-dlp`
+- Docker Compose stack with PostgreSQL, Go API and static frontend
 
+## Getting started
 
-vidfriends.app is a pwa that has logins for users, and builds users an fyp that only contains videos sent from friends, and can process videos from many short form video sites, such as tiktok, facebook reels, instagram reels, youtube shorts, etc. it is designed with minimal server load in mind, currently designed to handle embedding videos directly on the user side rather than processing raw video files. in the future will look into possibly some server side compute to extract videos rather than embedding them for a cleaner view.
+### Prerequisites
 
-users can react to videos and send replies, and get notified when new videos are sent to them.
+- Docker and Docker Compose
 
-this platform is privacy focused, storing little to no data on users, allowing flexible login types such as username/password and social logins to choose the level of privacy.
+### Environment variables
 
-Development goal of this program is for the whole service to be run on cloudflare free tier services, and if the userbase grows too much then it can expand to paid cloudflare tiers. no ads, but may eventually charge a subscription if we exceed free tier. will probably move to native app before this happens.
+The backend requires the following environment variables:
+
+- `DATABASE_URL` – PostgreSQL connection string (e.g. `postgres://user:pass@db:5432/vidshare?sslmode=disable`)
+- `SESSION_SECRET` – random string used to sign cookies
+- `ALLOW_ORIGINS` – optional comma-separated list of origins allowed for CORS (defaults to `*`)
+- `YT_EXECUTABLE` – path to the `yt-dlp` binary inside the container (defaults to `yt-dlp`)
+
+These are wired up automatically in the provided `docker-compose.yml`, but you can override them with your own values.
+
+### Running with Docker Compose
+
+```bash
+cp .env.example .env # optional if you want to override defaults
+docker compose up --build
+```
+
+The services exposed by default are:
+
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8080
+- PostgreSQL: localhost:5432 (user/password/db: `vidshare`)
+
+The Go service applies SQL migrations on startup from `backend/migrations`.
+
+### Local development
+
+You can run the backend and frontend separately without containers.
+
+**Backend**
+
+```bash
+cd backend
+export DATABASE_URL=postgres://vidshare:vidshare@localhost:5432/vidshare?sslmode=disable
+export SESSION_SECRET=dev-secret
+go run ./cmd/server
+```
+
+**Frontend**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The Vite dev server proxies `/api` to `http://localhost:8080` by default. Adjust `VITE_API_BASE` if your API runs elsewhere.
+
+## Testing
+
+- Go unit tests: `cd backend && go test ./...`
+- Frontend build: `cd frontend && npm run build`
+
+## Project structure
+
+```
+backend/    Go API server, migrations and Dockerfile
+frontend/   React + Vite frontend and Dockerfile
+docker-compose.yml  Multi-service orchestration
+```
+
+## License
+
+MIT
