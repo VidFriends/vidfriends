@@ -92,9 +92,15 @@ jobs:
           java-version: 17
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+      - name: Decode signing keystore
+        env:
+          ANDROID_SIGNING_KEYSTORE_B64: ${{ secrets.ANDROID_SIGNING_KEYSTORE }}
+        run: |
+          if [ -n "$ANDROID_SIGNING_KEYSTORE_B64" ]; then
+            echo "$ANDROID_SIGNING_KEYSTORE_B64" | base64 -d > app/keystore.jks
+          fi
       - name: Assemble release
         env:
-          ANDROID_SIGNING_KEYSTORE: ${{ secrets.ANDROID_SIGNING_KEYSTORE }}
           ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
           ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
           ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
@@ -134,4 +140,4 @@ jobs:
           appId: ${{ secrets.FIREBASE_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           groups: internal-testers
-          file: app/build/outputs/apk/release/app-release-unsigned.apk
+          file: app/build/outputs/apk/release/app-release.apk
