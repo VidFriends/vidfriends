@@ -172,6 +172,12 @@ class VideoDetailViewModel @Inject constructor(
         }
     }
 
+    fun markWatched(videoId: String) {
+        viewModelScope.launch {
+            feedRepository.markWatched(videoId)
+        }
+    }
+
     fun deleteComment(commentId: String) {
         val video = _uiState.value.video ?: return
         viewModelScope.launch {

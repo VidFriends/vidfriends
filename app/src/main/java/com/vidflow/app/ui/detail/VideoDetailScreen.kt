@@ -86,6 +86,7 @@ fun VideoDetailScreen(
 
     LaunchedEffect(videoId) {
         viewModel.loadVideo(videoId)
+        viewModel.markWatched(videoId)
     }
 
     LaunchedEffect(player) {
