@@ -24,6 +24,11 @@ final class AuthService {
         isAuthenticated = true
     }
 
+    func fetchCurrentUser(using apiClient: APIClientProtocol) async throws {
+        let user = try await apiClient.getCurrentUser()
+        currentUser = user
+    }
+
     func logout() {
         keychainService.clearToken()
         apiConfig.token = nil

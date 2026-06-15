@@ -86,10 +86,10 @@ struct FriendPickerView: View {
                     description: Text("Add friends to send them videos.")
                 )
                 .accessibilityLabel("No friends yet. Add friends to send them videos.")
-            } else {
+            } else if let currentUserId = appState.currentUser?.id {
                 List(friends) { friend in
                     // Determine if current user is requester or addressee
-                    let isRequester = friend.requesterId == appState.currentUser?.id
+                    let isRequester = friend.requesterId == currentUserId
                     let friendId = isRequester ? friend.addresseeId : friend.requesterId
 
                     Button {
@@ -128,6 +128,13 @@ struct FriendPickerView: View {
                 }
                 .listStyle(.plain)
                 .accessibilityLabel("Friends list")
+            } else {
+                ContentUnavailableView(
+                    "Not Available",
+                    systemImage: "person.slash",
+                    description: Text("Sign in to send videos to friends.")
+                )
+                .accessibilityLabel("Not available. Sign in to send videos.")
             }
         }
     }
@@ -197,6 +204,7 @@ struct FriendPickerView: View {
         defer { isSearching = false }
         do {
             results = try await appState.apiClient.searchUsers(query: searchQuery)
+                .filter { $0.id != appState.currentUser?.id }
         } catch {
             errorMessage = error.localizedDescription
         }

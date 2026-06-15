@@ -88,20 +88,9 @@ struct InboxView: View {
                 let aps = notification.userInfo?["aps"] as? [String: Any],
                 let videoId = aps["video_id"] as? String ?? (aps["data"] as? [String: Any])?["video_id"] as? String
             else { return }
-            let title = (aps["alert"] as? [String: Any])?["title"] as? String ?? "New video"
-            let fromName = (aps["alert"] as? [String: Any])?["body"] as? String ?? "Someone"
-            let bannerItem = InboxItem(
-                id: UUID().uuidString,
-                videoId: videoId,
-                fromUserId: "",
-                fromUserName: fromName,
-                title: title,
-                thumbnailURL: nil,
-                status: "pending",
-                createdAt: ISO8601DateFormatter().string(from: Date())
-            )
-            self.bannerItem = bannerItem
-            withAnimation { showBanner = true }
+            Task {
+                await showBannerForNotification(videoId: videoId, aps: aps)
+            }
         }
     }
 
@@ -121,7 +110,7 @@ struct InboxView: View {
     private func acceptItem(_ item: InboxItem) async {
         do {
             try await appState.apiClient.updateInboxItem(id: item.id, status: "accepted")
-            items.removeAll { $0.id == item.id }
+            await loadInbox()
         } catch {
             self.error = error.localizedDescription
         }
@@ -130,10 +119,39 @@ struct InboxView: View {
     private func rejectItem(_ item: InboxItem) async {
         do {
             try await appState.apiClient.updateInboxItem(id: item.id, status: "rejected")
-            items.removeAll { $0.id == item.id }
+            await loadInbox()
         } catch {
             self.error = error.localizedDescription
         }
+    }
+
+    private func showBannerForNotification(videoId: String, aps: [String: Any]) async {
+        do {
+            let inboxItems = try await appState.apiClient.getInbox()
+            if let match = inboxItems.first(where: { $0.videoId == videoId }) {
+                bannerItem = match
+            } else {
+                bannerItem = fallbackBannerItem(videoId: videoId, aps: aps)
+            }
+        } catch {
+            bannerItem = fallbackBannerItem(videoId: videoId, aps: aps)
+        }
+        withAnimation { showBanner = true }
+    }
+
+    private func fallbackBannerItem(videoId: String, aps: [String: Any]) -> InboxItem {
+        let title = (aps["alert"] as? [String: Any])?["title"] as? String ?? "New video"
+        let fromName = (aps["alert"] as? [String: Any])?["body"] as? String ?? "Someone"
+        return InboxItem(
+            id: videoId,
+            videoId: videoId,
+            fromUserId: "",
+            fromUserName: fromName,
+            title: title,
+            thumbnailURL: nil,
+            status: "pending",
+            createdAt: ISO8601DateFormatter().string(from: Date())
+        )
     }
 }
 

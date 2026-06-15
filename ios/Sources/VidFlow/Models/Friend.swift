@@ -8,6 +8,8 @@ struct Friend: Identifiable, Codable, Hashable {
     let requesterId: String
     let addresseeId: String
     let status: String
+    let username: String?
+    let displayName: String?
     let createdAt: String
     let updatedAt: String
 
@@ -15,6 +17,8 @@ struct Friend: Identifiable, Codable, Hashable {
         case id, status
         case requesterId = "requester_id"
         case addresseeId = "addressee_id"
+        case username
+        case displayName = "display_name"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }

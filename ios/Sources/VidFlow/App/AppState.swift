@@ -15,6 +15,7 @@ final class AppState {
     let keychainService = KeychainService()
     let authService: AuthService
     var apiClient: APIClientProtocol
+    let pushService = PushNotificationService()
 
     init() {
         let config = APIConfig(baseURL: URL(string: "http://localhost:3100")!)
@@ -28,7 +29,27 @@ final class AppState {
             authToken = token
             apiConfig.token = token
             authSvc.restoreSession(token: token)
+            isAuthenticated = true
+            Task {
+                try? await authSvc.fetchCurrentUser(using: apiClient)
+                currentUser = authSvc.currentUser
+            }
         }
+    }
+
+    func completeAuth(token: String) async throws {
+        try await authService.handleAuthResponse(token: token)
+        authToken = token
+        isAuthenticated = true
+        try await authService.fetchCurrentUser(using: apiClient)
+        currentUser = authService.currentUser
+    }
+
+    func logout() {
+        authService.logout()
+        authToken = nil
+        currentUser = nil
+        isAuthenticated = false
     }
 
     func setEnvironment(baseURL: URL, useStub: Bool) {

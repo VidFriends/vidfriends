@@ -36,6 +36,7 @@ final class VideoRecorderController: UIViewController {
     weak var delegate: Coordinator?
 
     private var captureSession: AVCaptureSession?
+    #warning("AVCaptureMovieFileOutput is deprecated in iOS 16+. Migrate to AVAssetWriter before shipping.")
     private var videoOutput: AVCaptureMovieFileOutput?
     private var previewLayer: AVCaptureVideoPreviewLayer?
     private var outputURL: URL?

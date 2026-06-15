@@ -25,6 +25,14 @@
 		A10016 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10016; };
 		A10017 /* StubAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10017; };
 		A10018 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10018; };
+		A10019 /* Inbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10019; };
+		A10020 /* PushNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10020; };
+		A10021 /* FeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10021; };
+		A10022 /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10022; };
+		A10023 /* SendVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10023; };
+		A10024 /* FriendPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10024; };
+		A10025 /* UploadProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10025; };
+		A10026 /* VideoRecorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10026; };
 		A20001 /* VidFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20001; };
 		A20002 /* APIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20002; };
 /* End PBXBuildFile section */
@@ -48,6 +56,14 @@
 		B10016 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		B10017 /* StubAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubAPIClient.swift; sourceTree = "<group>"; };
 		B10018 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B10019 /* Inbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Inbox.swift; sourceTree = "<group>"; };
+		B10020 /* PushNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationService.swift; sourceTree = "<group>"; };
+		B10021 /* FeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedView.swift; sourceTree = "<group>"; };
+		B10022 /* InboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxView.swift; sourceTree = "<group>"; };
+		B10023 /* SendVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendVideoView.swift; sourceTree = "<group>"; };
+		B10024 /* FriendPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendPickerView.swift; sourceTree = "<group>"; };
+		B10025 /* UploadProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadProgressView.swift; sourceTree = "<group>"; };
+		B10026 /* VideoRecorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecorderView.swift; sourceTree = "<group>"; };
 		B20001 /* VidFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VidFlowTests.swift; sourceTree = "<group>"; };
 		B20002 /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
 		C00001 /* VidFlow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VidFlow.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -89,9 +105,47 @@
 				E00007 /* Networking */,
 				E00008 /* Services */,
 				E00009 /* Stubs */,
+				E00011 /* Views */,
 				E00010 /* Resources */,
 			);
 			path = VidFlow;
+			sourceTree = "<group>";
+		};
+		E00011 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				E00012 /* Feed */,
+				E00013 /* Inbox */,
+				E00014 /* Send */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		E00012 /* Feed */ = {
+			isa = PBXGroup;
+			children = (
+				B10021 /* FeedView.swift */,
+			);
+			path = Feed;
+			sourceTree = "<group>";
+		};
+		E00013 /* Inbox */ = {
+			isa = PBXGroup;
+			children = (
+				B10022 /* InboxView.swift */,
+			);
+			path = Inbox;
+			sourceTree = "<group>";
+		};
+		E00014 /* Send */ = {
+			isa = PBXGroup;
+			children = (
+				B10023 /* SendVideoView.swift */,
+				B10024 /* FriendPickerView.swift */,
+				B10025 /* UploadProgressView.swift */,
+				B10026 /* VideoRecorderView.swift */,
+			);
+			path = Send;
 			sourceTree = "<group>";
 		};
 		E00003 /* VidFlowTests */ = {
@@ -130,6 +184,7 @@
 				B10006 /* Friend.swift */,
 				B10007 /* Comment.swift */,
 				B10008 /* Like.swift */,
+				B10019 /* Inbox.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -152,6 +207,7 @@
 			children = (
 				B10015 /* KeychainService.swift */,
 				B10016 /* AuthService.swift */,
+				B10020 /* PushNotificationService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -280,6 +336,14 @@
 				A10015 /* KeychainService.swift in Sources */,
 				A10016 /* AuthService.swift in Sources */,
 				A10017 /* StubAPIClient.swift in Sources */,
+				A10019 /* Inbox.swift in Sources */,
+				A10020 /* PushNotificationService.swift in Sources */,
+				A10021 /* FeedView.swift in Sources */,
+				A10022 /* InboxView.swift in Sources */,
+				A10023 /* SendVideoView.swift in Sources */,
+				A10024 /* FriendPickerView.swift in Sources */,
+				A10025 /* UploadProgressView.swift in Sources */,
+				A10026 /* VideoRecorderView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

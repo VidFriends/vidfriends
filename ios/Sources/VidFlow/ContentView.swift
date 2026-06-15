@@ -2,17 +2,34 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(AppState.self) private var appState
+    @State private var onboardingCoordinator = OnboardingCoordinator()
 
     var body: some View {
         Group {
             if appState.isAuthenticated {
                 mainTabs
             } else {
-                WelcomeView()
+                onboardingFlow
             }
         }
         .task {
+            appState.pushService.setDelegate()
             await registerPushIfNeeded()
+        }
+    }
+
+    @ViewBuilder
+    private var onboardingFlow: some View {
+        switch onboardingCoordinator.step {
+        case .serverSetup:
+            ServerSetupView(coordinator: onboardingCoordinator)
+                .transition(.opacity)
+        case .auth:
+            OnboardingAuthView(coordinator: onboardingCoordinator)
+                .transition(.opacity)
+        case .biometryOptIn:
+            BiometryOptInView(coordinator: onboardingCoordinator)
+                .transition(.opacity)
         }
     }
 
@@ -63,30 +80,4 @@ struct ContentView: View {
         guard granted else { return }
         appState.pushService.registerForRemoteNotifications()
     }
-}
-
-// MARK: - Welcome
-
-struct WelcomeView: View {
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "video.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(.tint)
-                .accessibilityHidden(true)
-            Text("VidFlow")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .accessibilityAddTraits(.isHeader)
-            Text("Share short videos with friends")
-                .foregroundStyle(.secondary)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("VidFlow. Share short videos with friends.")
-    }
-}
-
-#Preview {
-    ContentView()
-        .environment(AppState())
 }

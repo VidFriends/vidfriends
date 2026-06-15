@@ -31,6 +31,12 @@ actor APIClient: APIClientProtocol {
         return response.token
     }
 
+    func registerWithInvite(email: String, username: String, password: String, displayName: String?, inviteCode: String) async throws -> String {
+        let body = InviteSignupRequest(email: email, username: username, password: password, displayName: displayName, inviteCode: inviteCode)
+        let response: AuthResponse = try await perform(.registerWithInvite, body: body, auth: false)
+        return response.token
+    }
+
     func login(email: String, password: String) async throws -> String {
         let body = LoginRequest(email: email, password: password)
         let response: AuthResponse = try await perform(.login, body: body, auth: false)
@@ -40,6 +46,17 @@ actor APIClient: APIClientProtocol {
     func refreshToken() async throws -> String {
         let response: AuthResponse = try await perform(.refresh, auth: true)
         return response.token
+    }
+
+    // MARK: - Health
+
+    func checkHealth() async throws -> Bool {
+        do {
+            let response: HealthResponse = try await perform(.health, auth: false)
+            return response.status == "ok" || response.status == "healthy"
+        } catch {
+            return false
+        }
     }
 
     // MARK: - Feed
@@ -79,11 +96,6 @@ actor APIClient: APIClientProtocol {
 
     func markWatched(videoId: String, progressSeconds: Int) async throws {
         let body = MarkWatchedRequest(progressSeconds: progressSeconds)
-
-        struct StatusResponse: Decodable {
-            let status: String
-        }
-
         let _: StatusResponse = try await perform(.markWatched(id: videoId), body: body)
     }
 
@@ -91,22 +103,183 @@ actor APIClient: APIClientProtocol {
         try await perform(.history)
     }
 
+    // MARK: - Social
+
+    func searchUsers(query: String) async throws -> [UserSearchResult] {
+        let response: UserSearchResponse = try await perform(
+            .searchUsers,
+            queryItems: [URLQueryItem(name: "q", value: query)]
+        )
+        return response.users
+    }
+
+    func sendVideo(id: String, toUserId: String) async throws {
+        let body = SendVideoRequest(toUserId: toUserId)
+        let _: StatusResponse = try await perform(.sendVideo(id: id), body: body)
+    }
+
+    func getInbox() async throws -> [InboxItem] {
+        try await perform(.inbox)
+    }
+
+    func updateInboxItem(id: String, status: String) async throws {
+        let body = InboxUpdateRequest(status: status)
+        let _: StatusResponse = try await perform(.inboxItem(id: id), body: body)
+    }
+
+    // MARK: - Friends
+
+    func getFriends() async throws -> [Friend] {
+        try await perform(.friends)
+    }
+
+    func getFriendRequests() async throws -> [Friend] {
+        try await perform(.friendRequests)
+    }
+
+    func respondToFriendRequest(id: String, accept: Bool) async throws {
+        let body = FriendRequestAction(status: accept ? "accepted" : "rejected")
+        let _: StatusResponse = try await perform(.respondFriendRequest(id: id), body: body)
+    }
+
+    // MARK: - User
+
+    func getCurrentUser() async throws -> User {
+        try await perform(.currentUser)
+    }
+
+    // MARK: - User Profile
+
+    func updateProfile(displayName: String?) async throws -> User {
+        let body = UpdateProfileRequest(displayName: displayName)
+        return try await perform(.updateProfile, body: body)
+    }
+
+    // MARK: - Collections
+
+    func getCollections() async throws -> [Collection] {
+        try await perform(.collections)
+    }
+
+    func createCollection(name: String) async throws -> Collection {
+        let body = CreateCollectionRequest(name: name)
+        return try await perform(.createCollection, body: body)
+    }
+
+    func getCollectionVideos(id: String) async throws -> [VideoWithUser] {
+        try await perform(.collectionVideos(id: id))
+    }
+
+    func addVideoToCollection(collectionId: String, videoId: String) async throws {
+        let body = AddToCollectionRequest(videoId: videoId)
+        let _: StatusResponse = try await perform(.addToCollection(id: collectionId), body: body)
+    }
+
+    func removeVideoFromCollection(collectionId: String, videoId: String) async throws {
+        let _: StatusResponse = try await perform(.removeFromCollection(collectionId: collectionId, videoId: videoId))
+    }
+
+    func deleteCollection(id: String) async throws {
+        let _: StatusResponse = try await perform(.deleteCollection(id: id))
+    }
+
+    // MARK: - Sent
+
+    func getSentVideos() async throws -> [SentVideo] {
+        try await perform(.sentVideos)
+    }
+
+    func unsendVideo(id: String) async throws {
+        let _: StatusResponse = try await perform(.unsendVideo(id: id))
+    }
+
+    // MARK: - Push
+    
+    func registerPushToken(token: String) async throws {
+        let body = PushRegisterRequest(token: token, platform: "ios")
+        let _: StatusResponse = try await perform(.registerPushToken, body: body)
+    }
+
+    func getPushSettings() async throws -> PushSettings {
+        try await perform(.pushSettings)
+    }
+
+    func updatePushSettings(notificationsEnabled: Bool) async throws {
+        let body = PushSettingsUpdate(notificationsEnabled: notificationsEnabled)
+        let _: StatusResponse = try await perform(.pushSettings, body: body)
+    }
+
+    // MARK: - Upload / Download
+
+    func downloadVideo(id: String) async throws -> VideoDownloadResponse {
+        try await perform(.videoDownload(id: id))
+    }
+
+    func uploadVideo(fileData: Data, fileName: String, progress: (@Sendable (Double) -> Void)?) async throws -> String {
+        let boundary = "Boundary-\(UUID().uuidString)"
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: video/mp4\r\n\r\n".data(using: .utf8)!)
+        body.append(fileData)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+
+        let url = config.baseURL.appendingPathComponent(Endpoint.uploadVideo.path)
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = Endpoint.uploadVideo.method
+        urlRequest.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        try attachAuth(&urlRequest)
+
+        let uploadSession = UploadDelegateSession(progress: progress)
+        let (data, response) = try await uploadSession.upload(request: urlRequest, data: body)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        let uploadResponse: UploadResponse = try handleData(data: data, response: httpResponse)
+        return uploadResponse.url
+    }
+
+    // MARK: - Blocking
+
+    func blockUser(id: String) async throws {
+        let _: StatusResponse = try await perform(.blockUser(id: id))
+    }
+
+    func unblockUser(id: String) async throws {
+        let _: StatusResponse = try await perform(.unblockUser(id: id))
+    }
+
+    func getBlockedUsers() async throws -> [BlockedUser] {
+        try await perform(.blockedUsers)
+    }
+
     // MARK: - Request Engine
 
     private func perform<T: Decodable>(
         _ endpoint: Endpoint,
         body: Encodable? = nil,
+        queryItems: [URLQueryItem]? = nil,
         auth: Bool? = nil
     ) async throws -> T {
-        try await executeRequest(endpoint, body: body, auth: auth ?? endpoint.requiresAuth)
+        try await executeRequest(endpoint, body: body, queryItems: queryItems, auth: auth ?? endpoint.requiresAuth)
     }
 
     private func executeRequest<T: Decodable>(
         _ endpoint: Endpoint,
         body: Encodable?,
+        queryItems: [URLQueryItem]? = nil,
         auth: Bool
     ) async throws -> T {
-        let url = config.baseURL.appendingPathComponent(endpoint.path)
+        var url = config.baseURL.appendingPathComponent(endpoint.path)
+
+        if let queryItems, !queryItems.isEmpty {
+            var components = URLComponents(url: url, resolvingAgainstBaseURL: true)
+            components?.queryItems = queryItems
+            if let urlWithQuery = components?.url {
+                url = urlWithQuery
+            }
+        }
 
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = endpoint.method
@@ -135,10 +308,17 @@ actor APIClient: APIClientProtocol {
             throw APIError.invalidResponse
         }
 
-        return try handleResponse(data: data, response: httpResponse)
+        return try handleData(data: data, response: httpResponse)
     }
 
-    private func handleResponse<T: Decodable>(data: Data, response: HTTPURLResponse) throws -> T {
+    private func attachAuth(_ request: inout URLRequest) throws {
+        guard let token = config.token else {
+            throw APIError.unauthorized
+        }
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
+
+    private func handleData<T: Decodable>(data: Data, response: HTTPURLResponse) throws -> T {
         switch response.statusCode {
         case 200...299:
             do {
@@ -160,6 +340,36 @@ actor APIClient: APIClientProtocol {
     }
 }
 
+// MARK: - Upload Progress Helper
+
+private final class UploadDelegateSession: NSObject, URLSessionTaskDelegate {
+    private let progress: (@Sendable (Double) -> Void)?
+    private var session: URLSession?
+
+    init(progress: (@Sendable (Double) -> Void)?) {
+        self.progress = progress
+    }
+
+    func upload(request: URLRequest, data: Data) async throws -> (Data, URLResponse) {
+        let delegateSession = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
+        self.session = delegateSession
+        defer { delegateSession.invalidateAndCancel() }
+        return try await delegateSession.upload(for: request, from: data)
+    }
+
+    func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        didSendBodyData bytesSent: Int64,
+        totalBytesSent: Int64,
+        totalBytesExpectedToSend: Int64
+    ) {
+        guard totalBytesExpectedToSend > 0 else { return }
+        let fraction = Double(totalBytesSent) / Double(totalBytesExpectedToSend)
+        progress?(fraction)
+    }
+}
+
 // MARK: - Request/Response Bodies
 
 private struct AuthRequest: Encodable {
@@ -174,8 +384,38 @@ private struct LoginRequest: Encodable {
     let password: String
 }
 
+struct InviteSignupRequest: Encodable {
+    let email: String
+    let username: String
+    let password: String
+    let displayName: String?
+    let inviteCode: String
+
+    enum CodingKeys: String, CodingKey {
+        case email, username, password
+        case displayName = "display_name"
+        case inviteCode = "invite_code"
+    }
+}
+
 private struct AuthResponse: Decodable {
     let token: String
+}
+
+private struct AddToCollectionRequest: Encodable {
+    let videoId: String
+
+    enum CodingKeys: String, CodingKey {
+        case videoId = "video_id"
+    }
+}
+
+private struct PushSettingsUpdate: Encodable {
+    let notificationsEnabled: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case notificationsEnabled = "notifications_enabled"
+    }
 }
 
 private struct ErrorBody: Decodable {
@@ -195,5 +435,13 @@ private struct AnyEncodable: Encodable {
 
     func encode(to encoder: Encoder) throws {
         try _encode(encoder)
+    }
+}
+
+// MARK: - Response Types
+
+private extension APIClient {
+    struct HealthResponse: Decodable {
+        let status: String
     }
 }
