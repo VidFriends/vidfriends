@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+      - run: go test -race -count=1 -timeout 60s ./...
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+      - run: go build -ldflags="-s -w" -o /dev/null ./cmd/server
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t vidfriends-server .
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+      - name: Start docker compose
+        run: docker compose up --build --wait
+        timeout-minutes: 5
+      - name: Run integration tests
+        run: go test -count=1 -tags=integration -timeout 120s ./test/integration/
+        env:
+          VIDFRIENDS_ADDR: "http://localhost:8080"
+          VIDFRIENDS_DATABASE_URL: "postgres://vidfriends:vidfriends@localhost:5432/vidfriends?sslmode=disable"
+          VIDFRIENDS_S3_ENDPOINT: "http://localhost:9000"
+          VIDFRIENDS_S3_ACCESS_KEY: "minioadmin"
+          VIDFRIENDS_S3_SECRET_KEY: "minioadmin"
+          VIDFRIENDS_S3_BUCKET: "vidfriends-videos"
+          VIDFRIENDS_S3_USE_SSL: "false"
+      - name: Clean up
+        run: docker compose down
+        if: always()
