@@ -3,18 +3,19 @@ package model
 import "time"
 
 type User struct {
-	ID            string     `json:"id"`
-	Email         string     `json:"email"`
-	Username      string     `json:"username"`
-	PasswordHash  string     `json:"-"`
-	DisplayName   string     `json:"display_name,omitempty"`
-	AvatarURL     string     `json:"avatar_url,omitempty"`
-	Role          string     `json:"role"`
-	Status        string     `json:"status"`
-	StorageUsed   int64      `json:"storage_used"`
-	LastActiveAt  *time.Time `json:"last_active_at,omitempty"`
-	CreatedAt     time.Time  `json:"created_at"`
-	UpdatedAt     time.Time  `json:"updated_at"`
+	ID               string     `json:"id"`
+	Email            string     `json:"email"`
+	Username         string     `json:"username"`
+	PasswordHash     string     `json:"-"`
+	DisplayName      string     `json:"display_name,omitempty"`
+	AvatarURL        string     `json:"avatar_url,omitempty"`
+	Role             string     `json:"role"`
+	Status           string     `json:"status"`
+	StorageUsed      int64      `json:"storage_used"`
+	UploadQuotaBytes *int64     `json:"upload_quota_bytes,omitempty"`
+	LastActiveAt     *time.Time `json:"last_active_at,omitempty"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
 }
 
 type InviteToken struct {

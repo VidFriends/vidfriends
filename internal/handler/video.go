@@ -24,15 +24,16 @@ import (
 )
 
 type VideoHandler struct {
-	db        *pgxpool.Pool
-	s3        *storage.Client
-	dlManager *downloader.Manager
-	hub       *WSHub
-	detector  *vhash.Detector
+	db              *pgxpool.Pool
+	s3              *storage.Client
+	dlManager       *downloader.Manager
+	hub             *WSHub
+	detector        *vhash.Detector
+	maxStorageBytes int64
 }
 
-func NewVideoHandler(db *pgxpool.Pool, s3 *storage.Client, dlManager *downloader.Manager, hub *WSHub, detector *vhash.Detector) *VideoHandler {
-	return &VideoHandler{db: db, s3: s3, dlManager: dlManager, hub: hub, detector: detector}
+func NewVideoHandler(db *pgxpool.Pool, s3 *storage.Client, dlManager *downloader.Manager, hub *WSHub, detector *vhash.Detector, maxStorageBytes int64) *VideoHandler {
+	return &VideoHandler{db: db, s3: s3, dlManager: dlManager, hub: hub, detector: detector, maxStorageBytes: maxStorageBytes}
 }
 
 type CreateVideoFromLinkRequest struct {
@@ -104,6 +105,40 @@ func (h *VideoHandler) Upload() http.HandlerFunc {
 			return
 		}
 
+		fileSize := header.Size
+
+		// Check instance-level storage quota
+		if h.maxStorageBytes > 0 {
+			var totalStorage int64
+			err := h.db.QueryRow(r.Context(),
+				`SELECT COALESCE(SUM(storage_used), 0) FROM users`,
+			).Scan(&totalStorage)
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "failed to check storage quota")
+				return
+			}
+			if totalStorage+fileSize > h.maxStorageBytes {
+				writeError(w, http.StatusForbidden, "Instance storage quota exceeded. Contact an administrator.")
+				return
+			}
+		}
+
+		// Check per-user upload quota
+		var userStorageUsed int64
+		var uploadQuotaBytes *int64
+		err = h.db.QueryRow(r.Context(),
+			`SELECT storage_used, upload_quota_bytes FROM users WHERE id = $1`,
+			claims.UserID,
+		).Scan(&userStorageUsed, &uploadQuotaBytes)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to check user quota")
+			return
+		}
+		if uploadQuotaBytes != nil && userStorageUsed+fileSize > *uploadQuotaBytes {
+			writeError(w, http.StatusForbidden, "Upload quota exceeded. Reduce storage usage or request a quota increase.")
+			return
+		}
+
 		title := r.FormValue("title")
 		if title == "" {
 			title = header.Filename
@@ -111,7 +146,7 @@ func (h *VideoHandler) Upload() http.HandlerFunc {
 
 		description := r.FormValue("description")
 
-		fileURL, err := h.s3.PutFile(r.Context(), header.Filename, file, header.Size, header.Header.Get("Content-Type"))
+		fileURL, err := h.s3.PutFile(r.Context(), header.Filename, file, fileSize, header.Header.Get("Content-Type"))
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "failed to store video file")
 			return
@@ -130,9 +165,17 @@ func (h *VideoHandler) Upload() http.HandlerFunc {
 			return
 		}
 
+		_, err = h.db.Exec(r.Context(),
+			`UPDATE users SET storage_used = storage_used + $1 WHERE id = $2`,
+			fileSize, claims.UserID,
+		)
+		if err != nil {
+			slog.Error("failed to update user storage_used", "user_id", claims.UserID, "error", err)
+		}
+
 		dupCtx, dupCancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer dupCancel()
-		go h.detectAndHandleDuplicate(dupCtx, videoID, fileURL)
+		go h.detectAndHandleDuplicate(dupCtx, videoID, fileURL, claims.UserID)
 
 		resp := UploadVideoResponse{
 			ID:     videoID,
@@ -250,6 +293,57 @@ func (h *VideoHandler) Delete() http.HandlerFunc {
 		}
 
 		writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+	}
+}
+
+func (h *VideoHandler) Keep() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		claims := r.Context().Value(middleware.UserClaimsKey).(*auth.Claims)
+		videoID := r.PathValue("id")
+
+		var ownerID string
+		err := h.db.QueryRow(r.Context(),
+			`SELECT user_id FROM videos WHERE id = $1`, videoID,
+		).Scan(&ownerID)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				writeError(w, http.StatusNotFound, "video not found")
+				return
+			}
+			writeError(w, http.StatusInternalServerError, "failed to fetch video")
+			return
+		}
+
+		if ownerID != claims.UserID {
+			writeError(w, http.StatusForbidden, "cannot modify another user's video")
+			return
+		}
+
+		var req struct {
+			KeepForever *bool `json:"keep_forever"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid request body")
+			return
+		}
+		if req.KeepForever == nil {
+			writeError(w, http.StatusBadRequest, "keep_forever is required")
+			return
+		}
+
+		_, err = h.db.Exec(r.Context(),
+			`UPDATE videos SET keep_forever = $1, updated_at = now() WHERE id = $2`,
+			*req.KeepForever, videoID,
+		)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to update keep_forever")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, map[string]any{
+			"status":       "updated",
+			"keep_forever": *req.KeepForever,
+		})
 	}
 }
 
@@ -966,7 +1060,7 @@ func (h *VideoHandler) Unsend() http.HandlerFunc {
 	}
 }
 
-func (h *VideoHandler) detectAndHandleDuplicate(ctx context.Context, videoID, fileURL string) {
+func (h *VideoHandler) detectAndHandleDuplicate(ctx context.Context, videoID, fileURL, ownerUserID string) {
 	if h.detector == nil {
 		return
 	}
@@ -1016,8 +1110,8 @@ func (h *VideoHandler) detectAndHandleDuplicate(ctx context.Context, videoID, fi
 		"similarity", result.Similarity,
 	)
 
-	if h.hub != nil {
-		h.hub.SendToUser("", Notification{
+	if h.hub != nil && ownerUserID != "" {
+		h.hub.SendToUser(ownerUserID, Notification{
 			Type: "duplicate_detected",
 			Payload: map[string]string{
 				"video_id":    videoID,

@@ -351,6 +351,110 @@ func TestAuthRegister(t *testing.T) {
 	})
 }
 
+func TestPublicSignup(t *testing.T) {
+	addr := getEnv("VIDFRIENDS_ADDR", "http://localhost:8080")
+
+	t.Run("public mode no invite code returns 201 or 400", func(t *testing.T) {
+		body := `{"email":"public@test.com","username":"public_user","password":"password123"}`
+		resp, err := http.Post(addr+"/api/auth/register", "application/json", strings.NewReader(body))
+		if err != nil {
+			t.Fatalf("request: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode == http.StatusBadRequest {
+			var errResp ErrorResponse
+			json.NewDecoder(resp.Body).Decode(&errResp)
+			if errResp.Error == "invite_code is required" {
+				t.Log("server is in invite-only mode, skipping public signup tests")
+				return
+			}
+		}
+		if resp.StatusCode != http.StatusCreated {
+			data, _ := io.ReadAll(resp.Body)
+			t.Fatalf("expected 201 in public mode, got %d: %s", resp.StatusCode, string(data))
+		}
+		var result authResult
+		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			t.Fatalf("decode: %v", err)
+		}
+		if result.AccessToken == "" {
+			t.Error("expected non-empty access_token")
+		}
+		if result.RefreshToken == "" {
+			t.Error("expected non-empty refresh_token")
+		}
+	})
+
+	t.Run("public mode with valid invite code also works", func(t *testing.T) {
+		// Only run this if public mode appears to be enabled
+		body := `{"email":"public_check@test.com","username":"public_check","password":"password123"}`
+		resp, err := http.Post(addr+"/api/auth/register", "application/json", strings.NewReader(body))
+		if err != nil {
+			t.Fatalf("request: %v", err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode == http.StatusBadRequest {
+			t.Log("server is in invite-only mode, skipping invite code validation test")
+			return
+		}
+
+		invite := createInviteToken(t)
+		body2 := fmt.Sprintf(
+			`{"email":"public-invite@test.com","username":"public_invite","password":"password123","invite_code":"%s"}`,
+			invite,
+		)
+		resp2, err := http.Post(addr+"/api/auth/register", "application/json", strings.NewReader(body2))
+		if err != nil {
+			t.Fatalf("request: %v", err)
+		}
+		defer resp2.Body.Close()
+		if resp2.StatusCode != http.StatusCreated {
+			data, _ := io.ReadAll(resp2.Body)
+			t.Fatalf("expected 201 with valid invite code, got %d: %s", resp2.StatusCode, string(data))
+		}
+	})
+
+	t.Run("public mode rejects used invite code", func(t *testing.T) {
+		body := `{"email":"public_used_check@test.com","username":"public_used_check","password":"password123"}`
+		resp, err := http.Post(addr+"/api/auth/register", "application/json", strings.NewReader(body))
+		if err != nil {
+			t.Fatalf("request: %v", err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode == http.StatusBadRequest {
+			t.Log("server is in invite-only mode, skipping used invite test")
+			return
+		}
+
+		invite := createInviteToken(t)
+		body2 := fmt.Sprintf(
+			`{"email":"use-once-a@test.com","username":"use_once_a","password":"password123","invite_code":"%s"}`,
+			invite,
+		)
+		resp2, err := http.Post(addr+"/api/auth/register", "application/json", strings.NewReader(body2))
+		if err != nil {
+			t.Fatalf("request: %v", err)
+		}
+		resp2.Body.Close()
+		if resp2.StatusCode != http.StatusCreated {
+			t.Fatalf("expected 201 on first use, got %d", resp2.StatusCode)
+		}
+
+		body3 := fmt.Sprintf(
+			`{"email":"use-once-b@test.com","username":"use_once_b","password":"password123","invite_code":"%s"}`,
+			invite,
+		)
+		resp3, err := http.Post(addr+"/api/auth/register", "application/json", strings.NewReader(body3))
+		if err != nil {
+			t.Fatalf("request: %v", err)
+		}
+		defer resp3.Body.Close()
+		if resp3.StatusCode != http.StatusBadRequest {
+			t.Errorf("expected 400 for reused invite, got %d", resp3.StatusCode)
+		}
+	})
+}
+
 func TestAuthLogin(t *testing.T) {
 	addr := getEnv("VIDFRIENDS_ADDR", "http://localhost:8080")
 	user := registerUser(t, addr, "logintest@test.com", "login_user", "password123")

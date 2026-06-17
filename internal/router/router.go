@@ -13,13 +13,13 @@ import (
 	"vidfriends.ai/backend/internal/storage"
 )
 
-func New(db *pgxpool.Pool, s3 *storage.Client, jwt *auth.JWTManager, hub *handler.WSHub, dl *downloader.Manager, actLog *middleware.ActivityLogger, pm *push.PushManager, cfgDuplicateThreshold int, cfgHashType string, cfgPublicSignup bool) http.Handler {
+func New(db *pgxpool.Pool, s3 *storage.Client, jwt *auth.JWTManager, hub *handler.WSHub, dl *downloader.Manager, actLog *middleware.ActivityLogger, pm *push.PushManager, cfgDuplicateThreshold int, cfgHashType string, cfgPublicSignup bool, cfgEvictionAgeDays int, cfgMaxStorageBytes int64) http.Handler {
 	mux := http.NewServeMux()
 
 	detector := vhash.NewDetectorWithType(db, cfgDuplicateThreshold, vhash.HashType(cfgHashType))
 	authHandler := handler.NewAuthHandler(db, jwt, cfgPublicSignup)
-	videoHandler := handler.NewVideoHandler(db, s3, dl, hub, detector)
-	adminHandler := handler.NewAdminHandler(db, actLog, s3)
+	videoHandler := handler.NewVideoHandler(db, s3, dl, hub, detector, cfgMaxStorageBytes)
+	adminHandler := handler.NewAdminHandler(db, actLog, s3, cfgEvictionAgeDays)
 	wsHandler := handler.NewWSHandler(hub, jwt, db)
 	socialHandler := handler.NewSocialHandler(db)
 	pushHandler := handler.NewPushHandler(db, pm)
@@ -36,6 +36,7 @@ func New(db *pgxpool.Pool, s3 *storage.Client, jwt *auth.JWTManager, hub *handle
 
 	// Authenticated
 	mux.Handle("GET /api/auth/me", authMW(http.HandlerFunc(authHandler.Me())))
+	mux.Handle("PUT /api/auth/profile", authMW(http.HandlerFunc(authHandler.UpdateProfile())))
 
 	// Push Notifications
 	mux.Handle("POST /api/push/register", authMW(http.HandlerFunc(pushHandler.Register())))
@@ -69,6 +70,8 @@ func New(db *pgxpool.Pool, s3 *storage.Client, jwt *auth.JWTManager, hub *handle
 	mux.Handle("POST /api/inbox/{id}/read", authMW(http.HandlerFunc(socialHandler.MarkAsRead())))
 	mux.Handle("GET /api/feed/fyp", authMW(http.HandlerFunc(socialHandler.FYPFeed())))
 	mux.Handle("GET /api/users", authMW(http.HandlerFunc(socialHandler.SearchUsers())))
+	mux.Handle("GET /api/users/{id}/profile", authMW(http.HandlerFunc(socialHandler.GetUserProfile())))
+	mux.Handle("GET /api/users/{id}/videos", authMW(http.HandlerFunc(socialHandler.GetUserVideos())))
 
 	// Reactions
 	mux.Handle("POST /api/videos/{id}/react", authMW(http.HandlerFunc(videoHandler.AddReaction())))
@@ -78,13 +81,14 @@ func New(db *pgxpool.Pool, s3 *storage.Client, jwt *auth.JWTManager, hub *handle
 	mux.Handle("DELETE /api/videos/{id}/comments/{commentId}", authMW(http.HandlerFunc(videoHandler.DeleteComment())))
 
 	// Video likes list
+	mux.Handle("PATCH /api/videos/{id}/keep", authMW(http.HandlerFunc(videoHandler.Keep())))
 	mux.Handle("GET /api/videos/{id}/likes", authMW(http.HandlerFunc(videoHandler.GetVideoLikes())))
 
 	// Unsend
 	mux.Handle("POST /api/videos/{id}/unsend", authMW(http.HandlerFunc(videoHandler.Unsend())))
 
 	// Duplicate Groups
-	mux.Handle("GET /api/duplicates/{id}", authMW(http.HandlerFunc(dupHandler.GetGroup())))
+	mux.Handle("GET /api/videos/{id}/duplicates", authMW(http.HandlerFunc(dupHandler.GetGroupForVideo())))
 	mux.Handle("PUT /api/duplicates/{id}/canonical", authMW(http.HandlerFunc(dupHandler.SetCanonical())))
 
 	// Feed & History

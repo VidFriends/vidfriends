@@ -19,13 +19,14 @@ import (
 )
 
 type AdminHandler struct {
-	db     *pgxpool.Pool
-	actLog *middleware.ActivityLogger
-	s3     *storage.Client
+	db              *pgxpool.Pool
+	actLog          *middleware.ActivityLogger
+	s3              *storage.Client
+	evictionAgeDays int
 }
 
-func NewAdminHandler(db *pgxpool.Pool, actLog *middleware.ActivityLogger, s3 *storage.Client) *AdminHandler {
-	return &AdminHandler{db: db, actLog: actLog, s3: s3}
+func NewAdminHandler(db *pgxpool.Pool, actLog *middleware.ActivityLogger, s3 *storage.Client, evictionAgeDays int) *AdminHandler {
+	return &AdminHandler{db: db, actLog: actLog, s3: s3, evictionAgeDays: evictionAgeDays}
 }
 
 type AdminStatsResponse struct {
@@ -36,19 +37,21 @@ type AdminStatsResponse struct {
 }
 
 type AdminUserInfo struct {
-	ID          string  `json:"id"`
-	Email       string  `json:"email"`
-	Username    string  `json:"username"`
-	Role        string  `json:"role"`
-	Status      string  `json:"status"`
-	StorageUsed int64   `json:"storage_used"`
-	LastActive  *string `json:"last_active_at,omitempty"`
-	CreatedAt   string  `json:"created_at"`
+	ID               string  `json:"id"`
+	Email            string  `json:"email"`
+	Username         string  `json:"username"`
+	Role             string  `json:"role"`
+	Status           string  `json:"status"`
+	StorageUsed      int64   `json:"storage_used"`
+	UploadQuotaBytes *int64  `json:"upload_quota_bytes,omitempty"`
+	LastActive       *string `json:"last_active_at,omitempty"`
+	CreatedAt        string  `json:"created_at"`
 }
 
 type AdminUpdateUserRequest struct {
-	Role   *string `json:"role,omitempty"`
-	Status *string `json:"status,omitempty"`
+	Role             *string `json:"role,omitempty"`
+	Status           *string `json:"status,omitempty"`
+	UploadQuotaBytes *int64  `json:"upload_quota_bytes,omitempty"`
 }
 
 type StorageBreakdownItem struct {
@@ -122,7 +125,7 @@ func (h *AdminHandler) Users() http.HandlerFunc {
 		}
 
 		query := fmt.Sprintf(
-			`SELECT id, email, username, role, status, storage_used, last_active_at, created_at
+			`SELECT id, email, username, role, status, storage_used, upload_quota_bytes, last_active_at, created_at
 			 FROM users %s ORDER BY created_at DESC`, where)
 
 		rows, err := h.db.Query(r.Context(), query, args...)
@@ -137,7 +140,7 @@ func (h *AdminHandler) Users() http.HandlerFunc {
 			var u AdminUserInfo
 			var lastActive *time.Time
 			var createdAt time.Time
-			if err := rows.Scan(&u.ID, &u.Email, &u.Username, &u.Role, &u.Status, &u.StorageUsed, &lastActive, &createdAt); err != nil {
+			if err := rows.Scan(&u.ID, &u.Email, &u.Username, &u.Role, &u.Status, &u.StorageUsed, &u.UploadQuotaBytes, &lastActive, &createdAt); err != nil {
 				continue
 			}
 			u.CreatedAt = createdAt.Format(time.RFC3339)
@@ -161,8 +164,8 @@ func (h *AdminHandler) UpdateUser() http.HandlerFunc {
 			writeError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
-		if req.Role == nil && req.Status == nil {
-			writeError(w, http.StatusBadRequest, "at least one field (role, status) must be provided")
+		if req.Role == nil && req.Status == nil && req.UploadQuotaBytes == nil {
+			writeError(w, http.StatusBadRequest, "at least one field (role, status, upload_quota_bytes) must be provided")
 			return
 		}
 
@@ -183,11 +186,12 @@ func (h *AdminHandler) UpdateUser() http.HandlerFunc {
 
 		tag, err := h.db.Exec(r.Context(),
 			`UPDATE users SET
-			 role     = COALESCE($1, role),
-			 status   = COALESCE($2, status),
-			 updated_at = now()
-			 WHERE id = $3`,
-			req.Role, req.Status, userID,
+			 role              = COALESCE($1, role),
+			 status            = COALESCE($2, status),
+			 upload_quota_bytes = COALESCE($3, upload_quota_bytes),
+			 updated_at        = now()
+			 WHERE id = $4`,
+			req.Role, req.Status, req.UploadQuotaBytes, userID,
 		)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "failed to update user")
@@ -264,9 +268,11 @@ func (h *AdminHandler) RunEviction() http.HandlerFunc {
 		rows, err := h.db.Query(r.Context(),
 			`SELECT id, file_url, thumbnail_url FROM videos
 			 WHERE status IN ('ready', 'processing')
-			   AND created_at < now() - interval '90 days'
+			   AND created_at < now() - $1 * interval '1 day'
+			   AND (keep_forever IS NULL OR keep_forever = false)
 			   AND id NOT IN (SELECT video_id FROM likes)
 			   AND id NOT IN (SELECT video_id FROM comments)`,
+			h.evictionAgeDays,
 		)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "failed to query evictable videos")
@@ -304,9 +310,11 @@ func (h *AdminHandler) RunEviction() http.HandlerFunc {
 		tag, err := h.db.Exec(r.Context(),
 			`UPDATE videos SET status = 'deleted'
 			 WHERE status IN ('ready', 'processing')
-			   AND created_at < now() - interval '90 days'
+			   AND created_at < now() - $1 * interval '1 day'
+			   AND (keep_forever IS NULL OR keep_forever = false)
 			   AND id NOT IN (SELECT video_id FROM likes)
 			   AND id NOT IN (SELECT video_id FROM comments)`,
+			h.evictionAgeDays,
 		)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "failed to run eviction")

@@ -12,6 +12,8 @@ type S3Config struct {
 	AccessKey string
 	SecretKey string
 	Bucket    string
+	Region    string
+	PathStyle bool
 	UseSSL    bool
 }
 
@@ -49,6 +51,9 @@ type Config struct {
 	DuplicateThreshold  int
 	HashType            string
 	PublicSignup        bool
+	EvictionStrategy    string
+	EvictionAgeDays     int
+	MaxStorageBytes     int64
 }
 
 func Load() *Config {
@@ -67,6 +72,8 @@ func Load() *Config {
 			AccessKey: getEnv("VIDFRIENDS_S3_ACCESS_KEY", "minioadmin"),
 			SecretKey: getEnv("VIDFRIENDS_S3_SECRET_KEY", "minioadmin"),
 			Bucket:    getEnv("VIDFRIENDS_S3_BUCKET", "vidfriends-videos"),
+			Region:    getEnv("VIDFRIENDS_S3_REGION", ""),
+			PathStyle: getEnv("VIDFRIENDS_S3_PATH_STYLE", "false") == "true",
 			UseSSL:    getEnv("VIDFRIENDS_S3_USE_SSL", "false") == "true",
 		},
 		YTDLP: YTDLPConfig{
@@ -79,6 +86,9 @@ func Load() *Config {
 		DuplicateThreshold: getIntEnv("VIDFRIENDS_DUPLICATE_THRESHOLD", 12),
 		HashType:           getEnv("VIDFRIENDS_HASH_TYPE", "phash"),
 		PublicSignup:       getEnv("VIDFRIENDS_ALLOW_PUBLIC_SIGNUP", "false") == "true",
+		EvictionStrategy:   getEnv("VIDFRIENDS_EVICTION_STRATEGY", "age"),
+		EvictionAgeDays:    getIntEnv("VIDFRIENDS_EVICTION_AGE_DAYS", 90),
+		MaxStorageBytes:    getInt64Env("VIDFRIENDS_MAX_STORAGE_BYTES", 0),
 		Push: PushConfig{
 			NtfyURL:       getEnv("VIDFRIENDS_NTFY_URL", ""),
 			GotifyURL:     getEnv("VIDFRIENDS_GOTIFY_URL", ""),

@@ -652,3 +652,90 @@ func (h *SocialHandler) FYPFeed() http.HandlerFunc {
 		writeJSON(w, http.StatusOK, videos)
 	}
 }
+
+type UserProfileResponse struct {
+	User       UserPublic `json:"user"`
+	VideoCount int        `json:"video_count"`
+}
+
+type UserPublic struct {
+	ID          string  `json:"id"`
+	Username    string  `json:"username"`
+	DisplayName string  `json:"display_name,omitempty"`
+	AvatarURL   string  `json:"avatar_url,omitempty"`
+	CreatedAt   string  `json:"created_at"`
+}
+
+func (h *SocialHandler) GetUserProfile() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID := r.PathValue("id")
+
+		var resp UserProfileResponse
+		err := h.db.QueryRow(r.Context(),
+			`SELECT id, username, COALESCE(display_name, ''), COALESCE(avatar_url, ''), created_at
+			 FROM users WHERE id = $1`,
+			userID,
+		).Scan(&resp.User.ID, &resp.User.Username, &resp.User.DisplayName, &resp.User.AvatarURL, &resp.User.CreatedAt)
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "user not found")
+			return
+		}
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to query user")
+			return
+		}
+
+		err = h.db.QueryRow(r.Context(),
+			`SELECT COUNT(*) FROM videos WHERE user_id = $1 AND status = 'ready'`,
+			userID,
+		).Scan(&resp.VideoCount)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to count videos")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, resp)
+	}
+}
+
+func (h *SocialHandler) GetUserVideos() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID := r.PathValue("id")
+
+		rows, err := h.db.Query(r.Context(),
+			`SELECT v.id, v.user_id, v.title, v.description, v.thumbnail_url,
+			        v.status, v.created_at, v.updated_at, u.username,
+			        COALESCE(l.like_count, 0) AS like_count,
+			        COALESCE(c.comment_count, 0) AS comment_count
+			 FROM videos v
+			 JOIN users u ON u.id = v.user_id
+			 LEFT JOIN (SELECT video_id, COUNT(*) AS like_count FROM likes GROUP BY video_id) l ON l.video_id = v.id
+			 LEFT JOIN (SELECT video_id, COUNT(*) AS comment_count FROM comments GROUP BY video_id) c ON c.video_id = v.id
+			 WHERE v.user_id = $1 AND v.status = 'ready'
+			 ORDER BY v.created_at DESC
+			 LIMIT 50`,
+			userID,
+		)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to fetch user videos")
+			return
+		}
+		defer rows.Close()
+
+		videos := make([]VideoResponse, 0)
+		for rows.Next() {
+			var v VideoResponse
+			var createdAt, updatedAt time.Time
+			if err := rows.Scan(&v.ID, &v.UserID, &v.Title, &v.Description, &v.ThumbnailURL,
+				&v.Status, &createdAt, &updatedAt, &v.UserName,
+				&v.LikeCount, &v.CommentCount); err != nil {
+				continue
+			}
+			v.CreatedAt = createdAt.Format(time.RFC3339)
+			v.UpdatedAt = updatedAt.Format(time.RFC3339)
+			videos = append(videos, v)
+		}
+
+		writeJSON(w, http.StatusOK, videos)
+	}
+}

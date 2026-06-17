@@ -7,6 +7,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"regexp"
+	"strings"
+	"unicode"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -16,6 +19,12 @@ import (
 	"vidfriends.ai/backend/internal/middleware"
 	"vidfriends.ai/backend/internal/model"
 )
+
+var emailRe = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+
+type querier interface {
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
 
 type AuthHandler struct {
 	db          *pgxpool.Pool
@@ -50,6 +59,83 @@ type AuthResponse struct {
 	ExpiresIn    int    `json:"expires_in"`
 }
 
+func createUser(ctx context.Context, q querier, email, username, password, displayName string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+
+	var userID string
+	err = q.QueryRow(ctx,
+		`INSERT INTO users (email, username, password_hash, display_name)
+		 VALUES ($1, $2, $3, $4)
+		 RETURNING id`,
+		email, username, string(hash), displayName,
+	).Scan(&userID)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return "", pgErr
+		}
+		return "", err
+	}
+	return userID, nil
+}
+
+func validateRegisterInput(req RegisterRequest) string {
+	var errs []string
+
+	email := strings.TrimSpace(strings.ToLower(req.Email))
+	if email == "" {
+		errs = append(errs, "email is required")
+	} else if len(email) > 255 {
+		errs = append(errs, "email must be at most 255 characters")
+	} else if !emailRe.MatchString(email) {
+		errs = append(errs, "invalid email address")
+	}
+
+	req.Username = strings.TrimSpace(req.Username)
+	if req.Username == "" {
+		errs = append(errs, "username is required")
+	} else if len(req.Username) < 3 {
+		errs = append(errs, "username must be at least 3 characters")
+	} else if len(req.Username) > 30 {
+		errs = append(errs, "username must be at most 30 characters")
+	}
+
+	password := req.Password
+	if password == "" {
+		errs = append(errs, "password is required")
+	} else if len(password) < 8 {
+		errs = append(errs, "password must be at least 8 characters")
+	} else if len(password) > 128 {
+		errs = append(errs, "password must be at most 128 characters")
+	} else {
+		hasUpper, hasLower, hasDigit := false, false, false
+		for _, r := range password {
+			switch {
+			case unicode.IsUpper(r):
+				hasUpper = true
+			case unicode.IsLower(r):
+				hasLower = true
+			case unicode.IsDigit(r):
+				hasDigit = true
+			}
+		}
+		if !hasUpper {
+			errs = append(errs, "password must contain at least one uppercase letter")
+		}
+		if !hasLower {
+			errs = append(errs, "password must contain at least one lowercase letter")
+		}
+		if !hasDigit {
+			errs = append(errs, "password must contain at least one number")
+		}
+	}
+
+	return strings.Join(errs, "; ")
+}
+
 func (h *AuthHandler) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req RegisterRequest
@@ -57,14 +143,15 @@ func (h *AuthHandler) Register() http.HandlerFunc {
 			writeError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
-		if req.Email == "" || req.Username == "" || req.Password == "" {
-			writeError(w, http.StatusBadRequest, "email, username, and password are required")
+
+		if errMsg := validateRegisterInput(req); errMsg != "" {
+			writeError(w, http.StatusBadRequest, errMsg)
 			return
 		}
-		if len(req.Password) < 8 {
-			writeError(w, http.StatusBadRequest, "password must be at least 8 characters")
-			return
-		}
+
+		req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+		req.Username = strings.TrimSpace(req.Username)
+
 		if !h.publicSignup && req.InviteCode == "" {
 			writeError(w, http.StatusBadRequest, "invite_code is required")
 			return
@@ -98,18 +185,7 @@ func (h *AuthHandler) Register() http.HandlerFunc {
 				return
 			}
 
-			hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-			if err != nil {
-				writeError(w, http.StatusInternalServerError, "failed to hash password")
-				return
-			}
-
-			err = tx.QueryRow(r.Context(),
-				`INSERT INTO users (email, username, password_hash, display_name)
-				 VALUES ($1, $2, $3, $4)
-				 RETURNING id`,
-				req.Email, req.Username, string(hash), req.DisplayName,
-			).Scan(&userID)
+			userID, err = createUser(r.Context(), tx, req.Email, req.Username, req.Password, req.DisplayName)
 			if err != nil {
 				var pgErr *pgconn.PgError
 				if errors.As(err, &pgErr) && pgErr.Code == "23505" {
@@ -134,18 +210,8 @@ func (h *AuthHandler) Register() http.HandlerFunc {
 				return
 			}
 		} else {
-			hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-			if err != nil {
-				writeError(w, http.StatusInternalServerError, "failed to hash password")
-				return
-			}
-
-			err = h.db.QueryRow(r.Context(),
-				`INSERT INTO users (email, username, password_hash, display_name)
-				 VALUES ($1, $2, $3, $4)
-				 RETURNING id`,
-				req.Email, req.Username, string(hash), req.DisplayName,
-			).Scan(&userID)
+			var err error
+			userID, err = createUser(r.Context(), h.db, req.Email, req.Username, req.Password, req.DisplayName)
 			if err != nil {
 				var pgErr *pgconn.PgError
 				if errors.As(err, &pgErr) && pgErr.Code == "23505" {
@@ -329,6 +395,56 @@ func (h *AuthHandler) Me() http.HandlerFunc {
 			writeError(w, http.StatusNotFound, "user not found")
 			return
 		}
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to query user")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, user)
+	}
+}
+
+type UpdateProfileRequest struct {
+	DisplayName string `json:"display_name,omitempty"`
+	AvatarURL   string `json:"avatar_url,omitempty"`
+}
+
+func (h *AuthHandler) UpdateProfile() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		claims, ok := r.Context().Value(middleware.UserClaimsKey).(*auth.Claims)
+		if !ok {
+			writeError(w, http.StatusUnauthorized, "unauthorized")
+			return
+		}
+
+		var req UpdateProfileRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid request body")
+			return
+		}
+
+		_, err := h.db.Exec(r.Context(),
+			`UPDATE users SET display_name = COALESCE(NULLIF($1, ''), display_name),
+			                  avatar_url = COALESCE(NULLIF($2, ''), avatar_url),
+			                  updated_at = now()
+			 WHERE id = $3`,
+			req.DisplayName, req.AvatarURL, claims.UserID,
+		)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to update profile")
+			return
+		}
+
+		var user model.User
+		err = h.db.QueryRow(r.Context(),
+			`SELECT id, email, username, password_hash, display_name, avatar_url, role, status, storage_used, last_active_at, created_at, updated_at
+			 FROM users WHERE id = $1`,
+			claims.UserID,
+		).Scan(
+			&user.ID, &user.Email, &user.Username, &user.PasswordHash,
+			&user.DisplayName, &user.AvatarURL, &user.Role, &user.Status,
+			&user.StorageUsed, &user.LastActiveAt, &user.CreatedAt, &user.UpdatedAt,
+		)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "failed to query user")
 			return

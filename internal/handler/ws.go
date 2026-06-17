@@ -217,6 +217,10 @@ func (h *WSHub) Stop() {
 }
 
 func (h *WSHub) SendToUser(userID string, n Notification) {
+	if userID == "" {
+		return
+	}
+
 	data, err := json.Marshal(n)
 	if err != nil {
 		slog.Error("marshal notification", "error", err)

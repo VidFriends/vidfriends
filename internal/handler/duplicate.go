@@ -8,6 +8,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"vidfriends.ai/backend/internal/auth"
+	"vidfriends.ai/backend/internal/middleware"
 )
 
 type DuplicateHandler struct {
@@ -57,47 +59,94 @@ func (h *DuplicateHandler) GetGroup() http.HandlerFunc {
 			return
 		}
 
-		rows, err := h.db.Query(r.Context(),
-			`SELECT v.id, v.user_id, u.username, v.title, v.thumbnail_url, v.created_at
-			 FROM videos v
-			 JOIN users u ON u.id = v.user_id
-			 WHERE v.duplicate_group_id = $1
-			 ORDER BY v.created_at ASC`,
-			groupID,
-		)
+		writeDuplicateGroup(w, h.db, r, groupID, canonicalID, createdAt, updatedAt)
+	}
+}
+
+func (h *DuplicateHandler) GetGroupForVideo() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		videoID := r.PathValue("id")
+
+		var groupID *string
+		err := h.db.QueryRow(r.Context(),
+			`SELECT duplicate_group_id FROM videos WHERE id = $1`,
+			videoID,
+		).Scan(&groupID)
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "failed to fetch members")
+			if errors.Is(err, pgx.ErrNoRows) {
+				writeError(w, http.StatusNotFound, "video not found")
+				return
+			}
+			writeError(w, http.StatusInternalServerError, "failed to fetch video")
 			return
 		}
-		defer rows.Close()
 
-		members := make([]DuplicateMemberResponse, 0)
-		for rows.Next() {
-			var m DuplicateMemberResponse
-			var memCreatedAt time.Time
-			if err := rows.Scan(&m.ID, &m.UserID, &m.UserName, &m.Title, &m.ThumbnailURL, &memCreatedAt); err != nil {
-				continue
+		if groupID == nil {
+			writeJSON(w, http.StatusOK, map[string]any{"group": nil})
+			return
+		}
+
+		var canonicalID string
+		var createdAt, updatedAt time.Time
+		err = h.db.QueryRow(r.Context(),
+			`SELECT id, canonical_id, created_at, updated_at
+			 FROM duplicate_groups WHERE id = $1`,
+			*groupID,
+		).Scan(groupID, &canonicalID, &createdAt, &updatedAt)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				writeError(w, http.StatusNotFound, "group not found")
+				return
 			}
-			m.IsCanonical = m.ID == canonicalID
-			m.CreatedAt = memCreatedAt.Format(time.RFC3339)
-			members = append(members, m)
+			writeError(w, http.StatusInternalServerError, "failed to fetch group")
+			return
 		}
 
-		if members == nil {
-			members = []DuplicateMemberResponse{}
-		}
-
-		resp := DuplicateGroupResponse{
-			ID:          groupID,
-			CanonicalID: canonicalID,
-			Members:     members,
-			MemberCount: len(members),
-			CreatedAt:   createdAt.Format(time.RFC3339),
-			UpdatedAt:   updatedAt.Format(time.RFC3339),
-		}
-
-		writeJSON(w, http.StatusOK, resp)
+		writeDuplicateGroup(w, h.db, r, *groupID, canonicalID, createdAt, updatedAt)
 	}
+}
+
+func writeDuplicateGroup(w http.ResponseWriter, db *pgxpool.Pool, r *http.Request, groupID, canonicalID string, createdAt, updatedAt time.Time) {
+	rows, err := db.Query(r.Context(),
+		`SELECT v.id, v.user_id, u.username, v.title, v.thumbnail_url, v.created_at
+		 FROM videos v
+		 JOIN users u ON u.id = v.user_id
+		 WHERE v.duplicate_group_id = $1
+		 ORDER BY v.created_at ASC`,
+		groupID,
+	)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to fetch members")
+		return
+	}
+	defer rows.Close()
+
+	members := make([]DuplicateMemberResponse, 0)
+	for rows.Next() {
+		var m DuplicateMemberResponse
+		var memCreatedAt time.Time
+		if err := rows.Scan(&m.ID, &m.UserID, &m.UserName, &m.Title, &m.ThumbnailURL, &memCreatedAt); err != nil {
+			continue
+		}
+		m.IsCanonical = m.ID == canonicalID
+		m.CreatedAt = memCreatedAt.Format(time.RFC3339)
+		members = append(members, m)
+	}
+
+	if members == nil {
+		members = []DuplicateMemberResponse{}
+	}
+
+	resp := DuplicateGroupResponse{
+		ID:          groupID,
+		CanonicalID: canonicalID,
+		Members:     members,
+		MemberCount: len(members),
+		CreatedAt:   createdAt.Format(time.RFC3339),
+		UpdatedAt:   updatedAt.Format(time.RFC3339),
+	}
+
+	writeJSON(w, http.StatusOK, resp)
 }
 
 type SetCanonicalRequest struct {
@@ -106,6 +155,7 @@ type SetCanonicalRequest struct {
 
 func (h *DuplicateHandler) SetCanonical() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		claims := r.Context().Value(middleware.UserClaimsKey).(*auth.Claims)
 		groupID := r.PathValue("id")
 
 		var req SetCanonicalRequest
@@ -128,13 +178,22 @@ func (h *DuplicateHandler) SetCanonical() http.HandlerFunc {
 			return
 		}
 
-		var videoInGroup bool
+		var videoOwnerID string
 		err = h.db.QueryRow(r.Context(),
-			`SELECT EXISTS(SELECT 1 FROM videos WHERE id = $1 AND duplicate_group_id = $2)`,
+			`SELECT user_id FROM videos WHERE id = $1 AND duplicate_group_id = $2`,
 			req.VideoID, groupID,
-		).Scan(&videoInGroup)
-		if err != nil || !videoInGroup {
-			writeError(w, http.StatusBadRequest, "video is not a member of this group")
+		).Scan(&videoOwnerID)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				writeError(w, http.StatusBadRequest, "video is not a member of this group")
+				return
+			}
+			writeError(w, http.StatusInternalServerError, "failed to fetch video")
+			return
+		}
+
+		if videoOwnerID != claims.UserID && claims.Role != "admin" {
+			writeError(w, http.StatusForbidden, "you do not own this video")
 			return
 		}
 

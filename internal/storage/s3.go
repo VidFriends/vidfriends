@@ -23,9 +23,16 @@ func NewS3Client(cfg config.S3Config) (*Client, error) {
 	endpoint := strings.TrimPrefix(cfg.Endpoint, "http://")
 	endpoint = strings.TrimPrefix(endpoint, "https://")
 
+	bucketLookup := minio.BucketLookupDNS
+	if cfg.PathStyle {
+		bucketLookup = minio.BucketLookupPath
+	}
+
 	client, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
-		Secure: cfg.UseSSL,
+		Creds:        credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
+		Secure:       cfg.UseSSL,
+		Region:       cfg.Region,
+		BucketLookup: bucketLookup,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create s3 client: %w", err)
@@ -35,22 +42,41 @@ func NewS3Client(cfg config.S3Config) (*Client, error) {
 }
 
 func (s *Client) EnsureBucket(ctx context.Context) error {
-	exists, err := s.client.BucketExists(ctx, s.cfg.Bucket)
-	if err != nil {
-		return fmt.Errorf("check bucket %q: %w", s.cfg.Bucket, err)
-	}
+	var lastErr error
+	backoff := 1 * time.Second
+	const maxRetries = 3
 
-	if !exists {
-		err = s.client.MakeBucket(ctx, s.cfg.Bucket, minio.MakeBucketOptions{})
-		if err != nil {
-			return fmt.Errorf("create bucket %q: %w", s.cfg.Bucket, err)
+	for attempt := range maxRetries {
+		if attempt > 0 {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(backoff):
+			}
+			backoff *= 2
 		}
-		slog.Info("created s3 bucket", "bucket", s.cfg.Bucket)
-	} else {
-		slog.Info("s3 bucket already exists", "bucket", s.cfg.Bucket)
+
+		exists, err := s.client.BucketExists(ctx, s.cfg.Bucket)
+		if err != nil {
+			lastErr = fmt.Errorf("check bucket %q: %w", s.cfg.Bucket, err)
+			continue
+		}
+
+		if !exists {
+			err = s.client.MakeBucket(ctx, s.cfg.Bucket, minio.MakeBucketOptions{})
+			if err != nil {
+				lastErr = fmt.Errorf("create bucket %q: %w", s.cfg.Bucket, err)
+				continue
+			}
+			slog.Info("created s3 bucket", "bucket", s.cfg.Bucket)
+		} else {
+			slog.Info("s3 bucket already exists", "bucket", s.cfg.Bucket)
+		}
+
+		return nil
 	}
 
-	return nil
+	return fmt.Errorf("ensure bucket %q after %d retries: %w", s.cfg.Bucket, maxRetries, lastErr)
 }
 
 func (s *Client) PutFile(ctx context.Context, filename string, reader io.Reader, size int64, contentType string) (string, error) {
