@@ -569,6 +569,43 @@ func (h *SocialHandler) HandleInboxItem() http.HandlerFunc {
 	}
 }
 
+func (h *SocialHandler) MarkAsRead() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		claims := r.Context().Value(middleware.UserClaimsKey).(*auth.Claims)
+		inboxID := r.PathValue("id")
+
+		var recipientID string
+		err := h.db.QueryRow(r.Context(),
+			`SELECT recipient_id FROM received_videos WHERE id = $1`,
+			inboxID,
+		).Scan(&recipientID)
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "inbox item not found")
+			return
+		}
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to fetch inbox item")
+			return
+		}
+
+		if recipientID != claims.UserID {
+			writeError(w, http.StatusForbidden, "cannot modify another user's inbox")
+			return
+		}
+
+		_, err = h.db.Exec(r.Context(),
+			`UPDATE received_videos SET read_at = now() WHERE id = $1`,
+			inboxID,
+		)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to mark as read")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	}
+}
+
 func (h *SocialHandler) FYPFeed() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		claims := r.Context().Value(middleware.UserClaimsKey).(*auth.Claims)

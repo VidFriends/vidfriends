@@ -66,6 +66,7 @@ func New(db *pgxpool.Pool, s3 *storage.Client, jwt *auth.JWTManager, hub *handle
 	mux.Handle("POST /api/send/{id}", authMW(http.HandlerFunc(socialHandler.Send())))
 	mux.Handle("GET /api/inbox", authMW(http.HandlerFunc(socialHandler.Inbox())))
 	mux.Handle("PATCH /api/inbox/{id}", authMW(http.HandlerFunc(socialHandler.HandleInboxItem())))
+	mux.Handle("POST /api/inbox/{id}/read", authMW(http.HandlerFunc(socialHandler.MarkAsRead())))
 	mux.Handle("GET /api/feed/fyp", authMW(http.HandlerFunc(socialHandler.FYPFeed())))
 	mux.Handle("GET /api/users", authMW(http.HandlerFunc(socialHandler.SearchUsers())))
 
