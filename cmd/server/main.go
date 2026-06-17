@@ -116,7 +116,7 @@ func main() {
 		cfg.Push.APNsTopic,
 	)
 
-	h := router.New(db, s3Client, jwt, hub, dlManager, actLog, pm, cfg.DuplicateThreshold, cfg.HashType, cfg.PublicSignup, cfg.EvictionAgeDays, cfg.MaxStorageBytes)
+	h := router.New(db, s3Client, jwt, hub, dlManager, actLog, pm, cfg.DuplicateThreshold, cfg.HashType, cfg.PublicSignup, cfg.EvictionAgeDays, cfg.MaxStorageBytes, cfg.MaxUploadSize)
 
 	server := &http.Server{
 		Addr:         cfg.Addr,

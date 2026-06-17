@@ -13,12 +13,12 @@ import (
 	"vidfriends.ai/backend/internal/storage"
 )
 
-func New(db *pgxpool.Pool, s3 *storage.Client, jwt *auth.JWTManager, hub *handler.WSHub, dl *downloader.Manager, actLog *middleware.ActivityLogger, pm *push.PushManager, cfgDuplicateThreshold int, cfgHashType string, cfgPublicSignup bool, cfgEvictionAgeDays int, cfgMaxStorageBytes int64) http.Handler {
+func New(db *pgxpool.Pool, s3 *storage.Client, jwt *auth.JWTManager, hub *handler.WSHub, dl *downloader.Manager, actLog *middleware.ActivityLogger, pm *push.PushManager, cfgDuplicateThreshold int, cfgHashType string, cfgPublicSignup bool, cfgEvictionAgeDays int, cfgMaxStorageBytes int64, cfgMaxUploadSize int64) http.Handler {
 	mux := http.NewServeMux()
 
 	detector := vhash.NewDetectorWithType(db, cfgDuplicateThreshold, vhash.HashType(cfgHashType))
 	authHandler := handler.NewAuthHandler(db, jwt, cfgPublicSignup)
-	videoHandler := handler.NewVideoHandler(db, s3, dl, hub, detector, cfgMaxStorageBytes)
+	videoHandler := handler.NewVideoHandler(db, s3, dl, hub, detector, cfgMaxStorageBytes, cfgMaxUploadSize)
 	adminHandler := handler.NewAdminHandler(db, actLog, s3, cfgEvictionAgeDays)
 	wsHandler := handler.NewWSHandler(hub, jwt, db)
 	socialHandler := handler.NewSocialHandler(db)

@@ -54,6 +54,7 @@ type Config struct {
 	EvictionStrategy    string
 	EvictionAgeDays     int
 	MaxStorageBytes     int64
+	MaxUploadSize       int64
 }
 
 func Load() *Config {
@@ -89,6 +90,7 @@ func Load() *Config {
 		EvictionStrategy:   getEnv("VIDFRIENDS_EVICTION_STRATEGY", "age"),
 		EvictionAgeDays:    getIntEnv("VIDFRIENDS_EVICTION_AGE_DAYS", 90),
 		MaxStorageBytes:    getInt64Env("VIDFRIENDS_MAX_STORAGE_BYTES", 0),
+		MaxUploadSize:      getInt64Env("VIDFRIENDS_MAX_UPLOAD_SIZE", 500*1024*1024),
 		Push: PushConfig{
 			NtfyURL:       getEnv("VIDFRIENDS_NTFY_URL", ""),
 			GotifyURL:     getEnv("VIDFRIENDS_GOTIFY_URL", ""),

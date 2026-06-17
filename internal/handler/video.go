@@ -30,10 +30,11 @@ type VideoHandler struct {
 	hub             *WSHub
 	detector        *vhash.Detector
 	maxStorageBytes int64
+	maxUploadSize   int64
 }
 
-func NewVideoHandler(db *pgxpool.Pool, s3 *storage.Client, dlManager *downloader.Manager, hub *WSHub, detector *vhash.Detector, maxStorageBytes int64) *VideoHandler {
-	return &VideoHandler{db: db, s3: s3, dlManager: dlManager, hub: hub, detector: detector, maxStorageBytes: maxStorageBytes}
+func NewVideoHandler(db *pgxpool.Pool, s3 *storage.Client, dlManager *downloader.Manager, hub *WSHub, detector *vhash.Detector, maxStorageBytes int64, maxUploadSize int64) *VideoHandler {
+	return &VideoHandler{db: db, s3: s3, dlManager: dlManager, hub: hub, detector: detector, maxStorageBytes: maxStorageBytes, maxUploadSize: maxUploadSize}
 }
 
 type CreateVideoFromLinkRequest struct {
@@ -106,6 +107,11 @@ func (h *VideoHandler) Upload() http.HandlerFunc {
 		}
 
 		fileSize := header.Size
+
+		if h.maxUploadSize > 0 && fileSize > h.maxUploadSize {
+			writeError(w, http.StatusRequestEntityTooLarge, fmt.Sprintf("file exceeds maximum upload size of %d bytes", h.maxUploadSize))
+			return
+		}
 
 		// Check instance-level storage quota
 		if h.maxStorageBytes > 0 {
