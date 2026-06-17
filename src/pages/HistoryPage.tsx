@@ -93,6 +93,7 @@ export function HistoryPage() {
               value={dateFrom}
               onChange={e => handleDateFrom(e.target.value)}
               className="flex-1 sm:flex-none px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              aria-label="From date"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -102,6 +103,7 @@ export function HistoryPage() {
               value={dateTo}
               onChange={e => handleDateTo(e.target.value)}
               className="flex-1 sm:flex-none px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              aria-label="To date"
             />
           </div>
         </div>
