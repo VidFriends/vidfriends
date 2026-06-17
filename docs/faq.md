@@ -13,7 +13,7 @@ All data stays on your server (the one the admin runs). VidFriends does not use 
 
 ### Can I delete my account?
 
-Contact your server admin. They can delete your account and all associated data — videos, comments, likes, and friend connections.
+Yes. Go to **Settings → Delete Account** (or call `DELETE /api/auth/me/account`). You will be asked to confirm your password. Your account, videos, comments, likes, and all associated data will be permanently deleted. This action cannot be undone and is rate-limited to once per hour.
 
 ### Is VidFriends open source?
 

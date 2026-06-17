@@ -6,9 +6,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"regexp"
 	"strings"
+	"sync"
+	"time"
 	"unicode"
 
 	"github.com/jackc/pgx/v5"
@@ -18,6 +21,7 @@ import (
 	"vidfriends.ai/backend/internal/auth"
 	"vidfriends.ai/backend/internal/middleware"
 	"vidfriends.ai/backend/internal/model"
+	"vidfriends.ai/backend/internal/storage"
 )
 
 var emailRe = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
@@ -27,13 +31,22 @@ type querier interface {
 }
 
 type AuthHandler struct {
-	db          *pgxpool.Pool
-	jwt         *auth.JWTManager
-	publicSignup bool
+	db             *pgxpool.Pool
+	jwt            *auth.JWTManager
+	s3             *storage.Client
+	publicSignup   bool
+	deleteRateMu   sync.Mutex
+	deleteRate     map[string]time.Time
 }
 
-func NewAuthHandler(db *pgxpool.Pool, jwt *auth.JWTManager, publicSignup bool) *AuthHandler {
-	return &AuthHandler{db: db, jwt: jwt, publicSignup: publicSignup}
+func NewAuthHandler(db *pgxpool.Pool, jwt *auth.JWTManager, s3 *storage.Client, publicSignup bool) *AuthHandler {
+	return &AuthHandler{
+		db:           db,
+		jwt:          jwt,
+		s3:           s3,
+		publicSignup: publicSignup,
+		deleteRate:   make(map[string]time.Time),
+	}
 }
 
 type RegisterRequest struct {
@@ -451,6 +464,99 @@ func (h *AuthHandler) UpdateProfile() http.HandlerFunc {
 		}
 
 		writeJSON(w, http.StatusOK, user)
+	}
+}
+
+func (h *AuthHandler) DeleteAccount() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		claims, ok := r.Context().Value(middleware.UserClaimsKey).(*auth.Claims)
+		if !ok {
+			writeError(w, http.StatusUnauthorized, "unauthorized")
+			return
+		}
+
+		var req struct {
+			Password string `json:"password"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid request body")
+			return
+		}
+		if req.Password == "" {
+			writeError(w, http.StatusBadRequest, "password is required")
+			return
+		}
+
+		var passwordHash string
+		err := h.db.QueryRow(r.Context(),
+			`SELECT password_hash FROM users WHERE id = $1`,
+			claims.UserID,
+		).Scan(&passwordHash)
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "user not found")
+			return
+		}
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to query user")
+			return
+		}
+
+		if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(req.Password)); err != nil {
+			writeError(w, http.StatusUnauthorized, "invalid password")
+			return
+		}
+
+		h.deleteRateMu.Lock()
+		lastAttempt, exists := h.deleteRate[claims.UserID]
+		if exists && time.Since(lastAttempt) < time.Hour {
+			h.deleteRateMu.Unlock()
+			writeError(w, http.StatusTooManyRequests, "you can only delete your account once per hour")
+			return
+		}
+		h.deleteRate[claims.UserID] = time.Now()
+		h.deleteRateMu.Unlock()
+
+		rows, err := h.db.Query(r.Context(),
+			`SELECT file_url, thumbnail_url FROM videos WHERE user_id = $1`,
+			claims.UserID,
+		)
+		if err == nil {
+			defer rows.Close()
+			for rows.Next() {
+				var fileURL, thumbnailURL string
+				if err := rows.Scan(&fileURL, &thumbnailURL); err != nil {
+					continue
+				}
+				if fileURL != "" {
+					if err := h.s3.DeleteFile(r.Context(), fileURL); err != nil {
+						slog.Error("failed to delete video file from s3", "file_url", fileURL, "error", err)
+					}
+				}
+				if thumbnailURL != "" {
+					if err := h.s3.DeleteFile(r.Context(), thumbnailURL); err != nil {
+						slog.Error("failed to delete thumbnail from s3", "thumbnail_url", thumbnailURL, "error", err)
+					}
+				}
+			}
+		}
+
+		tag, err := h.db.Exec(r.Context(),
+			`DELETE FROM users WHERE id = $1`, claims.UserID,
+		)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to delete account")
+			return
+		}
+		if tag.RowsAffected() == 0 {
+			writeError(w, http.StatusNotFound, "user not found")
+			return
+		}
+
+		h.deleteRateMu.Lock()
+		delete(h.deleteRate, claims.UserID)
+		h.deleteRateMu.Unlock()
+
+		writeJSON(w, http.StatusOK, map[string]bool{"success": true})
 	}
 }
 

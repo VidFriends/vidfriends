@@ -1339,6 +1339,120 @@ func promoteToAdmin(t *testing.T, email string) {
 	}
 }
 
+func TestAuthDeleteAccount(t *testing.T) {
+	addr := getEnv("VIDFRIENDS_ADDR", "http://localhost:8080")
+	password := "password123"
+	user := registerUser(t, addr, "delete-acct-test@example.com", "delete_acct", password)
+
+	t.Run("deletes own account with valid password", func(t *testing.T) {
+		body := fmt.Sprintf(`{"password":"%s"}`, password)
+		req, _ := http.NewRequest("DELETE", addr+"/api/auth/me/account", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+user.AccessToken)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("delete account request: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			data, _ := io.ReadAll(resp.Body)
+			t.Fatalf("expected 200, got %d: %s", resp.StatusCode, string(data))
+		}
+		var result map[string]bool
+		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			t.Fatalf("decode response: %v", err)
+		}
+		if !result["success"] {
+			t.Error("expected success: true")
+		}
+	})
+
+	t.Run("rejects request without password", func(t *testing.T) {
+		other := registerUser(t, addr, "delete-no-pass@example.com", "delete_nopass", password)
+		req, _ := http.NewRequest("DELETE", addr+"/api/auth/me/account", nil)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+other.AccessToken)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("delete account request: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("expected 400, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("rejects request with wrong password", func(t *testing.T) {
+		other := registerUser(t, addr, "delete-wrong-pw@example.com", "delete_wrongpw", password)
+		body := `{"password":"wrongpassword"}`
+		req, _ := http.NewRequest("DELETE", addr+"/api/auth/me/account", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+other.AccessToken)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("delete account request: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusUnauthorized {
+			data, _ := io.ReadAll(resp.Body)
+			t.Errorf("expected 401, got %d: %s", resp.StatusCode, string(data))
+		}
+	})
+
+	t.Run("rejects unauthenticated request", func(t *testing.T) {
+		req, _ := http.NewRequest("DELETE", addr+"/api/auth/me/account", nil)
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("delete account request: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusUnauthorized {
+			t.Errorf("expected 401, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("rejects invalid token", func(t *testing.T) {
+		body := fmt.Sprintf(`{"password":"%s"}`, password)
+		req, _ := http.NewRequest("DELETE", addr+"/api/auth/me/account", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer invalidtoken123")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("delete account request: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusUnauthorized {
+			t.Errorf("expected 401, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("user is gone after account deletion", func(t *testing.T) {
+		other := registerUser(t, addr, "delete-gone-test@example.com", "delete_gone", password)
+		body := fmt.Sprintf(`{"password":"%s"}`, password)
+		req, _ := http.NewRequest("DELETE", addr+"/api/auth/me/account", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+other.AccessToken)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("delete account request: %v", err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200, got %d", resp.StatusCode)
+		}
+
+		meResp, err := apiGet(addr, "/api/auth/me", other.AccessToken)
+		if err != nil {
+			t.Fatalf("me request: %v", err)
+		}
+		defer meResp.Body.Close()
+		if meResp.StatusCode != http.StatusNotFound {
+			t.Errorf("expected 404 after deletion, got %d", meResp.StatusCode)
+		}
+	})
+}
+
 func apiPatch(addr, path, token, body string) (*http.Response, error) {
 	req, err := http.NewRequest("PATCH", addr+path, strings.NewReader(body))
 	if err != nil {

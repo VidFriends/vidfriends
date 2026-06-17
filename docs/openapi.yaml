@@ -154,6 +154,55 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/auth/me/account:
+    delete:
+      operationId: deleteMyAccount
+      summary: Delete the currently authenticated user's account
+      description: |
+        Permanently deletes the authenticated user's account and all associated data
+        (videos, comments, likes, collections, friends, etc.). Requires password
+        confirmation. Rate-limited to 1 request per hour per user.
+      tags: [Auth]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteAccountRequest"
+      responses:
+        "200":
+          description: Account deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteAccountResponse"
+        "400":
+          description: Validation error (missing password)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Invalid password or missing/invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limited (1 request per hour)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /api/ws:
     get:
       operationId: websocketConnect
@@ -2035,6 +2084,21 @@ components:
       properties:
         status:
           type: string
+
+    DeleteAccountRequest:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+          description: Current password for confirmation
+
+    DeleteAccountResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
 
     HealthResponse:
       type: object

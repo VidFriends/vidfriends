@@ -17,7 +17,7 @@ func New(db *pgxpool.Pool, s3 *storage.Client, jwt *auth.JWTManager, hub *handle
 	mux := http.NewServeMux()
 
 	detector := vhash.NewDetectorWithType(db, cfgDuplicateThreshold, vhash.HashType(cfgHashType))
-	authHandler := handler.NewAuthHandler(db, jwt, cfgPublicSignup)
+	authHandler := handler.NewAuthHandler(db, jwt, s3, cfgPublicSignup)
 	videoHandler := handler.NewVideoHandler(db, s3, dl, hub, detector, cfgMaxStorageBytes, cfgMaxUploadSize)
 	adminHandler := handler.NewAdminHandler(db, actLog, s3, cfgEvictionAgeDays)
 	wsHandler := handler.NewWSHandler(hub, jwt, db)
@@ -36,6 +36,7 @@ func New(db *pgxpool.Pool, s3 *storage.Client, jwt *auth.JWTManager, hub *handle
 
 	// Authenticated
 	mux.Handle("GET /api/auth/me", authMW(http.HandlerFunc(authHandler.Me())))
+	mux.Handle("DELETE /api/auth/me/account", authMW(http.HandlerFunc(authHandler.DeleteAccount())))
 	mux.Handle("PUT /api/auth/profile", authMW(http.HandlerFunc(authHandler.UpdateProfile())))
 
 	// Push Notifications
