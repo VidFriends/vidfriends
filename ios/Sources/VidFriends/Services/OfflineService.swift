@@ -88,8 +88,14 @@ final class OfflineService {
 
     // MARK: - Helpers
 
+    private static let dateFormatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
     private func parseDate(_ string: String) -> Date {
-        ISO8601DateFormatter().date(from: string) ?? .now
+        Self.dateFormatter.date(from: string) ?? .now
     }
 }
 
