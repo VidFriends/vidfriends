@@ -30,10 +30,13 @@ func NewAdminHandler(db *pgxpool.Pool, actLog *middleware.ActivityLogger, s3 *st
 }
 
 type AdminStatsResponse struct {
-	TotalVideos      int `json:"total_videos"`
-	TotalStorage     int `json:"total_storage"`
-	TotalUsers       int `json:"total_users"`
-	ActiveUsersToday int `json:"active_users_today"`
+	TotalVideos      int     `json:"total_videos"`
+	TotalUsers       int     `json:"total_users"`
+	TotalLikes       int     `json:"total_likes"`
+	TotalComments    int     `json:"total_comments"`
+	TotalStorageBytes int64  `json:"total_storage_bytes"`
+	StorageQuotaBytes int64  `json:"storage_quota_bytes"`
+	StorageUsagePct  float64 `json:"storage_usage_pct"`
 }
 
 type AdminUserInfo struct {
@@ -85,13 +88,18 @@ func (h *AdminHandler) Stats() http.HandlerFunc {
 		err := h.db.QueryRow(r.Context(),
 			`SELECT
 			 (SELECT COUNT(*) FROM videos WHERE status != 'deleted'),
-			 (SELECT COALESCE(SUM(storage_used), 0) FROM users),
 			 (SELECT COUNT(*) FROM users),
-			 (SELECT COUNT(*) FROM users WHERE last_active_at >= now() - interval '24 hours')`,
-		).Scan(&resp.TotalVideos, &resp.TotalStorage, &resp.TotalUsers, &resp.ActiveUsersToday)
+			 (SELECT COUNT(*) FROM likes),
+			 (SELECT COUNT(*) FROM comments),
+			 (SELECT COALESCE(SUM(storage_used), 0) FROM users),
+			 (SELECT COALESCE(SUM(upload_quota_bytes), 0) FROM users)`,
+		).Scan(&resp.TotalVideos, &resp.TotalUsers, &resp.TotalLikes, &resp.TotalComments, &resp.TotalStorageBytes, &resp.StorageQuotaBytes)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "failed to fetch stats")
 			return
+		}
+		if resp.StorageQuotaBytes > 0 {
+			resp.StorageUsagePct = float64(resp.TotalStorageBytes) / float64(resp.StorageQuotaBytes) * 100
 		}
 		writeJSON(w, http.StatusOK, resp)
 	}
