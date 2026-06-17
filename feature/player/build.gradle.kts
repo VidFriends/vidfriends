@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.vidflow.feature.player"
+    namespace = "com.vidfriends.feature.player"
     compileSdk = 35
 
     defaultConfig {

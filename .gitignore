@@ -21,6 +21,15 @@ ios/build/
 *.dSYM.zip
 *.dSYM
 
+# Agent working documents
+*_REVIEW_*.md
+*_DISPOSITION_*.md
+*DISPOSITION_*.md
+*VERIFICATION-*.md
+*REVIEW-*.md
+review-*.md
+review_sweep-*.md
+
 # Fastlane
 fastlane/report.xml
 fastlane/test_output

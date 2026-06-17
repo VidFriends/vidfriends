@@ -2,26 +2,33 @@
 import PackageDescription
 
 let package = Package(
-    name: "VidFlow",
+    name: "VidFriends",
     defaultLocalization: "en",
     platforms: [.iOS(.v17)],
     products: [
-        .library(name: "VidFlow", targets: ["VidFlow"]),
+        .library(name: "VidFriends", targets: ["VidFriends"]),
     ],
     dependencies: [
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess.git", from: "4.2.2"),
     ],
     targets: [
         .target(
-            name: "VidFlow",
+            name: "VidFriends",
             dependencies: [
                 .product(name: "KeychainAccess", package: "KeychainAccess"),
             ],
             resources: [.process("Resources")]
         ),
+        .target(
+            name: "VidFriendsShareExtension",
+            dependencies: [
+                .target(name: "VidFriends"),
+            ],
+            resources: [.process("Resources")]
+        ),
         .testTarget(
-            name: "VidFlowTests",
-            dependencies: ["VidFlow"]
+            name: "VidFriendsTests",
+            dependencies: ["VidFriends"]
         ),
     ]
 )

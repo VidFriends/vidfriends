@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.vidflow.core.common"
+    namespace = "com.vidfriends.core.common"
     compileSdk = 35
 
     defaultConfig {

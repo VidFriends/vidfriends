@@ -31,13 +31,13 @@ jobs:
         run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
 
       - name: Resolve SPM Dependencies
-        run: xcodebuild -resolvePackageDependencies -project VidFlow.xcodeproj
+        run: xcodebuild -resolvePackageDependencies -project VidFriends.xcodeproj
 
       - name: Build
         run: |
           xcodebuild build \
-            -project VidFlow.xcodeproj \
-            -scheme VidFlow \
+            -project VidFriends.xcodeproj \
+            -scheme VidFriends \
             -sdk iphonesimulator \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
             CODE_SIGNING_ALLOWED=NO
@@ -45,8 +45,8 @@ jobs:
       - name: Test
         run: |
           xcodebuild test \
-            -project VidFlow.xcodeproj \
-            -scheme VidFlow \
+            -project VidFriends.xcodeproj \
+            -scheme VidFriends \
             -sdk iphonesimulator \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
             CODE_SIGNING_ALLOWED=NO

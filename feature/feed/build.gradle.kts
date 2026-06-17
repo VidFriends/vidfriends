@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.vidflow.feature.feed"
+    namespace = "com.vidfriends.feature.feed"
     compileSdk = 35
 
     defaultConfig {

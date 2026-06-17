@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.vidflow.feature.notifications"
+    namespace = "com.vidfriends.feature.notifications"
     compileSdk = 35
 
     defaultConfig {
@@ -41,6 +41,15 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     implementation(libs.hilt.navigation.compose)
+
+    implementation(libs.okhttp)
+    implementation(libs.moshi)
+    ksp(libs.moshi.kotlin.codegen)
+
+    implementation(libs.datastore.preferences)
+
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     testImplementation(libs.mockk)
     testImplementation(libs.junit)

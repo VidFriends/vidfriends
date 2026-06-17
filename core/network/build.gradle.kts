@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.vidflow.core.network"
+    namespace = "com.vidfriends.core.network"
     compileSdk = 35
 
     defaultConfig {
@@ -30,7 +30,6 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.moshi)
-    implementation(libs.moshi.kotlin)
     ksp(libs.moshi.kotlin.codegen)
 
     testImplementation(libs.mockk)

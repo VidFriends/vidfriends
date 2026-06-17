@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.vidflow.feature.auth"
+    namespace = "com.vidfriends.feature.auth"
     compileSdk = 35
 
     defaultConfig {
@@ -41,6 +41,12 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     implementation(libs.hilt.navigation.compose)
+
+    implementation(libs.androidx.camerax.core)
+    implementation(libs.androidx.camerax.camera2)
+    implementation(libs.androidx.camerax.lifecycle)
+    implementation(libs.androidx.camerax.view)
+    implementation(libs.mlkit.barcode.scanning)
 
     testImplementation(libs.mockk)
     testImplementation(libs.junit)

@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.vidflow.app"
+    namespace = "com.vidfriends.app"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.vidflow.app"
+        applicationId = "com.vidfriends.app"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -58,6 +58,10 @@ android {
     buildFeatures {
         compose = true
     }
+
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
 }
 
 dependencies {
@@ -95,7 +99,10 @@ dependencies {
 
     implementation(libs.datastore.preferences)
 
+    implementation(libs.okhttp)
+
     testImplementation(libs.mockk)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
 }

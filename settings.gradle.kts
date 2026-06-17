@@ -19,7 +19,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "VidFlow"
+rootProject.name = "VidFriends"
 include(":app")
 include(":core:common")
 include(":core:network")
