@@ -21,6 +21,11 @@ final class StubAPIClient: APIClientProtocol {
 
     func checkHealth() async throws -> Bool { true }
 
+    func getPaginatedFeed(cursor: String?) async throws -> FeedResponse {
+        let all = try await getFeed()
+        return FeedResponse(videos: all, nextCursor: nil)
+    }
+
     func getFeed() async throws -> [Video] {
         [
             Video(id: "v1", userId: "u1", title: "Amazing sunset timelapse",

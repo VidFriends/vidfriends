@@ -17,6 +17,7 @@ struct SendVideoView: View {
     @State private var uploadError: String?
     @State private var uploadComplete = false
     @State private var source: VideoSource = .picker
+    @State private var comment = ""
 
     enum VideoSource: String, CaseIterable {
         case picker = "Choose"
@@ -38,6 +39,7 @@ struct SendVideoView: View {
                     sourcePicker
                     videoPreviewArea
                     friendSelectionArea
+                    commentField
                     Spacer()
                     uploadButton
                 }
@@ -171,6 +173,22 @@ struct SendVideoView: View {
         }
     }
 
+    // MARK: - Comment Field
+
+    private var commentField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Add a comment (optional)")
+                .font(.headline)
+                .accessibilityAddTraits(.isHeader)
+            TextField("Say something about this video...", text: $comment, axis: .vertical)
+                .textFieldStyle(.roundedBorder)
+                .lineLimit(2...4)
+                .disabled(isUploading)
+                .accessibilityLabel("Comment field")
+                .accessibilityHint("Optional comment to include with your video")
+        }
+    }
+
     // MARK: - Upload
 
     private var uploadButton: some View {
@@ -242,7 +260,8 @@ struct SendVideoView: View {
                     }
                 }
             )
-            let videoId = try await appState.apiClient.createVideo(url: uploadURL, title: nil, description: nil)
+            let caption = comment.trimmingCharacters(in: .whitespaces)
+            let videoId = try await appState.apiClient.createVideo(url: uploadURL, title: caption.isEmpty ? nil : caption, description: nil)
             try await appState.apiClient.sendVideo(id: videoId, toUserId: friendId)
             uploadComplete = true
         } catch {

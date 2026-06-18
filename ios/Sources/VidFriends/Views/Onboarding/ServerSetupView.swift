@@ -6,10 +6,17 @@ struct ServerSetupView: View {
     let coordinator: OnboardingCoordinator
 
     @State private var urlString = ""
-    @State private var urlError: String?
     @State private var isTesting = false
-    @State private var testSuccess = false
     @State private var showScanner = false
+
+    private enum ConnectionStatus {
+        case idle
+        case testing
+        case success(URL)
+        case failure(String)
+    }
+
+    @State private var connectionStatus: ConnectionStatus = .idle
 
     var body: some View {
         ScrollView {
@@ -39,24 +46,23 @@ struct ServerSetupView: View {
                         .background(Color(.systemGray6))
                         .cornerRadius(10)
                         .onChange(of: urlString) { _, _ in
-                            urlError = nil
-                            testSuccess = false
+                            connectionStatus = .idle
                         }
+                        .accessibilityLabel("Server URL input")
 
-                    if let urlError {
-                        Text(urlError)
-                            .foregroundStyle(.red)
-                            .font(.caption)
+                    if case .failure(let message) = connectionStatus {
+                        statusRow(icon: "xmark.circle.fill", color: .red, message: message)
                     }
                 }
 
                 VStack(spacing: 12) {
                     Button(action: testConnection) {
-                        HStack {
+                        HStack(spacing: 8) {
                             if isTesting {
                                 ProgressView()
                                     .tint(.white)
                             }
+                            Image(systemName: "antenna.radiowaves.left.and.right")
                             Text(isTesting ? "Testing…" : "Test Connection")
                         }
                         .frame(maxWidth: .infinity)
@@ -66,9 +72,11 @@ struct ServerSetupView: View {
                         .cornerRadius(10)
                     }
                     .disabled(!canTest || isTesting)
+                    .accessibilityLabel("Test Connection")
+                    .accessibilityHint("Verifies the server URL is reachable")
 
                     Button(action: { showScanner = true }) {
-                        HStack {
+                        HStack(spacing: 8) {
                             Image(systemName: "qrcode.viewfinder")
                             Text("Scan QR Code")
                         }
@@ -78,24 +86,45 @@ struct ServerSetupView: View {
                         .foregroundColor(.primary)
                         .cornerRadius(10)
                     }
+                    .accessibilityLabel("Scan QR Code")
+                    .accessibilityHint("Opens camera to scan a QR code with the server URL")
                 }
 
-                if testSuccess {
-                    Button(action: proceedToAuth) {
-                        Text("Continue")
+                if case .success(let url) = connectionStatus {
+                    VStack(spacing: 16) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                                .font(.title2)
+                            Text("Connected")
+                                .foregroundStyle(.green)
+                                .fontWeight(.semibold)
+                        }
+                        .accessibilityLabel("Connected to server")
+
+                        Button(action: { proceedToAuth(url: url) }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "arrow.right")
+                                Text("Continue")
+                            }
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color.green)
                             .foregroundColor(.white)
                             .cornerRadius(10)
+                        }
+                        .accessibilityLabel("Continue to login")
+                        .accessibilityHint("Proceed with the connected server")
                     }
                     .padding(.top, 8)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
 
                 Spacer()
             }
             .padding(.horizontal, 24)
         }
+        .animation(.easeInOut(duration: 0.3), value: connectionStatus)
         .sheet(isPresented: $showScanner) {
             QRScannerView { code in
                 urlString = code
@@ -104,19 +133,39 @@ struct ServerSetupView: View {
         }
     }
 
+    private func statusRow(icon: String, color: Color, message: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .foregroundStyle(color)
+            Text(message)
+                .foregroundStyle(color)
+                .font(.caption)
+        }
+        .accessibilityLabel(message)
+    }
+
     private var canTest: Bool {
         !urlString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    static func sanitizedURL(from string: String) -> URL? {
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        if let url = URL(string: trimmed), url.scheme != nil {
+            return url
+        }
+        return URL(string: "https://\(trimmed)")
+    }
+
     private func testConnection() {
         let trimmed = urlString.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let url = URL(string: trimmed), url.scheme != nil else {
-            urlError = "Enter a valid URL (e.g. https://videos.example.com)"
+        guard let url = Self.sanitizedURL(from: trimmed) else {
+            connectionStatus = .failure("Enter a valid URL (e.g. https://videos.example.com)")
             return
         }
+
         isTesting = true
-        urlError = nil
-        testSuccess = false
+        connectionStatus = .testing
 
         let previousConfig = appState.apiConfig
         appState.setEnvironment(baseURL: url, useStub: false)
@@ -127,25 +176,29 @@ struct ServerSetupView: View {
                 await MainActor.run {
                     isTesting = false
                     if healthy {
-                        testSuccess = true
-                        coordinator.didConnect(to: url)
+                        connectionStatus = .success(url)
                     } else {
-                        urlError = "Server is not healthy. Check the URL and try again."
+                        connectionStatus = .failure("Server is not healthy. Check the URL and try again.")
                         appState.setEnvironment(baseURL: previousConfig.baseURL, useStub: previousConfig.useStub)
                     }
                 }
             } catch {
                 await MainActor.run {
                     isTesting = false
-                    urlError = "Could not reach server: \(error.localizedDescription)"
+                    let message: String
+                    if let apiError = error as? APIError {
+                        message = apiError.errorDescription ?? "Could not reach server."
+                    } else {
+                        message = "Could not reach server: \(error.localizedDescription)"
+                    }
+                    connectionStatus = .failure(message)
                     appState.setEnvironment(baseURL: previousConfig.baseURL, useStub: previousConfig.useStub)
                 }
             }
         }
     }
 
-    private func proceedToAuth() {
-        guard let url = coordinator.serverURL else { return }
+    private func proceedToAuth(url: URL) {
         coordinator.didConnect(to: url)
     }
 }
@@ -169,6 +222,19 @@ final class QRScannerController: UIViewController, AVCaptureMetadataOutputObject
 
     private var captureSession: AVCaptureSession?
     private var previewLayer: AVCaptureVideoPreviewLayer?
+
+    deinit {
+        if let session = captureSession, session.isRunning {
+            session.stopRunning()
+        }
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        if let session = captureSession, session.isRunning {
+            session.stopRunning()
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()

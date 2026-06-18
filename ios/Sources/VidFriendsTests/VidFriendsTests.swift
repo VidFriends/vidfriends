@@ -575,4 +575,130 @@ struct VidFriendsTests {
     func downloadErrorDescription() {
         #expect(DownloadError.invalidDownloadURL.errorDescription != nil)
     }
+
+    // MARK: - FYP Feed Tests
+
+    @Test("FeedResponse decodes with videos and optional cursor")
+    func feedResponseDecoding() throws {
+        let json = """
+        {
+            "videos": [
+                {"id": "v1", "user_id": "u1", "title": "Test", "status": "ready", "created_at": "2026-06-14T00:00:00Z", "updated_at": "2026-06-14T00:00:00Z"}
+            ],
+            "next_cursor": "cursor-abc"
+        }
+        """.data(using: .utf8)!
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let response = try decoder.decode(FeedResponse.self, from: json)
+        #expect(response.videos.count == 1)
+        #expect(response.videos[0].id == "v1")
+        #expect(response.nextCursor == "cursor-abc")
+    }
+
+    @Test("FeedResponse decodes with nil cursor at end")
+    func feedResponseDecodingNoCursor() throws {
+        let json = """
+        {
+            "videos": [],
+            "next_cursor": null
+        }
+        """.data(using: .utf8)!
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let response = try decoder.decode(FeedResponse.self, from: json)
+        #expect(response.videos.isEmpty)
+        #expect(response.nextCursor == nil)
+    }
+
+    @Test("StubAPIClient getPaginatedFeed returns feed with nil cursor")
+    func stubPaginatedFeed() async throws {
+        let client = StubAPIClient()
+        let response = try await client.getPaginatedFeed(cursor: nil)
+        #expect(response.videos.count == 3)
+        #expect(response.nextCursor == nil)
+    }
+
+    @Test("StubAPIClient getPaginatedFeed with cursor still returns full stub")
+    func stubPaginatedFeedWithCursor() async throws {
+        let client = StubAPIClient()
+        let response = try await client.getPaginatedFeed(cursor: "some-cursor")
+        #expect(response.videos.count == 3)
+        #expect(response.nextCursor == nil)
+    }
+
+    @Test("Comment model decodes from JSON with full fields")
+    func commentDecoding() throws {
+        let json = """
+        {
+            "id": "c1",
+            "user_id": "u2",
+            "user_name": "bob",
+            "video_id": "v1",
+            "parent_id": null,
+            "body": "Great video!",
+            "created_at": "2026-06-14T00:00:00Z"
+        }
+        """.data(using: .utf8)!
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let comment = try decoder.decode(Comment.self, from: json)
+        #expect(comment.id == "c1")
+        #expect(comment.userName == "bob")
+        #expect(comment.body == "Great video!")
+        #expect(comment.parentId == nil)
+    }
+
+    @Test("CreateCommentResponse decodes from JSON")
+    func createCommentResponseDecoding() throws {
+        let json = """
+        {
+            "id": "c-new",
+            "created_at": "2026-06-14T00:00:00Z"
+        }
+        """.data(using: .utf8)!
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let response = try decoder.decode(CreateCommentResponse.self, from: json)
+        #expect(response.id == "c-new")
+        #expect(response.createdAt == "2026-06-14T00:00:00Z")
+    }
+
+    @Test("StubAPIClient postComment returns valid response")
+    func stubPostComment() async throws {
+        let client = StubAPIClient()
+        let response = try await client.postComment(videoId: "v1", body: "Nice!", parentId: nil)
+        #expect(response.id.hasPrefix("stub-cmt-"))
+        #expect(response.createdAt.isEmpty == false)
+    }
+
+    @Test("CreateCommentRequest encodes with optional parent_id")
+    func createCommentRequestEncoding() throws {
+        let request = CreateCommentRequest(body: "Nice video!", parentId: nil)
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        let data = try encoder.encode(request)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: String]
+        #expect(json?["body"] == "Nice video!")
+        #expect(json?["parent_id"] == nil)
+    }
+
+    @Test("CreateCommentRequest encodes with parent_id")
+    func createCommentRequestWithParentEncoding() throws {
+        let request = CreateCommentRequest(body: "Reply!", parentId: "c1")
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        let data = try encoder.encode(request)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: String]
+        #expect(json?["body"] == "Reply!")
+        #expect(json?["parent_id"] == "c1")
+    }
+
+    @Test("Comment endpoints have correct paths")
+    func endpointComments() {
+        #expect(Endpoint.videoComments(id: "v1").path == "/api/videos/v1/comments")
+        #expect(Endpoint.videoComments(id: "v1").method == "GET")
+        #expect(Endpoint.commentOnVideo(id: "v1").path == "/api/videos/v1/comment")
+        #expect(Endpoint.commentOnVideo(id: "v1").method == "POST")
+    }
 }

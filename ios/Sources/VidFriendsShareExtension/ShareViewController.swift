@@ -7,6 +7,8 @@ class ShareViewController: SLComposeServiceViewController {
     private var videoURL: URL?
     private var sharedVideoURL: URL?
     private var isUploading = false
+    private var recipientUserId: String?
+    private var recipientDisplayName: String?
 
     private lazy var keychainService = KeychainService(useAppGroup: true)
 
@@ -25,7 +27,7 @@ class ShareViewController: SLComposeServiceViewController {
         validateContent()
 
         Task {
-            await uploadVideo()
+            await uploadAndSend()
         }
     }
 
@@ -44,7 +46,13 @@ class ShareViewController: SLComposeServiceViewController {
     }
 
     override func configurationItems() -> [Any]! {
-        return []
+        let recipientItem = SLComposeSheetConfigurationItem()!
+        recipientItem.title = "Send To"
+        recipientItem.value = recipientDisplayName ?? "Select a friend..."
+        recipientItem.tapHandler = { [weak self] in
+            self?.presentFriendSearch()
+        }
+        return [recipientItem]
     }
 
     private func handleIncomingItems() {
@@ -91,7 +99,7 @@ class ShareViewController: SLComposeServiceViewController {
         }
     }
 
-    private func uploadVideo() async {
+    private func uploadAndSend() async {
         guard let videoURL else {
             showError("No video found to share.")
             return
@@ -118,28 +126,69 @@ class ShareViewController: SLComposeServiceViewController {
                 }
             )
             let caption = contentText?.isEmpty == false ? contentText : nil
-            _ = try await client.createVideo(url: uploadURL, title: caption, description: nil)
+            let videoId = try await client.createVideo(url: uploadURL, title: caption, description: nil)
+
+            if let recipientUserId {
+                try await client.sendVideo(id: videoId, toUserId: recipientUserId)
+            }
 
             try? FileManager.default.removeItem(at: videoURL)
 
-            extensionContext?.completeRequest(returningItems: nil) { _ in
-                // Extension dismissed
+            extensionContext?.completeRequest(returningItems: nil) { _ in }
+        } catch {
+            showError("Share failed: \(error.localizedDescription)")
+        }
+    }
+
+    private func presentFriendSearch() {
+        let alert = UIAlertController(
+            title: "Send To",
+            message: "Enter a friend's username or email:",
+            preferredStyle: .alert
+        )
+        alert.addTextField { textField in
+            textField.placeholder = "Username or email"
+            textField.autocapitalizationType = .none
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Search", style: .default) { [weak self] _ in
+            guard let query = alert.textFields?.first?.text, !query.isEmpty else { return }
+            Task { @MainActor in
+                await self?.resolveRecipient(query: query)
+            }
+        })
+        present(alert, animated: true)
+    }
+
+    private func resolveRecipient(query: String) async {
+        guard let token = keychainService.loadToken(),
+              let serverURL = keychainService.loadServerURL() else { return }
+        let config = APIConfig(baseURL: serverURL, token: token)
+        let client = APIClient(config: config, keychainService: keychainService)
+        do {
+            let results = try await client.searchUsers(query: query)
+            if let match = results.first {
+                recipientUserId = match.id
+                recipientDisplayName = match.displayName ?? match.username
+                reloadConfigurationItems()
+            } else {
+                showError("No user found for \"\(query)\".")
             }
         } catch {
-            showError("Upload failed: \(error.localizedDescription)")
+            showError("Search failed: \(error.localizedDescription)")
         }
     }
 
     private func updateProgress(_ fraction: Double) {
         let percent = Int(fraction * 100)
-        self.title = "Uploading... \(percent)%"
+        title = "Uploading... \(percent)%"
     }
 
     private func showError(_ message: String) {
         Task { @MainActor in
             isUploading = false
             let alert = UIAlertController(
-                title: "Upload Failed",
+                title: "Share Failed",
                 message: message,
                 preferredStyle: .alert
             )

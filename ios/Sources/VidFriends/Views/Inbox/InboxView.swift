@@ -46,21 +46,26 @@ struct InboxView: View {
                     .accessibilityLabel("Empty inbox. Videos sent to you will appear here.")
                 } else {
                     List(items) { item in
-                        InboxRowView(item: item)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                Button("Reject", role: .destructive) {
-                                    Task { await rejectItem(item) }
-                                }
-                                .tint(.red)
-                                .accessibilityLabel("Reject video from \(item.fromUserName)")
+                        NavigationLink {
+                            VideoReceiverView(inboxItem: item)
+                        } label: {
+                            InboxRowView(item: item)
+                        }
+                        .buttonStyle(.plain)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button("Reject", role: .destructive) {
+                                Task { await rejectItem(item) }
                             }
-                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                Button("Accept") {
-                                    Task { await acceptItem(item) }
-                                }
-                                .tint(.green)
-                                .accessibilityLabel("Accept video from \(item.fromUserName)")
+                            .tint(.red)
+                            .accessibilityLabel("Reject video from \(item.fromUserName)")
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                            Button("Accept") {
+                                Task { await acceptItem(item) }
                             }
+                            .tint(.green)
+                            .accessibilityLabel("Accept video from \(item.fromUserName)")
+                        }
                     }
                     .listStyle(.plain)
                     .accessibilityLabel("Inbox list")
@@ -293,5 +298,136 @@ struct NotificationBannerView: View {
         .shadow(radius: 4)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("New video notification")
+    }
+}
+
+// MARK: - Video Receiver
+
+struct VideoReceiverView: View {
+    let inboxItem: InboxItem
+
+    @Environment(AppState.self) private var appState
+    @State private var video: Video?
+    @State private var isLoading = true
+    @State private var error: String?
+
+    var body: some View {
+        Group {
+            if isLoading {
+                ProgressView("Loading video...")
+                    .accessibilityLabel("Loading received video")
+            } else if let error {
+                ContentUnavailableView(
+                    "Could Not Load Video",
+                    systemImage: "exclamationmark.triangle",
+                    description: Text(error)
+                )
+                .accessibilityLabel("Video error: \(error)")
+            } else if let video {
+                videoContent
+            } else {
+                ContentUnavailableView(
+                    "Video Not Available",
+                    systemImage: "video.slash",
+                    description: Text("This video could not be found.")
+                )
+                .accessibilityLabel("Video not found")
+            }
+        }
+        .navigationTitle(inboxItem.fromUserName)
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await loadVideo() }
+    }
+
+    @ViewBuilder
+    private var videoContent: some View {
+        if let url = video.fileURL.flatMap({ URL(string: $0) }) {
+            VideoPlayerView(video: video, onDownload: {})
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        if inboxItem.status == "pending" {
+                            Button("Accept") {
+                                Task { await acceptVideo() }
+                            }
+                            .accessibilityLabel("Accept received video")
+                        }
+                    }
+                }
+        } else {
+            VStack(spacing: 20) {
+                if let thumb = video.thumbnailURL.flatMap({ URL(string: $0) }) {
+                    AsyncImage(url: thumb) { phase in
+                        if let image = phase.image {
+                            image.resizable().aspectRatio(contentMode: .fill)
+                                .accessibilityHidden(true)
+                        } else {
+                            Rectangle().fill(.quaternary)
+                                .accessibilityHidden(true)
+                        }
+                    }
+                    .frame(height: 300)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+
+                Text(video.title)
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                if let userName = video.userName {
+                    Text("By \(userName)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
+                if inboxItem.status == "pending" {
+                    HStack(spacing: 16) {
+                        Button(role: .destructive) {
+                            Task { await rejectVideo() }
+                        } label: {
+                            Label("Reject", systemImage: "xmark")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+
+                        Button {
+                            Task { await acceptVideo() }
+                        } label: {
+                            Label("Accept", systemImage: "checkmark")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    .padding(.horizontal)
+                }
+            }
+            .padding()
+        }
+    }
+
+    private func loadVideo() async {
+        isLoading = true
+        error = nil
+        defer { isLoading = false }
+        do {
+            video = try await appState.apiClient.getVideoDetail(id: inboxItem.videoId)
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    private func acceptVideo() async {
+        do {
+            try await appState.apiClient.updateInboxItem(id: inboxItem.id, status: "accepted")
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    private func rejectVideo() async {
+        do {
+            try await appState.apiClient.updateInboxItem(id: inboxItem.id, status: "rejected")
+        } catch {
+            self.error = error.localizedDescription
+        }
     }
 }

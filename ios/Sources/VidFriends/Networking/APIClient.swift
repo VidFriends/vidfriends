@@ -58,18 +58,19 @@ actor APIClient: APIClientProtocol {
     // MARK: - Health
 
     func checkHealth() async throws -> Bool {
-        do {
-            let response: HealthResponse = try await perform(.health, auth: false)
-            return response.status == "ok" || response.status == "healthy"
-        } catch {
-            return false
-        }
+        let response: HealthResponse = try await perform(.health, auth: false)
+        return response.status == "ok" || response.status == "healthy"
     }
 
     // MARK: - Feed
 
     func getFeed() async throws -> [Video] {
         try await perform(.feed)
+    }
+
+    func getPaginatedFeed(cursor: String?) async throws -> FeedResponse {
+        let queryItems: [URLQueryItem] = cursor.map { [URLQueryItem(name: "cursor", value: $0)] } ?? []
+        return try await perform(.feed, queryItems: queryItems.isEmpty ? nil : queryItems)
     }
 
     // MARK: - Videos

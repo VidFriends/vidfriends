@@ -12,6 +12,7 @@ protocol APIClientProtocol {
 
     // Feed
     func getFeed() async throws -> [Video]
+    func getPaginatedFeed(cursor: String?) async throws -> FeedResponse
 
     // Videos
     func getVideoDetail(id: String) async throws -> Video
