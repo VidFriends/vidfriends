@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"strings"
@@ -148,6 +149,52 @@ func getEnv(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func createTestVideo(t *testing.T, addr, token string) string {
+	t.Helper()
+
+	var buf bytes.Buffer
+	mw := multipart.NewWriter(&buf)
+
+	fw, err := mw.CreateFormFile("file", "test.mp4")
+	if err != nil {
+		t.Fatalf("create form file: %v", err)
+	}
+	if _, err := fw.Write([]byte{0x00, 0x00, 0x00, 0x00}); err != nil {
+		t.Fatalf("write dummy content: %v", err)
+	}
+	if err := mw.WriteField("title", "Test Video"); err != nil {
+		t.Fatalf("write title field: %v", err)
+	}
+	if err := mw.WriteField("description", "test"); err != nil {
+		t.Fatalf("write description field: %v", err)
+	}
+	mw.Close()
+
+	req, err := http.NewRequest("POST", addr+"/api/videos/upload", &buf)
+	if err != nil {
+		t.Fatalf("create video request: %v", err)
+	}
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("create video: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		data, _ := io.ReadAll(resp.Body)
+		t.Fatalf("create video: status %d: %s", resp.StatusCode, string(data))
+	}
+
+	var result struct{ ID string `json:"id"` }
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode create video response: %v", err)
+	}
+	return result.ID
 }
 
 // ---- Infrastructure Tests ----
@@ -800,30 +847,7 @@ func TestSocialSendReceive(t *testing.T) {
 		resp.Body.Close()
 	}
 
-	var videoID string
-	{
-		body := bytes.NewBufferString(`{"title":"Test Video","description":"test"}`)
-		req, err := http.NewRequest("POST", addr+"/api/videos", body)
-		if err != nil {
-			t.Fatalf("create video request: %v", err)
-		}
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+sender.AccessToken)
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Fatalf("create video: %v", err)
-		}
-		var result struct {
-			ID string `json:"id"`
-		}
-		json.NewDecoder(resp.Body).Decode(&result)
-		resp.Body.Close()
-		videoID = result.ID
-	}
-
-	if videoID == "" {
-		t.Fatal("failed to create video")
-	}
+	videoID := createTestVideo(t, addr, sender.AccessToken)
 
 	t.Run("SendVideoToFriend", func(t *testing.T) {
 		friendResp, err := apiGet(addr, "/api/friends", sender.AccessToken)
@@ -1207,24 +1231,7 @@ func TestAdminDeleteVideo(t *testing.T) {
 	admin := registerUser(t, addr, "admin-delvideo-test@example.com", "admin_delvideo", "password123")
 	promoteToAdmin(t, admin.Email)
 
-	var videoID string
-	{
-		body := bytes.NewBufferString(`{"title":"Admin Delete Test","description":"to be deleted"}`)
-		req, _ := http.NewRequest("POST", addr+"/api/videos", body)
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+admin.AccessToken)
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Fatalf("create video: %v", err)
-		}
-		var result struct{ ID string `json:"id"` }
-		json.NewDecoder(resp.Body).Decode(&result)
-		resp.Body.Close()
-		videoID = result.ID
-	}
-	if videoID == "" {
-		t.Fatal("failed to create video")
-	}
+	videoID := createTestVideo(t, addr, admin.AccessToken)
 
 	t.Run("admin delete video", func(t *testing.T) {
 		req, _ := http.NewRequest("DELETE", addr+"/api/admin/videos/"+videoID, nil)
