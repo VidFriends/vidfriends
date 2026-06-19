@@ -23,8 +23,12 @@ class AuthRepositoryImpl @Inject constructor(
         return result.fold(
             onSuccess = { response ->
                 val authResult = response.toDomain()
-                preferences.saveAuthTokens(authResult.accessToken, authResult.refreshToken)
-                preferences.saveUserInfo(authResult.userId, authResult.username)
+                preferences.saveAuthSession(
+                    accessToken = authResult.accessToken,
+                    refreshToken = authResult.refreshToken,
+                    userId = authResult.userId,
+                    username = authResult.username,
+                )
                 ApiResult.Success(authResult)
             },
             onFailure = { ApiResult.Error(it.message ?: "Login failed") },
@@ -36,8 +40,12 @@ class AuthRepositoryImpl @Inject constructor(
         return result.fold(
             onSuccess = { response ->
                 val authResult = response.toDomain()
-                preferences.saveAuthTokens(authResult.accessToken, authResult.refreshToken)
-                preferences.saveUserInfo(authResult.userId, authResult.username)
+                preferences.saveAuthSession(
+                    accessToken = authResult.accessToken,
+                    refreshToken = authResult.refreshToken,
+                    userId = authResult.userId,
+                    username = authResult.username,
+                )
                 ApiResult.Success(authResult)
             },
             onFailure = { ApiResult.Error(it.message ?: "Registration failed") },
