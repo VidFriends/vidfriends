@@ -144,6 +144,10 @@ func apiGet(addr, path, token string) (*http.Response, error) {
 	return http.DefaultClient.Do(req)
 }
 
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
 func getEnv(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
