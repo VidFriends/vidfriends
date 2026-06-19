@@ -14,8 +14,6 @@ coroutines = "1.7.3"
 mockk = "1.13.9"
 junit = "4.13.2"
 media3 = "1.3.1"
-camerax = "1.3.1"
-mlkit-barcode = "17.2.0"
 
 [libraries]
 # AndroidX Core
@@ -62,15 +60,6 @@ coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutin
 # Media3
 media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
 media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }
-
-# CameraX
-camerax-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
-camerax-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
-camerax-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
-camerax-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
-
-# ML Kit
-mlkit-barcode = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkit-barcode" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }

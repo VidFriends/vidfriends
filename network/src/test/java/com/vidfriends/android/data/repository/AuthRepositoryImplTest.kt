@@ -7,7 +7,7 @@ import com.vidfriends.android.domain.model.LoginRequest
 import com.vidfriends.android.domain.model.RegisterRequest
 import io.mockk.coEvery
 import io.mockk.mockk
-import io.mockk.coVerify
+import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -38,12 +38,13 @@ class AuthRepositoryImplTest {
         coEvery { api.login(any()) } returns Response.success(responseDto)
         coEvery { preferences.accessToken } returns flowOf(null)
         coEvery { preferences.refreshToken } returns flowOf(null)
-        coEvery { preferences.saveAuthSession(any(), any(), any(), any()) } returns Unit
+        coEvery { preferences.saveAuthTokens(any(), any()) } returns Unit
+        coEvery { preferences.saveUserInfo(any(), any()) } returns Unit
 
         val result = repository.login(request)
 
-        assert(result is com.vidfriends.android.domain.model.ApiResult.Success<*>)
-        coVerify { api.login(any()) }
+        assert(result is com.vidfriends.android.domain.model.ApiResult.Success)
+        verify { api.login(any()) }
     }
 
     @Test
@@ -52,7 +53,6 @@ class AuthRepositoryImplTest {
             username = "newuser",
             email = "new@test.com",
             password = "password123",
-            inviteToken = null,
         )
         val responseDto = AuthResponseDto(
             userId = "2",
@@ -63,11 +63,12 @@ class AuthRepositoryImplTest {
         coEvery { api.register(any()) } returns Response.success(responseDto)
         coEvery { preferences.accessToken } returns flowOf(null)
         coEvery { preferences.refreshToken } returns flowOf(null)
-        coEvery { preferences.saveAuthSession(any(), any(), any(), any()) } returns Unit
+        coEvery { preferences.saveAuthTokens(any(), any()) } returns Unit
+        coEvery { preferences.saveUserInfo(any(), any()) } returns Unit
 
         val result = repository.register(request)
 
-        assert(result is com.vidfriends.android.domain.model.ApiResult.Success<*>)
-        coVerify { api.register(any()) }
+        assert(result is com.vidfriends.android.domain.model.ApiResult.Success)
+        verify { api.register(any()) }
     }
 }
