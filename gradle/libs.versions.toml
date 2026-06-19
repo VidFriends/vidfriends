@@ -13,6 +13,7 @@ datastore = "1.0.0"
 coroutines = "1.7.3"
 mockk = "1.13.9"
 junit = "4.13.2"
+media3 = "1.3.1"
 
 [libraries]
 # AndroidX Core
@@ -55,6 +56,10 @@ datastore = { group = "androidx.datastore", name = "datastore-preferences", vers
 # Coroutines
 coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+
+# Media3
+media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
+media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }

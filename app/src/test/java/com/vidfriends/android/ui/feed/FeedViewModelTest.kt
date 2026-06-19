@@ -112,7 +112,7 @@ class FeedViewModelTest {
         viewModel.loadMore()
 
         assertTrue(viewModel.uiState.value.isLoadingMore)
-        coVerify(invokeBlock = { exactly = 1 }) { feedRepository.getFeed(page = 2, limit = 10) }
+        coVerify(exactly = 1) { feedRepository.getFeed(page = 2, limit = 10) }
     }
 
     @Test
@@ -132,7 +132,7 @@ class FeedViewModelTest {
         viewModel.loadMore()
         advanceUntilIdle()
 
-        coVerify(invokeBlock = { exactly = 1 }) { feedRepository.getFeed(any(), any()) }
+        coVerify(exactly = 1) { feedRepository.getFeed(any(), any()) }
     }
 
     @Test
@@ -160,7 +160,7 @@ class FeedViewModelTest {
         viewModel.loadFeed()
         viewModel.loadFeed()
 
-        coVerify(invokeBlock = { exactly = 1 }) { feedRepository.getFeed(any(), any()) }
+        coVerify(exactly = 1) { feedRepository.getFeed(any(), any()) }
     }
 
     @Test
@@ -193,7 +193,7 @@ class FeedViewModelTest {
         val state = viewModel.uiState.value
         assertEquals(1, state.videos.size)
         assertEquals("v2", state.videos[0].id)
-        coVerify(invokeBlock = { exactly = 2 }) { feedRepository.getFeed(page = 1, limit = 10) }
+        coVerify(exactly = 2) { feedRepository.getFeed(page = 1, limit = 10) }
     }
 
     @Test

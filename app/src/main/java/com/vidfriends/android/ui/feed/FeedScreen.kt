@@ -1,5 +1,6 @@
 package com.vidfriends.android.ui.feed
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +19,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -38,6 +41,7 @@ private const val SCROLL_THRESHOLD = 3
 
 @Composable
 fun FeedScreen(
+    onVideoClick: (String) -> Unit = {},
     viewModel: FeedViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -68,11 +72,13 @@ fun FeedScreen(
             )
         }
         else -> {
-            FeedContent(
-                state = state,
-                listState = listState,
-                onRefresh = { viewModel.refresh() },
-            )
+    FeedContent(
+        state = state,
+        listState = listState,
+        onVideoClick = onVideoClick,
+        onRefresh = { viewModel.refresh() },
+        onLoadMore = { viewModel.loadMore() },
+    )
         }
     }
 }
@@ -82,12 +88,25 @@ fun FeedScreen(
 private fun FeedContent(
     state: FeedUiState,
     listState: androidx.compose.foundation.lazy.LazyListState,
+    onVideoClick: (String) -> Unit,
     onRefresh: () -> Unit,
+    onLoadMore: () -> Unit,
 ) {
-    PullToRefreshBox(
-        isRefreshing = state.isLoading,
-        onRefresh = onRefresh,
-        modifier = Modifier.fillMaxSize(),
+    val pullToRefreshState = rememberPullToRefreshState()
+    if (pullToRefreshState.isRefreshing) {
+        LaunchedEffect(true) {
+            onRefresh()
+        }
+    }
+    LaunchedEffect(state.isLoading) {
+        if (!state.isLoading) {
+            pullToRefreshState.endRefresh()
+        }
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(pullToRefreshState.nestedScrollConnection),
     ) {
         LazyColumn(
             state = listState,
@@ -99,7 +118,7 @@ private fun FeedContent(
                 items = state.videos,
                 key = { it.id },
             ) { video ->
-                VideoCard(video = video)
+                VideoCard(video = video, onClick = { onVideoClick(video.id) })
             }
 
             if (state.isLoadingMore) {
@@ -119,7 +138,7 @@ private fun FeedContent(
                 item {
                     ErrorView(
                         message = state.loadMoreError!!,
-                        onRetry = { viewModel.loadMore() },
+                        onRetry = onLoadMore,
                         modifier = Modifier.height(120.dp),
                     )
                 }
@@ -142,13 +161,22 @@ private fun FeedContent(
                 }
             }
         }
+
+        if (pullToRefreshState.isRefreshing) {
+            PullToRefreshContainer(
+                state = pullToRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
+        }
     }
 }
 
 @Composable
-private fun VideoCard(video: Video) {
+private fun VideoCard(video: Video, onClick: () -> Unit = {}) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),

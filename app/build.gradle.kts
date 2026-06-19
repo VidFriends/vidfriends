@@ -79,8 +79,17 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 
+    // Network (transitive for moved repo impls)
+    implementation(libs.okhttp)
+    implementation(libs.retrofit)
+    implementation(libs.moshi)
+
     // DataStore
     implementation(libs.datastore)
+
+    // Media3 (ExoPlayer)
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.ui)
 
     // Coroutines
     implementation(libs.coroutines.android)
