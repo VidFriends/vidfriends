@@ -2,6 +2,7 @@ package com.vidfriends.android.data.repository
 
 import com.vidfriends.android.data.dto.RefreshRequestDto
 import com.vidfriends.android.data.dto.toDomain
+import com.vidfriends.android.data.dto.toDto
 import com.vidfriends.android.data.preferences.UserPreferences
 import com.vidfriends.android.data.remote.VidFriendsApi
 import com.vidfriends.android.domain.model.*

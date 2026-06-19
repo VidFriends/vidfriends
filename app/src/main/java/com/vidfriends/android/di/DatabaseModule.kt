@@ -3,6 +3,9 @@ package com.vidfriends.android.di
 import android.content.Context
 import androidx.room.Room
 import com.vidfriends.android.data.local.AppDatabase
+import com.vidfriends.android.data.local.MIGRATION_1_2
+import com.vidfriends.android.data.local.MIGRATION_2_3
+import com.vidfriends.android.data.local.MIGRATION_3_4
 import com.vidfriends.android.data.local.dao.CacheDao
 import com.vidfriends.android.data.local.dao.CollectionDao
 import com.vidfriends.android.data.local.dao.CollectionVideoDao
@@ -28,9 +31,9 @@ object DatabaseModule {
             AppDatabase::class.java,
             "vidfriends.db",
         ).addMigrations(
-                AppDatabase.MIGRATION_1_2,
-                AppDatabase.MIGRATION_2_3,
-                AppDatabase.MIGRATION_3_4,
+                MIGRATION_1_2,
+                MIGRATION_2_3,
+                MIGRATION_3_4,
             ).build()
 
     @Provides
