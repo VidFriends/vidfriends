@@ -1,0 +1,21 @@
+# Development override — mounts source code for live iteration.
+# Usage: docker compose up --build --wait
+#
+# For hot-reload, install https://github.com/air-verse/air and override the
+# api command with: air -- --config .air.toml
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    develop:
+      watch:
+        - action: rebuild
+          path: ./cmd
+        - action: rebuild
+          path: ./internal
+        - action: rebuild
+          path: ./go.mod
+        - action: rebuild
+          path: ./go.sum

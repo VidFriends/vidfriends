@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var expectedTables = []string{"users", "videos", "comments", "likes", "hashes", "watch_history", "friends", "invite_tokens", "downloads", "activity_log", "refresh_tokens", "received_videos", "reactions", "push_preferences", "duplicate_groups"}
+var expectedTables = []string{"users", "videos", "comments", "likes", "hashes", "watch_history", "friends", "invite_tokens", "downloads", "activity_log", "refresh_tokens", "received_videos", "reactions", "push_preferences", "duplicate_groups", "collections", "collection_videos", "oauth_tokens", "import_jobs", "import_job_items"}
 
 func VerifyMigrations(ctx context.Context, pool *pgxpool.Pool) error {
 	for _, table := range expectedTables {

@@ -6,7 +6,7 @@ Backend server for VidFriends — a unified place to find all of your shortform 
 
 ## Tech Stack
 
-- **Language:** Go 1.22+
+- **Language:** Go 1.26+
 - **Database:** PostgreSQL 16
 - **Object Storage:** MinIO (S3-compatible)
 - **Migrations:** [golang-migrate](https://github.com/golang-migrate/migrate)

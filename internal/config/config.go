@@ -24,6 +24,12 @@ type YTDLPConfig struct {
 	DownloadTimeout time.Duration
 }
 
+type OAuthConfig struct {
+	YouTubeClientID     string
+	YouTubeClientSecret string
+	YouTubeRedirectURI  string
+}
+
 type PushConfig struct {
 	NtfyURL       string
 	GotifyURL     string
@@ -32,6 +38,12 @@ type PushConfig struct {
 	APNsKeyID     string
 	APNsTeamID    string
 	APNsTopic     string
+}
+
+type GitHubAppConfig struct {
+	AppID          string
+	PrivateKeyPath string
+	InstallationID string
 }
 
 type Config struct {
@@ -47,6 +59,7 @@ type Config struct {
 	S3                  S3Config
 	YTDLP               YTDLPConfig
 	AllowedPlatforms    []string
+	OAuth               OAuthConfig
 	Push                PushConfig
 	DuplicateThreshold  int
 	HashType            string
@@ -55,6 +68,7 @@ type Config struct {
 	EvictionAgeDays     int
 	MaxStorageBytes     int64
 	MaxUploadSize       int64
+	GitHubApp           GitHubAppConfig
 }
 
 func Load() *Config {
@@ -91,6 +105,11 @@ func Load() *Config {
 		EvictionAgeDays:    getIntEnv("VIDFRIENDS_EVICTION_AGE_DAYS", 90),
 		MaxStorageBytes:    getInt64Env("VIDFRIENDS_MAX_STORAGE_BYTES", 0),
 		MaxUploadSize:      getInt64Env("VIDFRIENDS_MAX_UPLOAD_SIZE", 500*1024*1024),
+		OAuth: OAuthConfig{
+			YouTubeClientID:     getEnv("VIDFRIENDS_YOUTUBE_CLIENT_ID", ""),
+			YouTubeClientSecret: getEnv("VIDFRIENDS_YOUTUBE_CLIENT_SECRET", ""),
+			YouTubeRedirectURI:  getEnv("VIDFRIENDS_YOUTUBE_REDIRECT_URI", "http://localhost:8080/api/oauth/callback?provider=youtube"),
+		},
 		Push: PushConfig{
 			NtfyURL:       getEnv("VIDFRIENDS_NTFY_URL", ""),
 			GotifyURL:     getEnv("VIDFRIENDS_GOTIFY_URL", ""),
@@ -99,6 +118,11 @@ func Load() *Config {
 			APNsKeyID:     getEnv("VIDFRIENDS_APNS_KEY_ID", ""),
 			APNsTeamID:    getEnv("VIDFRIENDS_APNS_TEAM_ID", ""),
 			APNsTopic:     getEnv("VIDFRIENDS_APNS_TOPIC", ""),
+		},
+		GitHubApp: GitHubAppConfig{
+			AppID:          getEnv("VIDFRIENDS_GITHUB_APP_ID", ""),
+			PrivateKeyPath: getEnv("VIDFRIENDS_GITHUB_PRIVATE_KEY_PATH", ""),
+			InstallationID: getEnv("VIDFRIENDS_GITHUB_INSTALLATION_ID", ""),
 		},
 	}
 }

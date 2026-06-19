@@ -25,11 +25,14 @@ const (
 )
 
 const (
-	EventNewVideo       = "new_video"
+	EventNewVideo        = "new_video"
 	EventVideoDownloaded = "video_downloaded"
-	EventLiked          = "liked"
-	EventCommented      = "commented"
-	EventFriendRequest  = "friend_request"
+	EventLiked           = "liked"
+	EventCommented       = "commented"
+	EventFriendRequest   = "friend_request"
+	EventImportProgress  = "import_progress"
+	EventImportComplete  = "import_complete"
+	EventImportFailed    = "import_failed"
 )
 
 type Notification struct {

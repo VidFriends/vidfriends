@@ -1,29 +1,54 @@
 package router
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"vidfriends.ai/backend/internal/auth"
+	"vidfriends.ai/backend/internal/config"
 	"vidfriends.ai/backend/internal/downloader"
 	"vidfriends.ai/backend/internal/handler"
 	vhash "vidfriends.ai/backend/internal/hash"
+	"vidfriends.ai/backend/internal/importer"
 	"vidfriends.ai/backend/internal/middleware"
+	"vidfriends.ai/backend/internal/oauth"
 	"vidfriends.ai/backend/internal/push"
 	"vidfriends.ai/backend/internal/storage"
 )
 
-func New(db *pgxpool.Pool, s3 *storage.Client, jwt *auth.JWTManager, hub *handler.WSHub, dl *downloader.Manager, actLog *middleware.ActivityLogger, pm *push.PushManager, cfgDuplicateThreshold int, cfgHashType string, cfgPublicSignup bool, cfgEvictionAgeDays int, cfgMaxStorageBytes int64, cfgMaxUploadSize int64) http.Handler {
+func New(db *pgxpool.Pool, s3 *storage.Client, jwt *auth.JWTManager, hub *handler.WSHub, dl *downloader.Manager, actLog *middleware.ActivityLogger, pm *push.PushManager, cfg config.Config) http.Handler {
 	mux := http.NewServeMux()
 
-	detector := vhash.NewDetectorWithType(db, cfgDuplicateThreshold, vhash.HashType(cfgHashType))
-	authHandler := handler.NewAuthHandler(db, jwt, s3, cfgPublicSignup)
-	videoHandler := handler.NewVideoHandler(db, s3, dl, hub, detector, cfgMaxStorageBytes, cfgMaxUploadSize)
-	adminHandler := handler.NewAdminHandler(db, actLog, s3, cfgEvictionAgeDays)
+	detector := vhash.NewDetectorWithType(db, cfg.DuplicateThreshold, vhash.HashType(cfg.HashType))
+	authHandler := handler.NewAuthHandler(db, jwt, s3, cfg.PublicSignup)
+	videoHandler := handler.NewVideoHandler(db, s3, dl, hub, detector, cfg.MaxStorageBytes, cfg.MaxUploadSize)
+	adminHandler := handler.NewAdminHandler(db, actLog, s3, cfg.EvictionAgeDays)
 	wsHandler := handler.NewWSHandler(hub, jwt, db)
 	socialHandler := handler.NewSocialHandler(db)
 	pushHandler := handler.NewPushHandler(db, pm)
 	dupHandler := handler.NewDuplicateHandler(db)
+
+	ytProvider := oauth.NewYouTubeProvider(oauth.YouTubeConfig{
+		ClientID:     cfg.OAuth.YouTubeClientID,
+		ClientSecret: cfg.OAuth.YouTubeClientSecret,
+		RedirectURI:  cfg.OAuth.YouTubeRedirectURI,
+	})
+	providers := map[string]oauth.Provider{
+		"youtube": ytProvider,
+	}
+
+	tokenStore := oauth.NewTokenStore(db)
+	oauthHandler := handler.NewOAuthHandler(db, providers, tokenStore)
+
+	importNotify := func(userID string, event importer.ProgressEvent) {
+		hub.SendToUser(userID, handler.Notification{
+			Type:    event.Type,
+			Payload: event.Payload,
+		})
+	}
+	importManager := importer.NewManager(db, dl, ytProvider, tokenStore, importNotify)
+	importHandler := handler.NewImportHandler(importManager)
 
 	authMW := middleware.Auth(jwt)
 	adminMW := middleware.AdminOnly
@@ -96,6 +121,20 @@ func New(db *pgxpool.Pool, s3 *storage.Client, jwt *auth.JWTManager, hub *handle
 	mux.Handle("GET /api/feed", authMW(http.HandlerFunc(videoHandler.GetFeed())))
 	mux.Handle("GET /api/history", authMW(http.HandlerFunc(videoHandler.GetHistory())))
 
+	// OAuth
+	mux.Handle("GET /api/oauth/providers", authMW(http.HandlerFunc(oauthHandler.ListProviders())))
+	mux.Handle("GET /api/oauth/{provider}/auth-url", authMW(http.HandlerFunc(oauthHandler.GetAuthURL())))
+	mux.Handle("GET /api/oauth/callback", http.HandlerFunc(oauthHandler.Callback()))
+	mux.Handle("POST /api/oauth/connect", authMW(http.HandlerFunc(oauthHandler.Connect())))
+	mux.Handle("DELETE /api/oauth/{provider}", authMW(http.HandlerFunc(oauthHandler.Disconnect())))
+	mux.Handle("GET /api/oauth/{provider}/playlists", authMW(http.HandlerFunc(oauthHandler.ListPlaylists())))
+
+	// Import
+	mux.Handle("POST /api/import", authMW(http.HandlerFunc(importHandler.CreateJob())))
+	mux.Handle("GET /api/import", authMW(http.HandlerFunc(importHandler.ListJobs())))
+	mux.Handle("GET /api/import/{jobId}", authMW(http.HandlerFunc(importHandler.GetJob())))
+	mux.Handle("POST /api/import/{jobId}/cancel", authMW(http.HandlerFunc(importHandler.CancelJob())))
+
 	// Admin (auth + admin role required)
 	mux.Handle("GET /api/admin/stats", authMW(adminMW(http.HandlerFunc(adminHandler.Stats()))))
 	mux.Handle("GET /api/admin/users", authMW(adminMW(http.HandlerFunc(adminHandler.Users()))))
@@ -107,6 +146,8 @@ func New(db *pgxpool.Pool, s3 *storage.Client, jwt *auth.JWTManager, hub *handle
 	mux.Handle("GET /api/admin/invites", authMW(adminMW(http.HandlerFunc(adminHandler.ListInvites()))))
 	mux.Handle("GET /api/admin/activity", authMW(adminMW(http.HandlerFunc(adminHandler.ActivityLog()))))
 	mux.Handle("POST /api/admin/invites", authMW(adminMW(http.HandlerFunc(adminHandler.CreateInvite()))))
+
+	importManager.StartWorker(context.Background())
 
 	rl := middleware.GetRateLimiterFromEnv()
 
