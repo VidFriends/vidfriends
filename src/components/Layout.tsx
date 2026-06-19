@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export function Layout() {
-  const { logout } = useAuth()
+  const { logout, isAdmin } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -28,7 +28,9 @@ export function Layout() {
                 <NavLink to="/send" className={linkClass} onClick={closeMenu}>Send</NavLink>
                 <NavLink to="/inbox" className={linkClass} onClick={closeMenu}>Inbox</NavLink>
                 <NavLink to="/history" className={linkClass} onClick={closeMenu}>History</NavLink>
-                <NavLink to="/admin" className={linkClass} onClick={closeMenu}>Admin</NavLink>
+                <NavLink to="/collections" className={linkClass} onClick={closeMenu}>Collections</NavLink>
+                <NavLink to="/collections/import" className={linkClass} onClick={closeMenu}>Import</NavLink>
+                {isAdmin && <NavLink to="/admin" className={linkClass} onClick={closeMenu}>Admin</NavLink>}
               </div>
             </div>
             <div className="hidden md:flex items-center gap-2">
@@ -64,7 +66,9 @@ export function Layout() {
             <NavLink to="/send" className={linkClass} onClick={closeMenu}>Send</NavLink>
             <NavLink to="/inbox" className={linkClass} onClick={closeMenu}>Inbox</NavLink>
             <NavLink to="/history" className={linkClass} onClick={closeMenu}>History</NavLink>
-            <NavLink to="/admin" className={linkClass} onClick={closeMenu}>Admin</NavLink>
+            <NavLink to="/collections" className={linkClass} onClick={closeMenu}>Collections</NavLink>
+            <NavLink to="/collections/import" className={linkClass} onClick={closeMenu}>Import</NavLink>
+            {isAdmin && <NavLink to="/admin" className={linkClass} onClick={closeMenu}>Admin</NavLink>}
             <NavLink to="/profile" className={linkClass} onClick={closeMenu}>Profile</NavLink>
             <button
               onClick={() => { handleLogout(); closeMenu() }}

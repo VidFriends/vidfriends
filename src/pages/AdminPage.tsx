@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { api } from '../lib/api'
 import type { AdminStats, AdminUser, StorageBreakdown, ActivityEntry } from '../lib/types'
+import { QRCodeSVG } from 'qrcode.react'
 
-type AdminTab = 'overview' | 'users' | 'eviction' | 'storage' | 'activity'
+type AdminTab = 'overview' | 'users' | 'eviction' | 'storage' | 'activity' | 'qr'
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -70,6 +71,10 @@ export function AdminPage() {
   const [activityPage, setActivityPage] = useState(0)
   const [activityFilter, setActivityFilter] = useState('')
   const PAGE_SIZE = 50
+
+  const [qrUrl, setQrUrl] = useState(() => window.location.origin)
+  const [qrCustomUrl, setQrCustomUrl] = useState('')
+  const [qrCopied, setQrCopied] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -243,6 +248,7 @@ export function AdminPage() {
         <button onClick={() => setTab('storage')} className={tabClass('storage')}>Storage</button>
         <button onClick={() => setTab('eviction')} className={tabClass('eviction')}>Eviction Policy</button>
         <button onClick={() => setTab('activity')} className={tabClass('activity')}>Activity Log</button>
+        <button onClick={() => setTab('qr')} className={tabClass('qr')}>QR Codes</button>
       </div>
 
       {error && (
@@ -565,6 +571,110 @@ export function AdminPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'qr' && (
+        <div className="space-y-6">
+          <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
+            <h3 className="text-lg font-medium text-white mb-2">QR Code Generation</h3>
+            <p className="text-gray-400 text-sm">
+              Generate QR codes for server URLs to share the platform with others.
+            </p>
+          </div>
+
+          <div className="p-6 bg-gray-900 rounded-xl border border-gray-800 space-y-4">
+            <h4 className="text-white font-medium">Current Server URL</h4>
+            <div className="flex flex-col items-center gap-4">
+              <div className="bg-white p-4 rounded-xl">
+                <QRCodeSVG value={qrUrl} size={200} level="M" />
+              </div>
+              <p className="text-gray-300 text-sm break-all">{qrUrl}</p>
+              <button
+                onClick={() => { navigator.clipboard.writeText(qrUrl); setQrCopied(true); setTimeout(() => setQrCopied(false), 2000) }}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition-colors"
+                aria-label="Copy server URL"
+              >
+                {qrCopied ? 'Copied!' : 'Copy URL'}
+              </button>
+            </div>
+          </div>
+
+          <div className="p-6 bg-gray-900 rounded-xl border border-gray-800 space-y-4">
+            <h4 className="text-white font-medium">Generate Custom QR Code</h4>
+            <p className="text-gray-400 text-sm">
+              Enter any URL or text to generate a QR code.
+            </p>
+            <div className="flex gap-3">
+              <input
+                type="url"
+                value={qrCustomUrl}
+                onChange={e => setQrCustomUrl(e.target.value)}
+                placeholder="https://example.com/share/video/..."
+                className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                aria-label="Custom URL for QR code"
+              />
+              <button
+                onClick={() => { if (qrCustomUrl.trim()) setQrUrl(qrCustomUrl.trim()) }}
+                disabled={!qrCustomUrl.trim()}
+                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+              >
+                Generate
+              </button>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => { setQrCustomUrl(window.location.origin); setQrUrl(window.location.origin) }}
+                className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded transition-colors"
+              >
+                Platform URL
+              </button>
+              <button
+                onClick={() => { const u = `${window.location.origin}/register`; setQrCustomUrl(u); setQrUrl(u) }}
+                className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded transition-colors"
+              >
+                Register Page
+              </button>
+            </div>
+          </div>
+
+          {qrUrl !== window.location.origin && (
+            <div className="p-6 bg-gray-900 rounded-xl border border-gray-800 space-y-4">
+              <h4 className="text-white font-medium">Preview</h4>
+              <div className="flex flex-col items-center gap-4 qr-preview">
+                <div className="bg-white p-4 rounded-xl">
+                  <QRCodeSVG value={qrUrl} size={250} level="M" />
+                </div>
+                <p className="text-gray-300 text-sm break-all max-w-md text-center">{qrUrl}</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const svg = document.querySelector('.qr-preview svg')
+                      if (!svg) return
+                      const serialized = new XMLSerializer().serializeToString(svg)
+                      const blob = new Blob([serialized], { type: 'image/svg+xml' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = 'qrcode.svg'
+                      a.click()
+                      URL.revokeObjectURL(url)
+                    }}
+                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors"
+                    aria-label="Download QR code as SVG"
+                  >
+                    Download SVG
+                  </button>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(qrUrl); setQrCopied(true); setTimeout(() => setQrCopied(false), 2000) }}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition-colors"
+                  >
+                    {qrCopied ? 'Copied!' : 'Copy URL'}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

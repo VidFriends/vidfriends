@@ -1,9 +1,14 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { List } from 'react-window'
+import type { ListImperativeAPI } from 'react-window'
 import { api } from '../lib/api'
 import type { Video } from '../lib/types'
 import { VideoCard } from '../components/VideoCard'
 
 type FeedTab = 'fyp' | 'discover'
+
+const OVERSCAN = 3
+const SNAP_DELAY = 150
 
 export function FeedPage() {
   const [tab, setTab] = useState<FeedTab>('fyp')
@@ -11,6 +16,25 @@ export function FeedPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [refreshing, setRefreshing] = useState(false)
+
+  const containerRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<ListImperativeAPI | null>(null)
+  const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [containerHeight, setContainerHeight] = useState(window.innerHeight)
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        setContainerHeight(entry.contentRect.height)
+      }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -73,6 +97,72 @@ export function FeedPage() {
       })
       .finally(() => setRefreshing(false))
   }, [tab])
+
+  const prevActiveRef = useRef(activeIndex)
+
+  useEffect(() => {
+    const el = listRef.current?.element
+    if (!el) return
+
+    const onScroll = () => {
+      const idx = Math.min(
+        Math.max(0, Math.round(el.scrollTop / containerHeight)),
+        videos.length - 1
+      )
+      setActiveIndex(idx)
+
+      if (snapTimerRef.current) clearTimeout(snapTimerRef.current)
+      snapTimerRef.current = setTimeout(() => {
+        const snapIdx = Math.min(
+          Math.max(0, Math.round(el.scrollTop / containerHeight)),
+          videos.length - 1
+        )
+        listRef.current?.scrollToRow({ index: snapIdx, align: 'start' })
+      }, SNAP_DELAY)
+    }
+
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      el.removeEventListener('scroll', onScroll)
+      if (snapTimerRef.current) clearTimeout(snapTimerRef.current)
+    }
+  }, [containerHeight, videos.length, listRef])
+
+  useEffect(() => {
+    if (prevActiveRef.current === activeIndex) return
+    prevActiveRef.current = activeIndex
+
+    const nextIndex = activeIndex + 1
+    if (nextIndex < videos.length) {
+      const nextVideo = videos[nextIndex]
+      if (nextVideo.file_url) {
+        const existing = document.querySelector(`link[data-preload="${nextVideo.id}"]`)
+        if (!existing) {
+          const link = document.createElement('link')
+          link.rel = 'preload'
+          link.as = 'video'
+          link.href = nextVideo.file_url
+          link.setAttribute('data-preload', nextVideo.id)
+          document.head.appendChild(link)
+        }
+      }
+    }
+  }, [activeIndex, videos])
+
+  const RowComponent = useCallback(
+    (props: Record<string, unknown>) => {
+      const index = props.index as number
+      const video = videos[index]
+      return (
+        <VideoCard
+          video={video}
+          style={props.style as React.CSSProperties}
+          isActive={index === activeIndex}
+        />
+      )
+    },
+    [videos, activeIndex]
+  )
 
   if (loading) {
     return (
@@ -151,10 +241,16 @@ export function FeedPage() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-scroll snap-y snap-mandatory scroll-smooth">
-        {videos.map(video => (
-          <VideoCard key={video.id} video={video} />
-        ))}
+      <div ref={containerRef} className="flex-1">
+        <List
+          listRef={listRef}
+          rowCount={videos.length}
+          rowHeight={containerHeight}
+          rowComponent={RowComponent}
+          rowProps={{}}
+          overscanCount={OVERSCAN}
+          style={{ width: '100%', height: containerHeight }}
+        />
       </div>
     </div>
   )

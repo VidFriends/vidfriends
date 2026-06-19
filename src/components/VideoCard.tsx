@@ -2,12 +2,15 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import type { Video } from '../lib/types'
+import { LazyImage } from './LazyImage'
 
 interface VideoCardProps {
   video: Video
+  style?: React.CSSProperties
+  isActive?: boolean
 }
 
-export function VideoCard({ video }: VideoCardProps) {
+export function VideoCard({ video, style, isActive = false }: VideoCardProps) {
   const navigate = useNavigate()
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -40,7 +43,7 @@ export function VideoCard({ video }: VideoCardProps) {
         const visible = entry.isIntersecting
         setIsVisible(visible)
 
-        if (visible && videoRef.current) {
+        if (visible && videoRef.current && isActive) {
           videoRef.current.currentTime = 0
           videoRef.current.play().catch(() => {})
         } else if (!visible && videoRef.current) {
@@ -57,14 +60,11 @@ export function VideoCard({ video }: VideoCardProps) {
 
     observer.observe(el)
     return () => observer.disconnect()
-  }, [video.id])
+  }, [video.id, isActive])
 
-  return (
-    <div
-      ref={containerRef}
-      className="relative w-full h-dvh snap-start snap-always bg-black flex-shrink-0 overflow-hidden"
-    >
-      {video.file_url ? (
+  const renderVideoOrPlaceholder = () => {
+    if (isActive && video.file_url) {
+      return (
         <video
           ref={videoRef}
           src={video.file_url}
@@ -74,19 +74,50 @@ export function VideoCard({ video }: VideoCardProps) {
           preload="auto"
           className="absolute inset-0 w-full h-full object-contain"
         />
-      ) : video.thumbnail_url ? (
-        <img
+      )
+    }
+
+    if (video.thumbnail_url) {
+      return (
+        <LazyImage
           src={video.thumbnail_url}
           alt={video.title}
+          className="absolute inset-0 w-full h-full"
+          rootMargin="100px"
+        />
+      )
+    }
+
+    if (video.file_url) {
+      return (
+        <video
+          ref={videoRef}
+          src={video.file_url}
+          muted
+          loop
+          playsInline
+          preload="none"
           className="absolute inset-0 w-full h-full object-contain"
         />
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-          <svg className="w-16 h-16 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-          </svg>
-        </div>
-      )}
+      )
+    }
+
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+        <svg className="w-16 h-16 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+        </svg>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      style={style}
+      className="relative w-full h-full bg-black overflow-hidden"
+    >
+      {renderVideoOrPlaceholder()}
 
       {isVisible && !video.file_url && (
         <div className="absolute inset-0 flex items-center justify-center">

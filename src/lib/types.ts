@@ -2,6 +2,7 @@ export interface User {
   id: string
   email: string
   username: string
+  role: string
   display_name?: string
   avatar_url?: string
   created_at: string
@@ -126,6 +127,38 @@ export interface Friend {
   created_at: string
 }
 
+export interface Collection {
+  id: string
+  user_id: string
+  name: string
+  video_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface CollectionVideo {
+  id: string
+  user_id: string
+  filename: string
+  mimetype: string
+  size: number
+  duration: number | null
+  created_at: string
+}
+
+export interface ImportUrlResult {
+  url: string
+  status: 'imported' | 'skipped' | 'failed'
+  title?: string
+  error?: string
+}
+
+export interface ImportUrlsResponse {
+  collection_id: string
+  collection_name?: string
+  results: ImportUrlResult[]
+}
+
 export interface ApiError {
   error: string
 }
@@ -137,13 +170,4 @@ export interface AuthState {
   login: (email: string, password: string) => Promise<void>
   register: (email: string, username: string, password: string, displayName?: string) => Promise<void>
   logout: () => void
-}
-
-export interface AuthState {
-  token: string | null
-  user: User | null
-  login: (email: string, password: string) => Promise<void>
-  register: (email: string, username: string, password: string, displayName?: string) => Promise<void>
-  logout: () => void
-  isAuthenticated: boolean
 }

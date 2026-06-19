@@ -10,6 +10,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png'],
+      workbox: {
+        navigateFallback: '/offline.html',
+      },
       manifest: {
         name: 'VidFriends',
         short_name: 'VidFriends',

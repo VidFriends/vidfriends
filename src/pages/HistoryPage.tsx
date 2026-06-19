@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { api } from '../lib/api'
 import type { WatchHistoryEntry } from '../lib/types'
+import { EmptyState, HistoryEmptyIcon } from '../components/EmptyState'
 
 const ITEMS_PER_PAGE = 10
 
@@ -110,8 +111,12 @@ export function HistoryPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <p className="text-lg">No watch history found</p>
+        <div className="py-12">
+          <EmptyState
+            icon={<HistoryEmptyIcon />}
+            title="No history yet"
+            description="Your watch history will appear here after you start watching videos sent by friends."
+          />
         </div>
       ) : (
         <>

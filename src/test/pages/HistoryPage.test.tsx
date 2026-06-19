@@ -108,7 +108,7 @@ describe('HistoryPage', () => {
     const searchInput = screen.getByLabelText(/search history/i)
     await user.type(searchInput, 'nonexistent')
 
-    expect(screen.getByText('No watch history found')).toBeInTheDocument()
+    expect(screen.getByText('No history yet')).toBeInTheDocument()
   })
 
   it('shows error state when fetch fails', async () => {

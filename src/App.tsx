@@ -10,6 +10,9 @@ import { HistoryPage } from './pages/HistoryPage'
 import { AdminPage } from './pages/AdminPage'
 import { VideoPlayerPage } from './pages/VideoPlayerPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { ImportCollectionPage } from './pages/ImportCollectionPage'
+import { CollectionsIndexPage } from './pages/CollectionsIndexPage'
+import { CollectionDetailPage } from './pages/CollectionDetailPage'
 
 function LoadingScreen() {
   return (
@@ -33,6 +36,14 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isAdmin, isReady } = useAuth()
+  if (!isReady) return <LoadingScreen />
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (!isAdmin) return <Navigate to="/" replace />
+  return <>{children}</>
+}
+
 export default function App() {
   return (
     <Routes>
@@ -44,8 +55,11 @@ export default function App() {
         <Route path="/inbox" element={<InboxPage />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
         <Route path="/videos/:id" element={<VideoPlayerPage />} />
+        <Route path="/collections" element={<CollectionsIndexPage />} />
+        <Route path="/collections/import" element={<ImportCollectionPage />} />
+        <Route path="/collections/:id" element={<CollectionDetailPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

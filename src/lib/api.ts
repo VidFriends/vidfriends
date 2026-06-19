@@ -1,4 +1,4 @@
-import type { User, Video, WatchHistoryEntry, AdminStats, AdminUser, AdminUpdateUserData, StorageBreakdown, EvictionResult, ActivityLogResponse, Comment, ReceivedVideo, Friend } from './types'
+import type { User, Video, WatchHistoryEntry, AdminStats, AdminUser, AdminUpdateUserData, StorageBreakdown, EvictionResult, ActivityLogResponse, Comment, ReceivedVideo, Friend, Collection, CollectionVideo, ImportUrlsResponse } from './types'
 
 const BASE = '/api'
 
@@ -127,6 +127,39 @@ export const api = {
       request<{ user: User; video_count: number }>(`/users/${userId}/profile`),
     getVideos: (userId: string) =>
       request<Video[]>(`/users/${userId}/videos`),
+  },
+
+  collections: {
+    list: () =>
+      request<{ collections: Collection[] }>('/collections'),
+    get: (id: string) =>
+      request<{ collection: Collection }>(`/collections/${id}`),
+    create: (name: string) =>
+      request<{ collection: Collection }>('/collections', {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      }),
+    update: (id: string, name: string) =>
+      request<{ collection: Collection }>(`/collections/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ name }),
+      }),
+    remove: (id: string) =>
+      request<void>(`/collections/${id}`, { method: 'DELETE' }),
+    getVideos: (id: string) =>
+      request<{ videos: CollectionVideo[] }>(`/collections/${id}/videos`),
+    addVideo: (collectionId: string, videoId: string) =>
+      request<void>(`/collections/${collectionId}/videos`, {
+        method: 'POST',
+        body: JSON.stringify({ videoId }),
+      }),
+    removeVideo: (collectionId: string, videoId: string) =>
+      request<void>(`/collections/${collectionId}/videos/${videoId}`, { method: 'DELETE' }),
+    importUrls: (urls: string[]) =>
+      request<ImportUrlsResponse>('/collections/import/urls', {
+        method: 'POST',
+        body: JSON.stringify({ urls }),
+      }),
   },
 
   admin: {

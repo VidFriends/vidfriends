@@ -63,23 +63,26 @@ vi.mock('../../lib/api', () => ({
   },
 }))
 
+beforeEach(() => {
+  vi.stubGlobal('IntersectionObserver', class {
+    observe = vi.fn()
+    disconnect = vi.fn()
+    unobserve = vi.fn()
+  })
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
 describe('FeedPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.stubGlobal('IntersectionObserver', class {
-      observe = vi.fn()
-      disconnect = vi.fn()
-      unobserve = vi.fn()
-    })
     HTMLVideoElement.prototype.play = vi.fn().mockResolvedValue(undefined)
     HTMLVideoElement.prototype.pause = vi.fn()
     HTMLVideoElement.prototype.addEventListener = vi.fn()
     HTMLVideoElement.prototype.removeEventListener = vi.fn()
     HTMLVideoElement.prototype.load = vi.fn()
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
   })
 
   it('shows loading state initially', async () => {
