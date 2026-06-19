@@ -60,6 +60,7 @@ func New(db *pgxpool.Pool, s3 *storage.Client, jwt *auth.JWTManager, hub *handle
 	mux.HandleFunc("POST /api/auth/refresh", authHandler.Refresh())
 
 	// Authenticated
+	mux.Handle("POST /api/auth/logout", authMW(http.HandlerFunc(authHandler.Logout())))
 	mux.Handle("GET /api/auth/me", authMW(http.HandlerFunc(authHandler.Me())))
 	mux.Handle("DELETE /api/auth/me/account", authMW(http.HandlerFunc(authHandler.DeleteAccount())))
 	mux.Handle("PUT /api/auth/profile", authMW(http.HandlerFunc(authHandler.UpdateProfile())))

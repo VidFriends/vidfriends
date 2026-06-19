@@ -560,6 +560,12 @@ func (h *AuthHandler) DeleteAccount() http.HandlerFunc {
 	}
 }
 
+func (h *AuthHandler) Logout() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	}
+}
+
 func (h *AuthHandler) storeRefreshToken(ctx context.Context, userID, email, username, role string) (string, error) {
 	token, err := h.jwt.GenerateRefreshToken(userID, email, username, role)
 	if err != nil {
