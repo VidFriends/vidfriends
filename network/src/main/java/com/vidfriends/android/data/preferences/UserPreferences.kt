@@ -46,6 +46,20 @@ class UserPreferences @Inject constructor(
         prefs[Keys.USERNAME]
     }
 
+    suspend fun saveAuthSession(
+        accessToken: String,
+        refreshToken: String,
+        userId: String,
+        username: String,
+    ) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.ACCESS_TOKEN] = accessToken
+            prefs[Keys.REFRESH_TOKEN] = refreshToken
+            prefs[Keys.USER_ID] = userId
+            prefs[Keys.USERNAME] = username
+        }
+    }
+
     suspend fun saveAuthTokens(accessToken: String, refreshToken: String) {
         context.dataStore.edit { prefs ->
             prefs[Keys.ACCESS_TOKEN] = accessToken
