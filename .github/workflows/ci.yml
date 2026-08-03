@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: ${{ env.GO_VERSION_FILE }}
           fallback-go-version: ${{ env.FALLBACK_GO_VERSION }}
@@ -87,7 +87,7 @@ jobs:
           cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: ${{ env.GO_VERSION_FILE }}
           fallback-go-version: ${{ env.FALLBACK_GO_VERSION }}
