@@ -288,7 +288,8 @@ Each item needs a PRD update and, where architectural, an ADR before work starts
 | M7-T10 ntfy and Gotify on the server | ADR-0020: `ntfy`/`gotify` push target kinds with encrypted tokens (migration `0006_push_channels`), senders through the egress guard (https, public addresses pinned per connection, `PUSH_PRIVATE_HOSTS` for home-network servers), gone on 401/403/404, `GET /push-targets`, `POST /push-targets/{id}/test` (5 per 10 min), 5 targets per member | FR-NOTIF-07, BR-NOT-8, owner answer 2026-10-04 | `apps/server/test/push-servers.test.ts` (delivery with token and click link, private previews, gone, limits, SSRF refusals, guard pinning); authz matrix `testPushTarget` <br>**✅** [PR #123](https://github.com/VidFriends/vidfriends/pull/123): `apps/server/test/push-servers.test.ts` and authz matrix green |
 | M7-T11 ntfy and Gotify in Settings (web) | Card to add (URL, token, private previews), test and remove targets; privacy and self-hosting texts | M7-T10 | Playwright `e2e/tests/push-servers.spec.ts` against a fake ntfy service on the compose network <br>**✅** [PR #123](https://github.com/VidFriends/vidfriends/pull/123): `e2e/tests/push-servers.spec.ts` green in "Images, Trivy and E2E" |
 | M7-T12 Cloudflare test instance | ADR-0021: one container (app `ROLE=all`, PostgreSQL, SeaweedFS) behind a Worker on `vidfriends.app`, backups to a private R2 bucket every 15 min and on shutdown, restore on start; `deploy/cloudflare/deploy.sh` | Owner answers 2026-10-04 | Local round trip: claim, stop (final backup), fresh container restores; deployed: `/readyz` ok, web app served, `/__backup` refuses unauthenticated requests, `www` redirects. **Owner:** claim with the setup token from the container logs; upload an avatar or video to confirm media through `/media-store` <br>**🟡** [PR #123](https://github.com/VidFriends/vidfriends/pull/123); deployed at https://vidfriends.app (`/readyz` ok). Owner: claim it and upload media to confirm `/media-store` |
-| M7-T13 Offline downloads (mobile) | `video.media_bytes` in the API; the app downloads a share's video into private storage (progress, cancel), lists it under More → Downloads with a 1/2/5 GB cap, plays it offline, removes copies whose share is gone (BR-OFF-3) and all copies on sign-out or server change (BR-OFF-4) | FR-MOB-04, BR-OFF-1..4, owner answer 2026-10-04 | Unit `apps/mobile/src/features/offline/plan.test.ts`; API `media.test.ts` (`media_bytes`); Maestro `offline.yaml`: download, airplane mode, play from Downloads |
+| M7-T13 Offline downloads (mobile) | `video.media_bytes` in the API; the app downloads a share's video into private storage (progress, cancel), lists it under More → Downloads with a 1/2/5 GB cap, plays it offline, removes copies whose share is gone (BR-OFF-3) and all copies on sign-out or server change (BR-OFF-4) | FR-MOB-04, BR-OFF-1..4, owner answer 2026-10-04 | Unit `apps/mobile/src/features/offline/plan.test.ts`; API `media.test.ts` (`media_bytes`); Maestro `offline.yaml`: download, airplane mode, play from Downloads <br>**✅** [PR #124](https://github.com/VidFriends/vidfriends/pull/124): unit, API and Maestro `offline.yaml` green in CI |
+| M7-T14 Spanish (web and app) | Spanish catalogs for the web app and the mobile app; language from the browser or phone, override in Settings (per device); `lang` on the web document; a parity test keeps keys and placeholders identical | NFR-I18N-01, owner answer 2026-10-04 | `apps/web/src/i18n/catalog.test.ts`, `apps/mobile/src/i18n/catalog.test.ts` green; Playwright `e2e/tests/language.spec.ts` (Spanish browser, switch in Settings, back to following the browser) |
 
 Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7..T9, offline downloads to M7-T13):
 
@@ -298,7 +299,7 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7
 | Group sends | ADR-0010 alternative |
 | UnifiedPush channel (needs a native connector in the app; ADR-0020) | ADR-0011 |
 | Perceptual dedup | 2026 backend, redesigned per L-19 |
-| Localisation beyond English | NFR-I18N-01 groundwork |
+| More languages; localised push titles (the server needs each member's language) | NFR-I18N-01 |
 | Optional egress proxy for a hardened worker | TDD §5 residual risk |
 
 ## 6. Risks
@@ -317,7 +318,7 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7
 ## 7. Next actionable milestone
 
 **M7: post-v1 backlog.** Data export and passkey-only sign-in are done; realtime updates (M7-T7..T9) are next, chosen by the owner on 2026-10-04.
-- **Now (agents):** M7-T13 offline downloads (owner's choice, 2026-10-04); then the next backlog item the owner schedules.
+- **Now (agents):** M7-T14 Spanish (owner's choice, 2026-10-04); then the next backlog item the owner schedules.
 - **Owner:** check passkey sign-in on a real Android phone and iPhone against an HTTPS instance (M7-T6); enable branch protection on `main` (M1-T2); Apple and Google developer accounts for store builds (M6-T7). The alpha (M5-T9) is postponed by the owner.
 - **Verification:** each item's completion check in §5, with the CI run or record linked in the task row.
 
@@ -326,6 +327,8 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7
 | Date | Change |
 |---|---|
 | 2026-10-04 | M7-T7..T9 realtime updates ✅, merged in [PR #122](https://github.com/VidFriends/vidfriends/pull/122) with CI green, including the Android Maestro suite. |
+| 2026-10-04 | M7-T13 offline downloads ✅, merged in [PR #124](https://github.com/VidFriends/vidfriends/pull/124) with the Android Maestro offline flow green. |
+| 2026-10-04 | Owner answer (multiple choice): after offline downloads, a **second language**: Spanish for the web app and the app (M7-T14, NFR-I18N-01). |
 | 2026-10-04 | Owner answer (multiple choice): next is **offline downloads** on mobile (CAP-15 → M7-T13, FR-MOB-04, BR-OFF-1..4). M7-T10..T12 merged in [PR #123](https://github.com/VidFriends/vidfriends/pull/123). |
 | 2026-10-04 | Owner answers (multiple choice): deploy a **Cloudflare test instance** at `vidfriends.app`, data kept by backups to R2, real link downloads (M7-T12, ADR-0021). |
 | 2026-10-04 | Owner answer (multiple choice): after realtime, **more push channels**: ntfy and Gotify (M7-T10/T11, ADR-0020, FR-NOTIF-07); UnifiedPush stays in the backlog. |

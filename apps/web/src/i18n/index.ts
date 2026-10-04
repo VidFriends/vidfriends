@@ -1,15 +1,63 @@
-// All UI strings are externalised (NFR-I18N-01). English only in v1.
+// All UI strings are externalised (NFR-I18N-01): English and Spanish (M7-T14). The language
+// follows the browser unless the member picks one in Settings (kept in this browser only).
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import en from './en.json';
+import es from './es.json';
 
+export const LANGUAGES = ['en', 'es'] as const;
+export type Language = (typeof LANGUAGES)[number];
+const KEY = 'vf-lang';
+
+/** The member's explicit choice, or null to follow the browser. */
+export function storedLanguage(): Language | null {
+  try {
+    const v = localStorage.getItem(KEY);
+    return (LANGUAGES as readonly string[]).includes(v ?? '') ? (v as Language) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** First supported language among the browser's preferences, else English. */
+export function detectLanguage(preferred: readonly string[]): Language {
+  for (const tag of preferred) {
+    const base = tag.toLowerCase().split('-')[0];
+    if ((LANGUAGES as readonly string[]).includes(base ?? '')) return base as Language;
+  }
+  return 'en';
+}
+
+const browserLanguages = () =>
+  typeof navigator === 'undefined' ? [] : (navigator.languages ?? [navigator.language]);
+
+function apply(lng: Language) {
+  if (typeof document !== 'undefined') document.documentElement.lang = lng;
+}
+
+/** Picks a language, or null to follow the browser again. */
+export async function setLanguage(lng: Language | null): Promise<void> {
+  try {
+    if (lng) localStorage.setItem(KEY, lng);
+    else localStorage.removeItem(KEY);
+  } catch {
+    // private mode: the choice lasts for this page only
+  }
+  const next = lng ?? detectLanguage(browserLanguages());
+  await i18n.changeLanguage(next);
+  apply(next);
+}
+
+const initial = storedLanguage() ?? detectLanguage(browserLanguages());
 void i18n.use(initReactI18next).init({
-  resources: { en: { translation: en } },
-  lng: 'en',
+  resources: { en: { translation: en }, es: { translation: es } },
+  lng: initial,
   fallbackLng: 'en',
+  supportedLngs: [...LANGUAGES],
   interpolation: { escapeValue: false },
   returnNull: false,
 });
+apply(initial);
 
 export default i18n;
 
