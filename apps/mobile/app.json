@@ -1,0 +1,90 @@
+{
+  "expo": {
+    "name": "VidFriends",
+    "slug": "vidfriends",
+    "scheme": "vidfriends",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "bundleIdentifier": "io.github.vidfriends.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "VidFriends uses the camera to scan your server's QR code.",
+        "NSPhotoLibraryUsageDescription": "VidFriends needs access to your videos so you can send one to friends.",
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        },
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "io.github.vidfriends.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["android.permission.CAMERA", "android.permission.POST_NOTIFICATIONS"],
+      "blockedPermissions": ["android.permission.RECORD_AUDIO"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-video",
+      "expo-secure-store",
+      "expo-localization",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "VidFriends uses the camera to scan your server's QR code.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "VidFriends needs access to your videos so you can send one to friends.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#6d28d9"
+        }
+      ],
+      [
+        "expo-share-intent",
+        {
+          "iosActivationRules": {
+            "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
+            "NSExtensionActivationSupportsText": true,
+            "NSExtensionActivationSupportsMovieWithMaxCount": 1
+          },
+          "androidIntentFilters": ["text/*", "video/*"]
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "autolinkingModuleResolution": true
+    }
+  }
+}

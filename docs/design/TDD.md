@@ -77,9 +77,10 @@
 | Share intake | `expo-share-intent` (or the current maintained equivalent) config plugin: iOS share extension and Android `ACTION_SEND` for `text/plain` URLs and `video/*` |
 | Token storage | `expo-secure-store` (FR-MOB-03) |
 | Pairing | `expo-camera` barcode scanning, plus paste. The base URL is stored in secure storage and applied at startup (WF-PAIR-2). |
-| Cleartext | The Android `usesCleartextTraffic` config plugin is enabled. The app allows `http://` only to private-range hosts with a warning (WF-PAIR-3). iOS ATS uses `NSAllowsLocalNetworking`. |
-| Push | `expo-notifications`. The token is registered via `POST /api/v1/push-targets` with `{kind:"expo"}`. |
+| Cleartext | `expo-build-properties` sets Android `usesCleartextTraffic`. The app allows `http://` only to private-network **IP literals** (RFC 1918, loopback, link-local, IPv6 ULA) with a warning (WF-PAIR-3); host names never qualify because their resolution cannot be checked before connecting (Assumption). iOS ATS uses `NSAllowsLocalNetworking`. |
+| Push | `expo-notifications`. The token is registered via `POST /api/v1/push-targets` with `{kind:"expo"}`; the server sends through the Expo Push API (`EXPO_ACCESS_TOKEN` only if the Expo project enforces push security). Tokens need the build's EAS project id, so builds without one hide the push switch and rely on the in-app list. |
 | Release | EAS Build and Submit. The internal-testing tracks are TestFlight and the Play internal track. |
+| E2E | Maestro flows (`apps/mobile/e2e`) against a release APK on an Android emulator in CI. The stack runs its plain-HTTP variant at `http://10.0.2.2:8880` (the emulator's address for the host), which exercises the WF-PAIR-3 private-address path. |
 | Required plist strings | Camera (QR scanning and recording, if added), Photo Library, Microphone if recording ships. All are set before the first TestFlight build (legacy rejection risk). |
 
 ## 5. Security engineering
