@@ -1,6 +1,6 @@
 # ADR-0013: Instance pairing through HTTPS join links (QR codes encode the same URL)
 
-- **Status:** Accepted
+- **Status:** Accepted; **amended by [ADR-0014](0014-self-host-only-no-public-instance.md)** (no Universal/App Links, no default domain)
 - **Date:** 2026-10-03
 - **Decided by:** Claude under delegation
 

@@ -1,6 +1,6 @@
 # ADR-0009: Media ingestion through durable jobs; private S3-compatible storage with signed URLs
 
-- **Status:** Accepted. Legal exposure is flagged for the owner (BRD OQ-1).
+- **Status:** Accepted. The owner accepted the legal risk for private groups on 2026-10-03 (BRD OQ-1).
 - **Date:** 2026-10-03
 - **Decided by:** Claude under delegation
 
@@ -48,4 +48,4 @@
 
 - The reverse proxy must route a public path to MinIO in the default compose setup ([TDD §6](../design/TDD.md#6-deployment-and-operations)).
 - Storage cost is bounded by retention (BR-MED-5) and quotas.
-- **Owner risk:** platform terms of service and copyright (BRD BC-5, OQ-1). Mitigations: private instances only, no republishing, retention purge, and the `link_download_enabled` switch.
+- **Accepted risk** (owner, 2026-10-03): platform terms of service and copyright (BRD BC-5, OQ-1). Mitigations: private instances only, no republishing, retention purge, and the `link_download_enabled` switch.

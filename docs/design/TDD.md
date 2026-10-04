@@ -129,7 +129,7 @@
 | dev | Local development | `pnpm dev` (Vite + tsx watch) against `deploy/compose.dev.yml` (Postgres, MinIO) |
 | ci | Automated tests | Same compose services in GitHub Actions. Playwright runs against the built server image. |
 | staging (proposed) | Pre-release smoke | The owner's VM, deployed from `main` |
-| production | Owner instance and self-hosters | `deploy/compose.yml` + `.env` |
+| production | Self-hosted private instances (no public instance, ADR-0014) | `deploy/compose.yml` + `.env` |
 
 **Production compose:**
 - Services: `caddy`, `migrate` (one-shot), `server` (ROLE=api), `worker`, `postgres`, `minio`, `minio-init` (bucket + policy, one-shot).
@@ -193,7 +193,7 @@
   - ntfy and Gotify (deferred)
   - WebSockets (deferred)
   - email identity
-- **Package and bundle IDs (M6):** `app.vidfriends.mobile` is proposed. It avoids the legacy `com.vidfriends.app` and `com.vidflow.app` collisions with previously built test apps.
+- **Package and bundle IDs (M6):** `io.github.vidfriends.mobile` is proposed, because there is no project domain (ADR-0014). It avoids the legacy `com.vidfriends.app` and `com.vidflow.app` collisions with previously built test apps.
 
 ## 9. Key trade-offs
 

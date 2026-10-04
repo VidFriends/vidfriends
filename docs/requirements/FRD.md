@@ -252,7 +252,7 @@ The sender may delete a share while `watched_at` is null. The recipient's notifi
 
 | ID | Rule |
 |---|---|
-| WF-PAIR-1 | The mobile app's first screen offers: scan QR, paste a join or instance URL, or use the default instance (if the build configures one). The app calls `GET /api/v1/instance` to verify that the server is VidFriends, has a compatible API major version, and to read its name and signup mode. Only then does it persist the base URL ([ADR-0013](../adr/0013-instance-pairing-and-join-links.md)). |
+| WF-PAIR-1 | The mobile app's first screen offers: scan QR, or paste a join or instance URL. There is no default instance ([ADR-0014](../adr/0014-self-host-only-no-public-instance.md)). The app calls `GET /api/v1/instance` to verify that the server is VidFriends, has a compatible API major version, and to read its name and signup mode. Only then does it persist the base URL ([ADR-0013](../adr/0013-instance-pairing-and-join-links.md)). |
 | WF-PAIR-2 | The app persists the base URL and applies it on every launch ([L-16](../legacy/AUDIT.md#4-lessons-referenced-by-id-from-the-design-docs)). The user can switch servers only by signing out. |
 | WF-PAIR-3 | Plain `http://` base URLs are allowed only when the host is a private-network address, and the app shows a "not encrypted" warning. Android's network security config cannot list hosts chosen at runtime. The Android build therefore permits cleartext at the platform level, and the app itself enforces the private-address rule before making any request. See [TDD §4](../design/TDD.md#4-client-engineering). |
 | WF-PAIR-4 | The web client is served by the instance itself, so it never asks for a server. |

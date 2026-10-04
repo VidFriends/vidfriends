@@ -25,8 +25,8 @@
 |---|---|---|---|---|---|---|
 | FR-PAIR-01 | `GET /api/v1/instance` returns, without authentication, the instance name, signup mode, server version, API major version, and whether setup is complete. | M | CAP-01, WF-PAIR-1 | LLD §3 | M1 | API |
 | FR-PAIR-02 | The web client is served by the instance at `/`, and calls the API on the same origin. | M | WF-PAIR-4 | HLD §3 | M1 | E2E |
-| FR-PAIR-03 | The mobile app connects to an instance via QR scan, a pasted join or instance URL, or a default instance. It validates the instance with FR-PAIR-01 before saving it, and reapplies the saved URL on every launch. | M | WF-PAIR-1..3, L-16 | ADR-0013 | M6 | E2E (mobile) |
-| FR-PAIR-04 | Join URLs `https://<host>/join/<code>` open the registration screen with the code prefilled: in the mobile app if installed (universal/app links), otherwise on the web. | M | BR-INV-4 | ADR-0013 | M1 (web), M6 (app links) | E2E |
+| FR-PAIR-03 | The mobile app connects to an instance via QR scan or a pasted join or instance URL (no default instance, ADR-0014). It validates the instance with FR-PAIR-01 before saving it, and reapplies the saved URL on every launch. | M | WF-PAIR-1..3, L-16 | ADR-0013 | M6 | E2E (mobile) |
+| FR-PAIR-04 | Join URLs `https://<host>/join/<code>` open the web registration screen with the code prefilled. The mobile app accepts the same URL via in-app scan or paste. There are no Universal or App Links (ADR-0014). | M | BR-INV-4 | ADR-0013, ADR-0014 | M1 (web), M6 (in-app) | E2E |
 
 ### 1.2 Authentication and accounts (FR-AUTH, FR-ACCT)
 
@@ -223,6 +223,6 @@ The tables above are the trace matrix: each row links a requirement to its PRD c
 | M3 | FR-VID-01..05,07,09; NFR-SEC-05,08; NFR-REL-01; NFR-PERF-03; NFR-OPS-05 |
 | M4 | FR-SHR-01..03,05; FR-FEED-01..06; FR-ENG-01..02; FR-NOTIF-01,04,05; NFR-A11Y-01; NFR-COMPAT-01 |
 | M5 | FR-ACCT-03; FR-VID-06; FR-ADM-01..05 (UI); NFR-REL-04,05; NFR-DATA-01; NFR-OPS-01,03(metrics),04 |
-| M6 | FR-PAIR-03,04(app links); FR-NOTIF-03; FR-MOB-01..03; NFR-A11Y-02; NFR-COMPAT-02 |
+| M6 | FR-PAIR-03,04(in-app); FR-NOTIF-03; FR-MOB-01..03; NFR-A11Y-02; NFR-COMPAT-02 |
 
 Every Must requirement appears in exactly one delivery milestone (or is split explicitly by layer). NFR-MAINT-03 applies to every milestone.
