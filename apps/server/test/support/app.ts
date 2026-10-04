@@ -1,4 +1,5 @@
 import { TestClient, TEST_PEER_HEADER, type TestClientOptions } from '@vidfriends/test-utils';
+import { DeleteBucketCommand, S3Client } from '@aws-sdk/client-s3';
 import { randomBytes } from 'node:crypto';
 import { Writable } from 'node:stream';
 import { buildDeps, initSetupToken } from '../../src/bootstrap.js';
@@ -82,6 +83,18 @@ export async function createTestServer(
         const all: string[] = [];
         for await (const o of deps.storage.listKeys('')) all.push(o.key);
         await deps.storage.deleteObjects(all).catch(() => {});
+        // Each bucket is a SeaweedFS collection with its own volumes; drop it so runs don't pile up.
+        const client = new S3Client({
+          endpoint: env.S3_ENDPOINT,
+          region: env.S3_REGION,
+          forcePathStyle: true,
+          credentials: {
+            accessKeyId: env.S3_ACCESS_KEY_ID,
+            secretAccessKey: env.S3_SECRET_ACCESS_KEY,
+          },
+        });
+        await client.send(new DeleteBucketCommand({ Bucket: env.S3_BUCKET })).catch(() => {});
+        client.destroy();
       }
       await database.close();
       await testDb.drop();
