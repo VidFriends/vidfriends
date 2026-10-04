@@ -50,6 +50,20 @@ export const getAvatar = defineRoute({
   errors: ['not_found'],
 });
 
+export const getAvatarUrl = defineRoute({
+  id: 'getAvatarUrl',
+  method: 'get',
+  path: '/users/{user_id}/avatar-url',
+  auth: 'member',
+  tag: 'friends',
+  summary:
+    'The same short-lived signed avatar URL as JSON, for clients that authenticate with a bearer token (FR-ACCT-01, FR-MOB-01)',
+  params: UserIdParam,
+  status: 200,
+  response: z.object({ url: z.string(), expires_at: Timestamp }),
+  errors: ['not_found'],
+});
+
 export const listFriends = defineRoute({
   id: 'listFriends',
   method: 'get',
