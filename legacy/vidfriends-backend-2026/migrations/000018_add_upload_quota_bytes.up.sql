@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN upload_quota_bytes BIGINT DEFAULT NULL;
