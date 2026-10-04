@@ -50,6 +50,13 @@ jobs:
     timeout-minutes: 75
     steps:
       - uses: actions/checkout@v5
+      # The Gradle build (NDK, intermediates), two images and the emulator do not fit the runner's
+      # default free disk (CI ran out of space in the worker image build). Drop unused toolchains.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost \
+            /opt/hostedtoolcache/CodeQL /usr/share/swift
+          df -h /
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -70,6 +77,11 @@ jobs:
       - name: Build the release APK (x86_64 for the emulator)
         working-directory: apps/mobile/android
         run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon
+      - name: Keep the APK, drop the Gradle build outputs
+        run: |
+          cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/vidfriends.apk"
+          rm -rf apps/mobile/android/app/build apps/mobile/android/app/.cxx apps/mobile/android/build
+          df -h /
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v6
         with:
@@ -111,7 +123,7 @@ jobs:
           disable-animations: true
           emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: |
-            adb install -r apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+            adb install -r "$RUNNER_TEMP/vidfriends.apk"
             maestro test apps/mobile/e2e/main.yaml -e JOIN_URL="$JOIN_URL" -e ADMIN_USER="$ADMIN_USER" -e ADMIN_PASSWORD="$ADMIN_PASSWORD" -e VIDEO_URL="https://www.youtube.com/watch?v=ok&e2e=mobile" --format junit --output maestro-report.xml --debug-output maestro-debug
       - name: Stack logs
         if: failure()
