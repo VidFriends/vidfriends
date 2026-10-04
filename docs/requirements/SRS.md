@@ -195,7 +195,7 @@ Numbers marked † are **proposed targets** chosen under delegation for a small 
 | NFR-A11Y-02 | The mobile apps support VoiceOver and TalkBack labels, Dynamic Type / font scaling, and reduced motion. | M | M6 | Audit |
 | NFR-COMPAT-01 | Web supports the latest two versions of Chrome, Edge, Firefox and Safari (macOS and iOS). | M | M4 | E2E (Playwright projects) |
 | NFR-COMPAT-02 | Mobile supports iOS 17+ and Android 10+ (API 29)†. | M | M6 | Audit |
-| NFR-I18N-01 | All UI strings are externalised from day one. English only in v1. Dates and relative times use locale-aware formatting. | M | M1 | Audit |
+| NFR-I18N-01 | All UI strings are externalised from day one. The web app and the mobile app are available in English and Spanish (M7); the language follows the browser or phone, and a member can pick one in Settings (stored on that device). A test keeps every catalog complete, with the same placeholders. The signed-in client records the language in use on the member's account (`users.language`), and the server writes push titles (Web Push, Expo, ntfy, Gotify) in it. Dates and relative times use locale-aware formatting. | M | M1; Spanish M7 | Audit, Unit |
 
 ### Maintainability (NFR-MAINT)
 
@@ -228,6 +228,6 @@ The tables above are the trace matrix: each row links a requirement to its PRD c
 | M4 | FR-SHR-01..03,05; FR-FEED-01..06; FR-ENG-01..02; FR-NOTIF-01,04,05; NFR-A11Y-01; NFR-COMPAT-01 |
 | M5 | FR-ACCT-03; FR-VID-06; FR-ADM-01..05 (UI); NFR-REL-04,05; NFR-DATA-01; NFR-OPS-01,03(metrics),04 |
 | M6 | FR-PAIR-03,04(in-app); FR-NOTIF-03; FR-MOB-01..03; NFR-A11Y-02; NFR-COMPAT-02 |
-| M7 | Passkey-only sign-in (ADR-0018): FR-AUTH-01..04, FR-ACCT-02,03, FR-ADM-03, FR-PAIR-03 (https-only), NFR-SEC-02 change their mechanism; FR-ACCT-05 (S) data export; FR-NOTIF-06 (S) realtime updates (ADR-0019); FR-NOTIF-07 (S) ntfy and Gotify push (ADR-0020); FR-MOB-04 (S) offline downloads |
+| M7 | Passkey-only sign-in (ADR-0018): FR-AUTH-01..04, FR-ACCT-02,03, FR-ADM-03, FR-PAIR-03 (https-only), NFR-SEC-02 change their mechanism; FR-ACCT-05 (S) data export; FR-NOTIF-06 (S) realtime updates (ADR-0019); FR-NOTIF-07 (S) ntfy and Gotify push (ADR-0020); FR-MOB-04 (S) offline downloads; NFR-I18N-01 Spanish |
 
 Every Must requirement appears in exactly one delivery milestone (or is split explicitly by layer); the M7 row lists requirements whose mechanism M7 replaced. NFR-MAINT-03 applies to every milestone.

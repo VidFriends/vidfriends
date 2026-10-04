@@ -19,6 +19,7 @@ import { unreadCount } from '@vidfriends/contracts';
 import { useApiQuery } from '@vidfriends/api-client/react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { useLanguageSync } from '@/lib/language-sync';
 import { currentUser, meQuery } from '@/lib/session';
 import { useQuery } from '@tanstack/react-query';
 import { useRealtime } from '@/lib/realtime';
@@ -54,6 +55,7 @@ function AppLayout() {
   const navigate = useNavigate();
   const queryClient = Route.useRouteContext().queryClient;
   const me = useQuery(meQuery());
+  useLanguageSync(me.data?.user);
   const logoutMutation = useApiMutation(logout, {
     onSettled: async () => {
       queryClient.clear();

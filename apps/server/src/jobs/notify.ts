@@ -1,6 +1,7 @@
 // notify.dispatch (SDD §4, FRD §9, ADR-0011): fans a notification out to the user's push targets
 // according to their preferences. Payloads carry a generic title and opaque ids only (BR-NOT-3).
 import type { NotificationType } from '@vidfriends/contracts';
+import { privateTitle, pushTitle } from './push-text.js';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { Job } from 'pg-boss';
 import { notifications, pushTargets, users } from '../db/schema.js';
@@ -15,36 +16,28 @@ export type NotifyJob =
   | { user_id: string; actor_id: string; type: 'share_received' }
   | { retry: { payload: PushPayload; target_ids: string[]; attempt: number } };
 
-function title(type: NotificationType, actor: string, count = 1): string {
-  switch (type) {
-    case 'share_received':
-      return count > 1 ? `${actor} sent you ${count} videos` : `New video from ${actor}`;
-    case 'reaction_received':
-      return `${actor} reacted to your video`;
-    case 'reply_received':
-      return `New reply from ${actor}`;
-    case 'friend_request_received':
-      return `${actor} wants to be friends`;
-    case 'friend_request_accepted':
-      return `${actor} accepted your friend request`;
-    case 'share_watched':
-      return `${actor} watched your video`;
-  }
-}
-
 function urlFor(type: NotificationType, shareId: string | null): string {
   if (type === 'friend_request_received' || type === 'friend_request_accepted') return '/friends';
   if (type === 'share_received') return '/inbox';
   return shareId ? `/shares/${shareId}` : '/notifications';
 }
 
-async function actorName(deps: Deps, actorId: string | null): Promise<string> {
-  if (!actorId) return 'Someone';
+async function actorName(deps: Deps, actorId: string | null): Promise<string | null> {
+  if (!actorId) return null;
   const [u] = await deps.db
     .select({ d: users.displayName, u: users.username })
     .from(users)
     .where(eq(users.id, actorId));
-  return u ? u.d || u.u : 'Someone';
+  return u ? u.d || u.u : null;
+}
+
+/** The member's language for push texts (NFR-I18N-01). */
+async function languageOf(deps: Deps, userId: string): Promise<'en' | 'es'> {
+  const [u] = await deps.db
+    .select({ language: users.language })
+    .from(users)
+    .where(eq(users.id, userId));
+  return u?.language ?? 'en';
 }
 
 async function deliver(
@@ -70,7 +63,7 @@ async function deliver(
     if (!sender) continue;
     // "Private previews": no sender name on the lock screen (BR-NOT-3).
     const body = target.privatePreviews
-      ? { ...payload, title: 'New activity on VidFriends' }
+      ? { ...payload, title: privateTitle(payload.lang) }
       : payload;
     const result = await sender.send(target, body);
     if (result === 'gone')
@@ -107,8 +100,10 @@ export async function handleNotify(deps: Deps, job: Job<NotifyJob>): Promise<voi
       .set({ pushedAt: deps.clock.now() })
       .where(eq(notifications.id, n.id));
     if (!(await pushPrefs(deps.db, n.userId))[n.type]) return;
+    const lang = await languageOf(deps, n.userId);
     const payload: PushPayload = {
-      title: title(n.type, await actorName(deps, n.actorId)),
+      title: pushTitle(lang, n.type, await actorName(deps, n.actorId)),
+      lang,
       data: { notification_id: n.id, url: urlFor(n.type, n.shareId) },
       tag: n.type,
     };
@@ -131,8 +126,10 @@ export async function handleNotify(deps: Deps, job: Job<NotifyJob>): Promise<voi
     .returning({ id: notifications.id });
   if (!pending.length) return;
   if (!(await pushPrefs(deps.db, data.user_id)).share_received) return;
+  const lang = await languageOf(deps, data.user_id);
   const payload: PushPayload = {
-    title: title('share_received', await actorName(deps, data.actor_id), pending.length),
+    title: pushTitle(lang, 'share_received', await actorName(deps, data.actor_id), pending.length),
+    lang,
     data: { notification_id: pending[pending.length - 1]!.id, url: '/inbox' },
     tag: `share_received:${data.actor_id}`,
   };

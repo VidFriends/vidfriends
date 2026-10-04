@@ -523,7 +523,7 @@
       {
         "title": "What is stored about you",
         "body": [
-          "Your username, display name, optional profile picture and and the public keys of your passkeys (your device keeps the private part; the server never sees it). No email address or phone number is collected.",
+          "Your username, display name, optional profile picture and the public keys of your passkeys (your device keeps the private part; the server never sees it). No email address or phone number is collected.",
           "The videos you add, who you send them to, your notes, reactions and replies, what you have watched, saved or hidden, your friend list and blocks, and your notification settings.",
           "Your active sessions (device type, browser or app name, last activity) and, if you enable push notifications, the push address your browser or phone gave us, or the ntfy or Gotify address you entered (its token is stored encrypted)."
         ]
@@ -694,5 +694,9 @@
     "lastSuccess": "Last delivered {{when}}",
     "neverDelivered": "Nothing delivered yet",
     "private": "private previews"
+  },
+  "language": {
+    "title": "Language",
+    "system": "Browser language"
   }
 }
