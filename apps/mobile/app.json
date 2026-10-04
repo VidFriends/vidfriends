@@ -34,12 +34,25 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": ["android.permission.CAMERA", "android.permission.POST_NOTIFICATIONS"],
-      "blockedPermissions": ["android.permission.RECORD_AUDIO"]
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "plugins": [
       "expo-router",
       "expo-video",
-      "expo-secure-store",
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true,
+          "faceIDPermission": false
+        }
+      ],
       "expo-localization",
       [
         "expo-camera",
@@ -52,7 +65,6 @@
         "expo-image-picker",
         {
           "photosPermission": "VidFriends needs access to your videos so you can send one to friends.",
-          "cameraPermission": false,
           "microphonePermission": false
         }
       ],
