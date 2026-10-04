@@ -626,7 +626,8 @@
       {
         "title": "Installing the app",
         "body": [
-          "In Chrome, Edge or Safari, use \"Install app\" or \"Add to Home Screen\" to open VidFriends like an app. On Android, the installed app also appears in the share menu of other apps."
+          "In Chrome, Edge or Safari, use \"Install app\" or \"Add to Home Screen\" to open VidFriends like an app. On Android, the installed app also appears in the share menu of other apps.",
+          "Android app: until VidFriends is in Google Play, each release on the project's GitHub page has an app file (.apk) you can install directly. Open it, then scan your server's QR code or paste your join link; install newer releases the same way. There is no iPhone app yet."
         ]
       },
       {

@@ -8,3 +8,8 @@
 docs
 deploy/.env
 *.log
+# Native projects and build outputs of the mobile app (not part of the server images).
+apps/mobile/android
+apps/mobile/ios
+apps/mobile/.expo
+e2e/.stack

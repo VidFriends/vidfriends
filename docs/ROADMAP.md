@@ -262,7 +262,7 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 | M6-T5 Share intent and push | `expo-share-intent` (iOS extension, Android `text/*` and `video/*`) opens Send; Expo push tokens registered as push targets; server Expo push channel with gone-token cleanup; taps open the share | FR-MOB-02, FR-NOTIF-03, ADR-0011, BR-NOT-3/6 | Server unit test `apps/server/test/push-expo.test.ts`; mobile `push-target.test.ts`; device runbook (share from TikTok/YouTube/Instagram, real push) during the alpha |
 | M6-T6 Android E2E and accessibility | Release APK built from the Expo project in CI; stack in its emulator HTTP variant; Maestro flows J-2..J-5 on an Android 14 emulator; accessibility review (labels, roles, font scaling, reduced motion) | NFR-A11Y-02, NFR-COMPAT-02, TDD §7 | `mobile.yml` android-e2e job green; review notes in the PR |
 | M6-T7 Store builds | EAS project, signing, TestFlight and Play internal track; iOS build and Maestro on macOS runners | BC-7 | ⛔ Owner: Apple and Google developer accounts |
-| M6-T8 Sideloadable Android APK | Owner choice (2026-10-04) while store accounts are missing: the release workflow builds a universal release APK, signed with the project's upload key from repository secrets, attaches it to the GitHub release with its SHA-256, and the help pages explain sideloading. iOS waits for M6-T7 | FR-MOB-01, BC-7 | A dispatched release has an `.apk` asset that installs on the CI emulator (`release.yml` android job) |
+| M6-T8 Sideloadable Android APK | Owner choice (2026-10-04) while store accounts are missing: the release workflow builds a universal release APK, re-signs it with the project's upload key from repository secrets (never committed), attaches it with its SHA-256 to the GitHub release; [sideload guide](guides/android-sideload.md) and the help page explain installing. iOS waits for M6-T7 | FR-MOB-01, BC-7 | `release.yml` `android` job builds and verifies the APK on the PR; a dispatched release has the `.apk` and `.sha256` assets. **Owner action:** add the four `ANDROID_*` signing secrets (guide); without them the APK is built but not attached |
 
 **Exit:** Maestro suites green; TestFlight and Play internal builds installed by the alpha group; share-to-send works from TikTok, YouTube and Instagram on both platforms (runbook).
 
@@ -307,15 +307,16 @@ Remaining backlog (not scheduled):
 
 ## 7. Next actionable milestone
 
-**M6: Mobile apps (Expo)**, while the M4/M5 items that need a merged `main`, a published tag or the owner's alpha complete in parallel.
-- **Now (agents):** merge [PR #112](https://github.com/VidFriends/vidfriends/pull/112) when CI is green (owner delegation, 2026-10-04); then dispatch `nightly.yml` (M4-T7 browser matrix, M3-T7 live smoke) and `yt-dlp-bump.yml` (M3-T7) on `main`; write the detailed M6 task table and start M6-T1 (scaffold) and M6-T2 (pairing).
-- **Owner:** enable branch protection on `main` (M1-T2); push the first `v0.1.0` tag or approve an agent doing so (M5-T4); deploy the alpha from the [runbook](../deploy/RUNBOOK.md), check real Web Push and the Android share target (M4-T6), review the guides (M5-T8) and sign off (M5-T9). App-store accounts remain the M6 blocker for store submission.
+**M7: data export**, while M6 finishes.
+- **Now (agents):** get the M6 PR's Android Maestro job green and merge it; dispatch `release.yml` on `main` with `v0.1.0-rc.1` (owner's choice); then open the M7 PR (M7-T1/T2 data export, M6-T8 sideload APK) and merge it when green.
+- **Owner:** enable branch protection on `main` (M1-T2); add the Android signing secrets ([guide](guides/android-sideload.md)) so releases carry the APK (M6-T8); Apple and Google developer accounts for store builds (M6-T7). The alpha (M5-T9) is postponed by the owner.
 - **Verification:** each item's completion check in §5, with the CI run or record linked in the task row.
 
 ## 8. Change log
 
 | Date | Change |
 |---|---|
+| 2026-10-04 | Owner answers (multiple choice): alpha (M5-T9) postponed; Android ships as a sideloadable APK until store accounts exist (M6-T8 added); M7 starts with data export (CAP-18 → FR-ACCT-05, WF-ACCT-4; M7-T1 web/API, M7-T2 mobile). BRD BO-5 corrected to match NFR-PRIV-03 (no email). |
 | 2026-10-04 | PR #112 (M1–M5) merged with CI run 193 green. Owner answer (multiple choice): publish `v0.1.0-rc.1` now. M6 detailed tasks written; mobile app, Expo push channel and Android Maestro workflow in the M6 PR; ADR-0017 (one React version). |
 | 2026-10-04 | M4 built and tested (web MVP: shares, feed player, engagement, notifications, Web Push, PWA). M5: admin console, retention/sweeper, account deletion, metrics and monitoring overlay, release workflow, backup/restore with a CI drill, runbook with restore/upgrade/install drills, load test and security review (ADR-0016), privacy disclosure, help and self-hosting guide. Remaining M4/M5 checks need a merged `main`, a tag or the owner's alpha. Assumption A-6 added. |
 | 2026-10-04 | Owner answers (multiple choice): agents may merge their own PRs when CI is green; legacy deployments are shut down (M0-T3 ✅, so M0 is complete); agents should enable branch protection on `main`; no Apple or Google developer accounts yet, so M6 store submission is blocked (⛔) and the rest of M6 proceeds. AGENTS.md rule 11: blockers are asked as multiple-choice questions. |
