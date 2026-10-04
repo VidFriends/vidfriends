@@ -44,7 +44,7 @@ for (const route of allRoutes) {
   for (const status of [route.status, ...(route.altStatus ?? [])]) {
     success[String(status)] = route.response
       ? { description: 'OK', content: { 'application/json': { schema: route.response } } }
-      : { description: 'No content' };
+      : { description: status === 302 ? 'Redirect to a short-lived signed URL' : 'No content' };
   }
   registry.registerPath({
     operationId: route.id,

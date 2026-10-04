@@ -53,6 +53,17 @@ export class Api {
     return this.post<{ code: string; join_url: string; invite: { id: string } }>('/invites', body);
   }
 
+  /** Registers a new member through an invite and logs this context in as them. */
+  async register(code: string, username: string, displayName: string) {
+    return this.post<{ user: { id: string; username: string } }>('/auth/register', {
+      username,
+      password: PASSWORD,
+      display_name: displayName,
+      invite_code: code,
+      client: 'web',
+    });
+  }
+
   async dispose() {
     await this.ctx.dispose();
   }

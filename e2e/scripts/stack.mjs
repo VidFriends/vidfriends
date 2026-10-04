@@ -42,6 +42,8 @@ if (cmd === 'up') {
         `POSTGRES_PASSWORD=${hex(16)}`,
         `APP_SECRET=${hex(32)}`,
         `S3_ACCESS_KEY_ID=e2e${hex(6)}`,
+        // Every E2E request comes from one IP; the per-IP auth limit is covered by API tests.
+        'RATE_LIMIT_AUTH_PER_MINUTE=1000',
         `S3_SECRET_ACCESS_KEY=${hex(20)}`,
         `VIDFRIENDS_SERVER_IMAGE=${process.env.VIDFRIENDS_SERVER_IMAGE ?? 'vidfriends-server:local'}`,
         `VIDFRIENDS_WORKER_IMAGE=${process.env.VIDFRIENDS_WORKER_IMAGE ?? 'vidfriends-worker:local'}`,

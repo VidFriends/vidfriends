@@ -3,11 +3,10 @@
 import { expect, test } from '@playwright/test';
 import { expectAccessible } from '../support/a11y';
 import { ADMIN, Api, PASSWORD } from '../support/api';
-import { sql } from '../support/stack';
 
 test('friend registers through the join link, then logs out and in', async ({ page, baseURL }) => {
   const admin = await Api.create(baseURL as string);
-  const { user: adminUser } = await admin.login(ADMIN.username, ADMIN.password);
+  await admin.login(ADMIN.username, ADMIN.password);
   const { join_url } = await admin.createInvite({ auto_friend: true });
   const username = `sam${Date.now() % 100000}`;
 
@@ -25,13 +24,9 @@ test('friend registers through the join link, then logs out and in', async ({ pa
   await expect(page.getByRole('heading', { name: 'Welcome, Sam!' })).toBeVisible();
   await expectAccessible(page, 'home');
 
-  // The invite carried auto_friend, so Sam and the inviter are friends.
-  const friends = sql(
-    `select count(*) from relationships r join users u on u.id in (r.user_low, r.user_high)
-     where r.state = 'accepted' and u.username = '${username}'
-       and '${adminUser.id}' in (r.user_low::text, r.user_high::text)`,
-  );
-  expect(friends).toBe('1');
+  // The invite carried auto_friend, so Sam and the inviter are friends (checked via the API).
+  const friends = await admin.get<{ items: { user: { username: string } }[] }>('/friends');
+  expect(friends.items.map((f) => f.user.username)).toContain(username);
 
   await page.getByRole('button', { name: 'Log out' }).click();
   await expect(page).toHaveURL(/\/login/);

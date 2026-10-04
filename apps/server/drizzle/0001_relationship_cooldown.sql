@@ -1,0 +1,2 @@
+ALTER TABLE "relationships" DROP CONSTRAINT "relationships_state_check";--> statement-breakpoint
+ALTER TABLE "relationships" ADD CONSTRAINT "relationships_state_check" CHECK ("relationships"."state" in ('none','pending','accepted','blocked'));

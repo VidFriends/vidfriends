@@ -30,10 +30,10 @@ export interface RouteDef<
   query?: Q;
   body?: B;
   /** Success status. */
-  status: 200 | 201 | 202 | 204;
+  status: 200 | 201 | 202 | 204 | 302;
   /** Additional success statuses with the same body (e.g. 200 when an existing video is reused). */
   altStatus?: (200 | 201)[];
-  /** Response body schema, or null for 204. */
+  /** Response body schema, or null for 204 and 302 (redirect). */
   response: R;
   /** Domain errors this route can return in addition to the generic ones. */
   errors?: ErrorCode[];

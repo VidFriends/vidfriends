@@ -128,7 +128,8 @@ export const relationships = pgTable(
     userHigh: uuid('user_high')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    state: text('state', { enum: ['pending', 'accepted', 'blocked'] }).notNull(),
+    // 'none' is a tombstone that only carries a decline cooldown (BR-FRND-4).
+    state: text('state', { enum: ['none', 'pending', 'accepted', 'blocked'] }).notNull(),
     requestedBy: uuid('requested_by'),
     blockedBy: uuid('blocked_by'),
     cooldownUntil: tstz('cooldown_until'),
@@ -138,7 +139,7 @@ export const relationships = pgTable(
   (t) => [
     primaryKey({ columns: [t.userLow, t.userHigh] }),
     check('relationships_order', sql`${t.userLow} < ${t.userHigh}`),
-    check('relationships_state_check', sql`${t.state} in ('pending','accepted','blocked')`),
+    check('relationships_state_check', sql`${t.state} in ('none','pending','accepted','blocked')`),
     check(
       'relationships_state_fields',
       sql`(${t.state} <> 'pending' or ${t.requestedBy} is not null) and (${t.state} <> 'blocked' or ${t.blockedBy} is not null)`,

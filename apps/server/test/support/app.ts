@@ -1,4 +1,5 @@
 import { TestClient, TEST_PEER_HEADER, type TestClientOptions } from '@vidfriends/test-utils';
+import { randomBytes } from 'node:crypto';
 import { Writable } from 'node:stream';
 import { buildDeps, initSetupToken } from '../../src/bootstrap.js';
 import { loadEnv, type Env } from '../../src/config/env.js';
@@ -27,6 +28,16 @@ export async function createTestServer(
   depsOverrides: Partial<Deps> = {},
 ): Promise<TestServer> {
   const testDb = await createTestDatabase();
+  const s3 = process.env.TEST_S3_ENDPOINT
+    ? {
+        S3_ENDPOINT: process.env.TEST_S3_ENDPOINT,
+        S3_PUBLIC_ENDPOINT: process.env.TEST_S3_ENDPOINT,
+        S3_ACCESS_KEY_ID: process.env.TEST_S3_ACCESS_KEY_ID ?? '',
+        S3_SECRET_ACCESS_KEY: process.env.TEST_S3_SECRET_ACCESS_KEY ?? '',
+        // One bucket per test server keeps files isolated.
+        S3_BUCKET: `test-${randomBytes(6).toString('hex')}`,
+      }
+    : {};
   const env = loadEnv({
     NODE_ENV: 'test',
     PUBLIC_URL,
@@ -35,6 +46,7 @@ export async function createTestServer(
     LOG_LEVEL: 'info',
     WEB_DIST: '/nonexistent',
     RATE_LIMIT_IP_PER_MINUTE: '100000',
+    ...s3,
     ...envOverrides,
   });
   const logs: string[] = [];
@@ -54,6 +66,7 @@ export async function createTestServer(
     peerIp: (c) => c.req.header(TEST_PEER_HEADER) ?? '203.0.113.1',
     ...depsOverrides,
   });
+  if (deps.storage) await deps.storage.ensureBucket();
   await initSetupToken(deps);
   const app = createApp(deps, allHandlers());
   const fetch = async (request: Request) => app.fetch(request);
@@ -65,6 +78,11 @@ export async function createTestServer(
     fetch,
     client: (options = {}) => new TestClient(fetch, { baseUrl: PUBLIC_URL, ...options }),
     async close() {
+      if (deps.storage) {
+        const all: string[] = [];
+        for await (const o of deps.storage.listKeys('')) all.push(o.key);
+        await deps.storage.deleteObjects(all).catch(() => {});
+      }
       await database.close();
       await testDb.drop();
     },

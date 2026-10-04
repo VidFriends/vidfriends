@@ -1,7 +1,22 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useApiMutation } from '@vidfriends/api-client/react';
-import { changePassword, logout, Password } from '@vidfriends/contracts';
+import {
+  AVATAR_MAX_BYTES,
+  changePassword,
+  createAvatarUpload,
+  deleteAvatar,
+  DisplayName,
+  logout,
+  Password,
+  setAvatar,
+  updateMe,
+} from '@vidfriends/contracts';
+import { useApi } from '@vidfriends/api-client/react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Avatar } from '@/components/avatar';
+import { Input } from '@/components/ui/input';
+import { meQuery } from '@/lib/session';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -33,6 +48,7 @@ function SettingsPage() {
   return (
     <div className="grid max-w-2xl gap-6">
       <h1 className="text-2xl font-semibold">{t('settings.title')}</h1>
+      <ProfileCard />
       <PasswordCard />
       <SessionsCard />
       <AppearanceCard />
@@ -147,6 +163,148 @@ function AppearanceCard() {
           </label>
         ))}
       </fieldset>
+    </Card>
+  );
+}
+
+const AVATAR_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/heic',
+  'image/heif',
+  'image/avif',
+] as const;
+
+function ProfileCard() {
+  const { t } = useTranslation();
+  const api = useApi();
+  const queryClient = useQueryClient();
+  const me = useQuery(meQuery());
+  const user = me.data?.user;
+  const [name, setName] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const refresh = () => queryClient.invalidateQueries({ queryKey: meQuery().queryKey });
+  const save = useApiMutation(updateMe, {
+    onSuccess: async () => {
+      toast.success(t('settings.profileSaved'));
+      setName(null);
+      await refresh();
+    },
+    onError: (err) => setError(errorMessage(t, err)),
+  });
+  const parsed = DisplayName.safeParse(name ?? '');
+  const fieldErr = name !== null && !parsed.success ? fieldMessage(t, 'too_long') : undefined;
+
+  const onFile = async (file: File | undefined) => {
+    setError(null);
+    if (!file) return;
+    if (file.size > AVATAR_MAX_BYTES) return setError(t('errors.too_large'));
+    const type = AVATAR_TYPES.find((x) => x === file.type);
+    if (!type) return setError(fieldMessage(t, 'not_an_image') ?? null);
+    setBusy(true);
+    try {
+      const slot = await api.call(createAvatarUpload, {
+        body: { bytes: file.size, content_type: type },
+      });
+      const put = await fetch(slot.put_url, {
+        method: 'PUT',
+        body: file,
+        headers: { 'content-type': type },
+      });
+      if (!put.ok) throw new Error('upload failed');
+      await api.call(setAvatar, { body: { upload_id: slot.upload_id } });
+      toast.success(t('settings.avatarSaved'));
+      await refresh();
+    } catch (err) {
+      const e = err as { fields?: Record<string, string> };
+      setError(
+        e.fields?.upload_id ? (fieldMessage(t, e.fields.upload_id) ?? null) : errorMessage(t, err),
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!user) return null;
+  return (
+    <Card className="grid gap-4">
+      <CardTitle>{t('settings.profileTitle')}</CardTitle>
+      <p className="text-sm text-muted-foreground">
+        {t('settings.username', { username: user.username })}
+      </p>
+      {error && <Alert variant="destructive">{error}</Alert>}
+      <div className="flex flex-wrap items-center gap-4">
+        <Avatar user={user} size={72} />
+        <div className="grid gap-2">
+          <span className="text-sm font-medium" id="avatar-label">
+            {t('settings.avatar')}
+          </span>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm">
+              <label aria-disabled={busy}>
+                {t('settings.avatarChoose')}
+                <input
+                  type="file"
+                  accept={AVATAR_TYPES.join(',')}
+                  className="sr-only"
+                  aria-describedby="avatar-help"
+                  disabled={busy}
+                  onChange={(e) => {
+                    void onFile(e.target.files?.[0]);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            </Button>
+            {user.avatar_url && (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={busy}
+                onClick={async () => {
+                  await api.call(deleteAvatar);
+                  await refresh();
+                }}
+              >
+                {t('settings.avatarRemove')}
+              </Button>
+            )}
+          </div>
+          <p id="avatar-help" className="text-xs text-muted-foreground">
+            {t('settings.avatarHelp')}
+          </p>
+        </div>
+      </div>
+      <form
+        className="grid gap-3"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!parsed.success) return;
+          setError(null);
+          save.mutate({ body: { display_name: parsed.data } });
+        }}
+      >
+        <Field
+          label={t('settings.displayName')}
+          help={t('settings.displayNameHelp')}
+          error={fieldErr}
+        >
+          <Input
+            value={name ?? user.display_name}
+            maxLength={60}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </Field>
+        <div>
+          <Button type="submit" disabled={save.isPending || name === null}>
+            {t('settings.saveProfile')}
+          </Button>
+        </div>
+      </form>
     </Card>
   );
 }
