@@ -1,0 +1,147 @@
+# Production stack (HLD §3, TDD §6, NFR-OPS-01). Only Caddy publishes ports.
+# Secrets come from deploy/.env (see .env.example); this file never contains secret values (L-06).
+name: vidfriends
+
+x-app-env: &app-env
+  NODE_ENV: production
+  PUBLIC_URL: ${PUBLIC_URL:?set PUBLIC_URL in .env}
+  DATABASE_URL: postgres://vidfriends:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/vidfriends
+  APP_SECRET: ${APP_SECRET:?set APP_SECRET in .env}
+  S3_ENDPOINT: http://seaweedfs:8333
+  S3_PUBLIC_ENDPOINT: ${PUBLIC_URL}
+  S3_BUCKET: media-store
+  S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?set S3_ACCESS_KEY_ID in .env}
+  S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?set S3_SECRET_ACCESS_KEY in .env}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '5'
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '${HTTP_PORT:-80}:80'
+      - '${HTTPS_PORT:-443}:443'
+      - '${HTTPS_PORT:-443}:443/udp'
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      server:
+        condition: service_healthy
+    logging: *logging
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vidfriends
+      POSTGRES_DB: vidfriends
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U vidfriends -d vidfriends']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    logging: *logging
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.48
+    restart: unless-stopped
+    environment:
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?set S3_ACCESS_KEY_ID in .env}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?set S3_SECRET_ACCESS_KEY in .env}
+    # The S3 identity file is written from the environment at start, so no secret is committed.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        umask 077
+        printf '{"identities":[{"name":"vidfriends","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Admin","Read","Write","List","Tagging"]}]}' "$$S3_ACCESS_KEY_ID" "$$S3_SECRET_ACCESS_KEY" > /tmp/s3.json
+        exec weed server -dir=/data -ip.bind=0.0.0.0 -s3 -s3.port=8333 -s3.config=/tmp/s3.json -volume.max=0
+    volumes:
+      - s3data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:8333/healthz || exit 1']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+    logging: *logging
+
+  migrate:
+    image: ${VIDFRIENDS_SERVER_IMAGE:-vidfriends-server:local}
+    build:
+      context: ..
+      target: server
+    command: ['migrate']
+    environment:
+      <<: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+    logging: *logging
+
+  server:
+    image: ${VIDFRIENDS_SERVER_IMAGE:-vidfriends-server:local}
+    restart: unless-stopped
+    environment:
+      <<: *app-env
+      ROLE: api
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      seaweedfs:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:8080/readyz >/dev/null || exit 1']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+    stop_grace_period: 20s
+    logging: *logging
+
+  worker:
+    image: ${VIDFRIENDS_WORKER_IMAGE:-vidfriends-worker:local}
+    build:
+      context: ..
+      target: worker
+    restart: unless-stopped
+    environment:
+      <<: *app-env
+      ROLE: worker
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      seaweedfs:
+        condition: service_healthy
+    # Sandbox for yt-dlp and ffmpeg (TDD §2, TB-4).
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - work:/work
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    mem_limit: 1g
+    stop_grace_period: 30s
+    logging: *logging
+
+volumes:
+  pgdata:
+  s3data:
+  work:
+  caddy_data:
+  caddy_config:

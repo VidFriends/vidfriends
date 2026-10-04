@@ -1,0 +1,152 @@
+{
+  "app": {
+    "name": "VidFriends",
+    "tagline": "Videos from your friends, and nobody else."
+  },
+  "nav": {
+    "main": "Main navigation",
+    "skip": "Skip to content",
+    "home": "Home",
+    "invites": "Invites",
+    "settings": "Settings",
+    "logout": "Log out",
+    "account": "Signed in as {{name}}"
+  },
+  "common": {
+    "loading": "Loading…",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "save": "Save",
+    "copy": "Copy",
+    "copied": "Copied",
+    "close": "Close",
+    "loadMore": "Load more",
+    "optional": "optional",
+    "genericError": "Something went wrong. Please try again.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "theme": "Theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark"
+  },
+  "errors": {
+    "validation_failed": "Please check the highlighted fields.",
+    "invite_invalid": "This invite link is not valid. It may have expired, been used up or been revoked. Ask your friend for a new one.",
+    "setup_invalid": "That setup token is not correct. Copy it again from the server log.",
+    "unauthorized": "Please log in.",
+    "invalid_credentials": "Wrong username or password.",
+    "account_suspended": "This account is suspended. Contact your server admin.",
+    "forbidden": "You are not allowed to do that.",
+    "csrf_failed": "Your session needs refreshing. Reload the page and try again.",
+    "not_found": "Not found.",
+    "username_taken": "That username is taken.",
+    "rate_limited": "Too many attempts. Wait a minute and try again.",
+    "network_error": "Could not reach the server. Check your connection.",
+    "internal_error": "Something went wrong on the server. Please try again.",
+    "unavailable": "The server is temporarily unavailable."
+  },
+  "fieldErrors": {
+    "required": "Required.",
+    "username_format": "Use 3–30 characters: lowercase letters, digits, dots or underscores, starting with a letter or digit.",
+    "password_too_short": "Use at least 10 characters.",
+    "password_too_long": "Use at most 128 characters.",
+    "password_common": "This password is too common. Pick something less guessable.",
+    "password_equals_username": "Your password must not be your username.",
+    "password_mismatch": "The passwords do not match.",
+    "too_long": "Too long.",
+    "invalid": "Invalid value.",
+    "username_taken": "That username is taken."
+  },
+  "setup": {
+    "title": "Set up your VidFriends server",
+    "intro": "Claim this server to become its admin. You'll find the one-time setup token in the server log.",
+    "token": "Setup token",
+    "tokenHelp": "Printed in the server log as “enter the setup token: …”.",
+    "instanceName": "Server name",
+    "instanceNameHelp": "Shown to everyone who joins, for example “The Smiths”.",
+    "username": "Admin username",
+    "password": "Admin password",
+    "submit": "Claim server",
+    "claimed": "This server has already been set up.",
+    "goLogin": "Go to log in"
+  },
+  "login": {
+    "title": "Log in",
+    "subtitle": "to {{name}}",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Log in",
+    "noAccount": "No account? Ask a friend on this server for an invite link.",
+    "expired": "Your session ended. Please log in again."
+  },
+  "join": {
+    "title": "Join {{name}}",
+    "invitedBy": "{{name}} invited you.",
+    "expires": "This invite expires {{when}}.",
+    "displayName": "Display name",
+    "displayNameHelp": "What friends see. You can change it later.",
+    "username": "Username",
+    "usernameHelp": "3–30 characters: lowercase letters, digits, dots and underscores. It can't be changed.",
+    "password": "Password",
+    "passwordHelp": "At least 10 characters.",
+    "submit": "Create account",
+    "trust": "Your server admin can technically access stored data. Only join servers run by people you trust.",
+    "appHint": "Using the VidFriends app? Open it and scan the same QR code from inside the app.",
+    "haveAccount": "Already have an account? Log in"
+  },
+  "home": {
+    "title": "Home",
+    "welcome": "Welcome, {{name}}!",
+    "intro": "This is your private feed of videos your friends send you. Invite friends to get started.",
+    "inviteCta": "Invite a friend"
+  },
+  "settings": {
+    "title": "Settings",
+    "passwordTitle": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Repeat new password",
+    "passwordSubmit": "Change password",
+    "passwordChanged": "Password changed. Your other sessions were logged out.",
+    "sessionsTitle": "Sessions",
+    "logoutEverywhere": "Log out everywhere",
+    "logoutEverywhereHelp": "Ends every session on every device, including this one.",
+    "appearanceTitle": "Appearance"
+  },
+  "invites": {
+    "title": "Invites",
+    "intro": "Invite people you trust. Each invite is a link (and QR code) that lets someone create an account on this server.",
+    "createTitle": "New invite",
+    "maxUses": "How many people can use it",
+    "expiresInDays": "Expires after (days)",
+    "autoFriend": "Become friends automatically",
+    "autoFriendHelp": "People who join with this invite become your friends right away.",
+    "create": "Create invite",
+    "createdTitle": "Invite ready",
+    "createdHelp": "Share this link or let them scan the QR code. For security it is shown only now.",
+    "joinUrl": "Join link",
+    "qrLabel": "QR code for the join link",
+    "listTitle": "Your invites",
+    "listTitleAll": "All invites",
+    "showAll": "Show all invites",
+    "empty": "No invites yet.",
+    "uses": "{{uses}} of {{max}} used",
+    "expires": "Expires {{when}}",
+    "createdBy": "Created by {{name}}",
+    "revoke": "Revoke",
+    "revokeConfirm": "Revoke this invite? Nobody will be able to use it any more.",
+    "revoked": "Invite revoked.",
+    "notAllowed": "Only admins can create invites on this server.",
+    "status": {
+      "active": "Active",
+      "expired": "Expired",
+      "revoked": "Revoked",
+      "exhausted": "Used up"
+    }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "home": "Go home"
+  }
+}

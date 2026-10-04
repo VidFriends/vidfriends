@@ -48,6 +48,7 @@ erDiagram
 
 **`sessions`**
 - `token_hash` bytea PK (sha256)
+- `id` uuid UNIQUE: a public handle so a session can be listed and revoked (FR-ACCT-04) without exposing its token hash
 - `user_id` FK → users ON DELETE CASCADE
 - `client` text CHECK in (`web`, `mobile`)
 - `user_agent` text NOT NULL DEFAULT ''
@@ -322,7 +323,7 @@ Ops endpoints live outside `/api/v1`: `GET /healthz`, `GET /readyz`, and `GET :9
   - Compared by database lookup of the hash, which has no timing side channel on the secret.
 - **Setup token:** 32 bytes, kept in memory only, printed once per boot while unclaimed (FR-AUTH-01).
 - **CSRF:**
-  - On login, the server sets a non-HttpOnly `vf_csrf` cookie containing a random value.
+  - On login, the server sets a non-HttpOnly `vf_csrf` cookie whose value is `HMAC-SHA256(APP_SECRET, "csrf:" ‖ session token hash)`, so the token is bound to the session (signed double-submit).
   - Unsafe requests authenticated by cookie must send `X-CSRF-Token` equal to that cookie, **and** have an `Origin` header matching `PUBLIC_URL`.
   - Bearer-authenticated requests are exempt.
 - **CSP:** `default-src 'self'; img-src 'self' blob: data: {media origin}; media-src 'self' blob: {media origin}; connect-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'`.

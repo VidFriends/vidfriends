@@ -5,6 +5,7 @@ import { createDatabase, type Database } from './infra/db.js';
 import { createTrustedProxies } from './infra/ip.js';
 import type { Logger } from './infra/logger.js';
 import { createRateLimiter } from './infra/rate-limit.js';
+import { createStorage } from './infra/storage.js';
 import { newToken } from './infra/tokens.js';
 import type { Deps } from './http/deps.js';
 import { adminExists } from './modules/auth/service.js';
@@ -16,6 +17,7 @@ export function buildDeps(
 ): Deps {
   const database = overrides.database ?? createDatabase(env.DATABASE_URL);
   const clock = overrides.clock ?? systemClock;
+  const storage = overrides.storage !== undefined ? overrides.storage : createStorage(env);
   return {
     env,
     database,
@@ -25,6 +27,7 @@ export function buildDeps(
     rateLimiter: createRateLimiter(clock),
     trustedProxies: createTrustedProxies(env.TRUSTED_PROXIES),
     setup: { token: null },
+    storage,
     peerIp: (c) => {
       try {
         return getConnInfo(c).remote.address;
@@ -32,7 +35,7 @@ export function buildDeps(
         return undefined;
       }
     },
-    readinessChecks: [],
+    readinessChecks: storage ? [{ name: 'storage', check: () => storage.ping() }] : [],
     ...overrides,
   };
 }

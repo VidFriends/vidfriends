@@ -112,5 +112,5 @@ apps/mobile (M6)
 | Immediate revocation (FR-AUTH-05/06) | Database-backed sessions checked per request ([ADR-0008](../adr/0008-authentication-sessions.md)) |
 | Durable media pipeline (NFR-REL-01) | pg-boss jobs with transactional enqueue and idempotent handlers |
 | Safe fetching (NFR-SEC-05) | Validation in `videos/service` plus guarded runners in `infra/media` |
-| Self-hostable, low cost (BO-4) | Five containers (or fewer); Postgres doubles as the queue; MinIO optional |
+| Self-hostable, low cost (BO-4) | Five containers (or fewer); Postgres doubles as the queue; the bundled SeaweedFS is optional ([ADR-0015](../adr/0015-bundled-object-store-seaweedfs.md)) |
 | Accessibility (NFR-A11Y-*) | Radix primitives, jsx-a11y lint, axe checks in E2E, a11y review per milestone |

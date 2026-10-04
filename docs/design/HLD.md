@@ -44,7 +44,7 @@ flowchart TB
 | C-API | API server | Serves the static SPA. Handles the HTTP API: authentication, authorization, validation, business rules, presigned URL issuance. Enqueues jobs. | Node/Hono ([0007](../adr/0007-backend-stack.md)) |
 | C-WRK | Worker | Durable jobs: `video.fetch`, `video.process`, `notify.dispatch`, `retention.purge`, `storage.sweep`, `session.cleanup` | Node + pg-boss, yt-dlp, ffmpeg |
 | C-DB | PostgreSQL | System of record: users, sessions, relationships, videos, shares, conversations, notifications, settings, audit log, job queue | PostgreSQL 16 |
-| C-OBJ | Object storage | Media renditions, thumbnails, avatars, temporary uploads. Private bucket. | S3-compatible: MinIO by default ([0009](../adr/0009-media-ingestion-and-storage.md)) |
+| C-OBJ | Object storage | Media renditions, thumbnails, avatars, temporary uploads. Private bucket. | S3-compatible: SeaweedFS by default ([0009](../adr/0009-media-ingestion-and-storage.md), [0015](../adr/0015-bundled-object-store-seaweedfs.md)) |
 
 ## 3. Container and deployment topology (reference self-hosted deployment)
 
@@ -55,7 +55,7 @@ flowchart LR
     S[server ROLE=api :8080]
     W[worker ROLE=worker]
     D[(postgres :5432)]
-    O[(minio :9000)]
+    O[(seaweedfs :8333)]
     P -->|/ , /api| S
     P -->|/media-store/*| O
     S --> D
@@ -70,7 +70,7 @@ flowchart LR
 
 - Only Caddy publishes ports. Every other service binds to the internal Docker network (NFR-OPS-01).
 - **Small mode:** a single `server` container with `ROLE=all` that runs both API and worker. Supported for tiny installs.
-- **Alternative storage:** point C-API and C-WRK at external S3, R2 or B2, then drop MinIO and the `/media-store` route. Presigned URLs then use the provider's domain.
+- **Alternative storage:** point C-API and C-WRK at external S3, R2 or B2, then drop SeaweedFS and the `/media-store` route. Presigned URLs then use the provider's domain.
 - **Scaling path:** C-API and C-WRK are stateless. Sessions, jobs and settings live in C-DB, so replicas can be added behind Caddy. This is not needed at target scale.
 
 ## 4. Trust boundaries

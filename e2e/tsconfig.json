@@ -1,0 +1,10 @@
+{
+  "extends": "@vidfriends/config/tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["node"]
+  },
+  "include": ["tests", "support", "playwright.config.ts"]
+}
