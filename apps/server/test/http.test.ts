@@ -69,6 +69,7 @@ describe('HTTP pipeline', () => {
       api_version: 1,
       signup_mode: 'invite_only',
       setup_complete: false,
+      retention_days: 90,
     });
   });
 

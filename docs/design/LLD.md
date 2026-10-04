@@ -245,7 +245,7 @@ LIMIT :n + 1;
 
 | Method & path | Auth | Request → response (summary) | Notable errors | FR |
 |---|---|---|---|---|
-| `GET /instance` | P | → `{name, version, api_version, signup_mode, setup_complete}` | – | PAIR-01 |
+| `GET /instance` | P | → `{name, version, api_version, signup_mode, setup_complete, retention_days}` | – | PAIR-01 |
 | `POST /setup` | P | `{setup_token, instance_name, username, password}` → `{user}` + session | `setup_invalid`, 404 if complete | AUTH-01 |
 | `GET /invites/{code}/preview` | P | → `{inviter_display_name, expires_at}` | `invite_invalid` | PAIR-04 |
 | `POST /auth/register` | P | `{username, password, display_name?, invite_code?, client}` → `{user, token?}` | `invite_invalid`, `username_taken`, `validation_failed` | AUTH-02/03 |

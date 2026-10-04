@@ -20,6 +20,7 @@ import { useApi, useApiQuery } from '@vidfriends/api-client/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Avatar } from '@/components/avatar';
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import { SiteFooter } from '@/components/info-page';
 import { formatRelative } from '@/i18n';
 import { PushCard } from '@/features/notifications/push-card';
 import { Input } from '@/components/ui/input';
@@ -61,6 +62,7 @@ function SettingsPage() {
       <SessionsCard />
       <AppearanceCard />
       <DeleteAccountCard />
+      <SiteFooter />
     </div>
   );
 }

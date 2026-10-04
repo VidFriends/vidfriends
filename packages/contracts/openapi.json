@@ -1570,6 +1570,9 @@
                     },
                     "setup_complete": {
                       "type": "boolean"
+                    },
+                    "retention_days": {
+                      "type": "integer"
                     }
                   },
                   "required": [
@@ -1577,7 +1580,8 @@
                     "version",
                     "api_version",
                     "signup_mode",
-                    "setup_complete"
+                    "setup_complete",
+                    "retention_days"
                   ]
                 }
               }
