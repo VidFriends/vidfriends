@@ -25,7 +25,16 @@ jobs:
           echo "yt-dlp: current $current, latest $latest"
       - name: Update the pin
         if: steps.latest.outputs.latest != steps.latest.outputs.current
-        run: echo "yt-dlp==${{ steps.latest.outputs.latest }}" > deploy/worker/requirements.txt
+        env:
+          LATEST: ${{ steps.latest.outputs.latest }}
+        run: |
+          # yt-dlp-ejs moves in lockstep: use the version the new yt-dlp's "default" extra pins.
+          ejs=$(curl -fsSL "https://pypi.org/pypi/yt-dlp/$LATEST/json" | python3 -c '
+          import json, re, sys
+          deps = json.load(sys.stdin)["info"]["requires_dist"] or []
+          print(next(m.group(1) for d in deps if (m := re.match(r"yt-dlp-ejs==([\w.]+)", d))))')
+          sed -i "s/^yt-dlp==.*/yt-dlp==$LATEST/; s/^yt-dlp-ejs==.*/yt-dlp-ejs==$ejs/" deploy/worker/requirements.txt
+          cat deploy/worker/requirements.txt
       - name: Open a pull request
         if: steps.latest.outputs.latest != steps.latest.outputs.current
         uses: peter-evans/create-pull-request@v7

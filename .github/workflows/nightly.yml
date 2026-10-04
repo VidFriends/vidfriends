@@ -27,15 +27,29 @@ jobs:
           tags: vidfriends-worker:nightly
           cache-from: type=gha,scope=worker
       - name: Probe public, long-lived videos with the pinned yt-dlp
+        # Every site is probed. A YouTube "confirm you're not a bot" answer means GitHub's datacenter
+        # address is blocked, not that extraction broke; it is reported as a warning. Any other
+        # failure (or a JS-runtime warning) fails the job so it is noticed (R-2).
         run: |
-          set -e
+          failed=0
           for url in \
-            'https://www.youtube.com/watch?v=jNQXAC9IVRw' \
-            'https://vimeo.com/76979871'; do
+            'https://vimeo.com/76979871' \
+            'https://www.youtube.com/watch?v=jNQXAC9IVRw'; do
             echo "== $url"
-            docker run --rm --entrypoint yt-dlp vidfriends-worker:nightly \
-              --skip-download --no-playlist --print '%(extractor_key)s %(duration)s %(title)s' -- "$url"
+            if out=$(docker run --rm --entrypoint yt-dlp vidfriends-worker:nightly \
+                --js-runtimes node --skip-download --no-playlist \
+                --print '%(extractor_key)s %(duration)s %(title)s' -- "$url" 2>&1); then
+              echo "$out"
+              if echo "$out" | grep -q 'No supported JavaScript runtime'; then
+                echo "::error::yt-dlp found no JavaScript runtime for $url"; failed=1
+              fi
+            elif echo "$out" | grep -q 'confirm you.re not a bot'; then
+              echo "::warning::$url is bot-checked from this runner's network: $out"
+            else
+              echo "$out"; echo "::error::yt-dlp failed for $url"; failed=1
+            fi
           done
+          exit $failed
 
   e2e-all-browsers:
     name: E2E (Chromium, Firefox, WebKit)

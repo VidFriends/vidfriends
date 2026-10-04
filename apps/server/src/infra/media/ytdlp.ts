@@ -34,6 +34,9 @@ export interface YtDlpOptions {
 const proxyArgs = (proxy: string | undefined) => (proxy ? ['--proxy', proxy] : []);
 
 const COMMON = [
+  // YouTube needs a JavaScript runtime for its challenges (yt-dlp EJS); the worker image has Node.
+  '--js-runtimes',
+  'node',
   '--no-playlist',
   '--no-progress',
   '--no-warnings',
