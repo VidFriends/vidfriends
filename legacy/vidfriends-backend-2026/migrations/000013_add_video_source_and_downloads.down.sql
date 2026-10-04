@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS downloads;
+ALTER TABLE videos DROP COLUMN IF EXISTS source_url;
+ALTER TABLE videos DROP COLUMN IF EXISTS source_platform;

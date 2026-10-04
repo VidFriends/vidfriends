@@ -1,0 +1,91 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: vidfriends
+      POSTGRES_PASSWORD: vidfriends
+      POSTGRES_DB: vidfriends
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vidfriends"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  migrate:
+    image: migrate/migrate:v4.18.2
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+    command:
+      [
+        "-path", "/migrations",
+        "-database", "postgres://vidfriends:vidfriends@postgres:5432/vidfriends?sslmode=disable",
+        "up"
+      ]
+    restart: on_failure
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build: .
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      VIDFRIENDS_ADDR: ":8080"
+      VIDFRIENDS_DATABASE_URL: "postgres://vidfriends:vidfriends@postgres:5432/vidfriends?sslmode=disable"
+      VIDFRIENDS_LOG_LEVEL: "debug"
+      VIDFRIENDS_JWT_SECRET: "vidfriends-dev-secret-do-not-use-in-prod"
+      VIDFRIENDS_S3_ENDPOINT: "http://minio:9000"
+      VIDFRIENDS_S3_ACCESS_KEY: "${MINIO_ROOT_USER:-minioadmin}"
+      VIDFRIENDS_S3_SECRET_KEY: "${MINIO_ROOT_PASSWORD:-minioadmin}"
+      VIDFRIENDS_S3_BUCKET: "vidfriends-videos"
+      VIDFRIENDS_S3_USE_SSL: "false"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "256M"
+
+  createbuckets:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin} &&
+      /usr/bin/mc mb myminio/vidfriends-videos --ignore-existing
+      "
+
+volumes:
+  pgdata:
+  minio_data:
+
