@@ -75,6 +75,9 @@ the app under **Admin → Settings** and takes effect immediately:
   every device. If you lost your own admin passkey, run on the server
   `docker compose exec server node dist/main.js recovery-link <username>`; it prints the link in
   your terminal only.
+- **ntfy and Gotify:** members can get notifications through their own ntfy topic or Gotify
+  server (Settings → ntfy and Gotify). Servers on your home network are refused unless you list
+  their host names in `PUSH_PRIVATE_HOSTS` in `.env` (plain `http://` is then allowed for them).
 - **Problem members:** suspend (they are logged out and their shares are hidden), or delete the
   account. You cannot remove the last admin.
 - **Storage:** Admin → Storage shows usage per member and lets you run retention now.

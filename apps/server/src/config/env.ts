@@ -137,6 +137,20 @@ export const ENV_SPEC = {
       'Optional Expo access token, needed only if the Expo project behind your mobile app build enforces push security (FR-NOTIF-03).',
     secret: true,
   },
+  PUSH_PRIVATE_HOSTS: {
+    schema: z
+      .string()
+      .default('')
+      .transform((s) =>
+        s
+          .split(',')
+          .map((h) => h.trim().toLowerCase())
+          .filter(Boolean),
+      ),
+    description:
+      "Comma-separated host names of ntfy or Gotify servers on your own network. Only these may resolve to private addresses or use plain http:// for members' push targets (ADR-0020); all others must be public https.",
+    example: 'ntfy.home.lan,192.168.1.20',
+  },
   YTDLP_PATH: { schema: z.string().default('yt-dlp'), description: 'yt-dlp executable.' },
   FETCH_PROXY_URL: {
     schema: z.url().optional(),

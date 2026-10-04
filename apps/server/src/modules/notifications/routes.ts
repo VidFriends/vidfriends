@@ -2,6 +2,8 @@ import {
   createPushTarget,
   deletePushTarget,
   events,
+  listPushTargets,
+  testPushTarget,
   getNotificationPrefs,
   getVapidKey,
   listNotifications,
@@ -36,6 +38,10 @@ export const notificationHandlers = [
   })),
   handler(createPushTarget, async ({ deps, viewer, body }) =>
     svc.addPushTarget(deps, viewer, body),
+  ),
+  handler(listPushTargets, async ({ deps, viewer }) => svc.listPushTargets(deps, viewer)),
+  handler(testPushTarget, async ({ deps, viewer, params }) =>
+    svc.testPushTarget(deps, viewer, params.id),
   ),
   handler(deletePushTarget, async ({ deps, viewer, params }) => {
     await svc.deletePushTarget(deps, viewer, params.id);

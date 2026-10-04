@@ -31,6 +31,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 import { SiteFooter } from '@/components/info-page';
 import { formatBytes, formatRelative } from '@/i18n';
 import { PushCard } from '@/features/notifications/push-card';
+import { PushServersCard } from '@/features/notifications/push-servers-card';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { meQuery } from '@/lib/session';
@@ -57,6 +58,7 @@ function SettingsPage() {
       <h1 className="text-2xl font-semibold">{t('settings.title')}</h1>
       <ProfileCard />
       <PushCard />
+      <PushServersCard />
       <PasskeysCard />
       <SessionsCard />
       <AppearanceCard />

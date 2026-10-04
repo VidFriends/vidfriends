@@ -9,10 +9,14 @@ import { createRateLimiter } from './infra/rate-limit.js';
 import { createStorage } from './infra/storage.js';
 import {
   createExpoPushSender,
+  createGotifySender,
+  createNtfySender,
   createWebPushSender,
   vapidKeys,
+  type PushKind,
   type PushSender,
 } from './infra/push/channels.js';
+import { createGuardedPost } from './infra/push/egress.js';
 import { newToken } from './infra/tokens.js';
 import type { Deps } from './http/deps.js';
 import { adminExists } from './modules/auth/service.js';
@@ -25,12 +29,19 @@ export function buildDeps(
   const database = overrides.database ?? createDatabase(env.DATABASE_URL);
   const clock = overrides.clock ?? systemClock;
   const storage = overrides.storage !== undefined ? overrides.storage : createStorage(env);
-  let senders: Promise<Partial<Record<'webpush' | 'expo', PushSender>>> | null = null;
+  let senders: Promise<Partial<Record<PushKind, PushSender>>> | null = null;
+  const httpPush = {
+    publicUrl: env.PUBLIC_URL,
+    appSecret: env.APP_SECRET,
+    post: createGuardedPost(env.PUSH_PRIVATE_HOSTS),
+  };
   return {
     pushSenders: () =>
       (senders ??= vapidKeys(database.db, env.APP_SECRET).then((keys) => ({
         webpush: createWebPushSender(keys, env.PUBLIC_URL),
         expo: createExpoPushSender({ accessToken: env.EXPO_ACCESS_TOKEN }),
+        ntfy: createNtfySender(httpPush),
+        gotify: createGotifySender(httpPush),
       }))),
     env,
     database,

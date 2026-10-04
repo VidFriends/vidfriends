@@ -15,6 +15,7 @@ import {
   clearReaction,
   createPushTarget,
   deletePushTarget,
+  testPushTarget,
   deleteReply,
   getShare,
   getShareMedia,
@@ -69,7 +70,11 @@ let world: World;
 
 beforeAll(async () => {
   // Many passkey confirmations by the same member within a minute (one per persona).
-  server = await createTestServer({ RATE_LIMIT_AUTH_PER_MINUTE: '1000' });
+  // No push senders: test pushes report `error` without network access.
+  server = await createTestServer(
+    { RATE_LIMIT_AUTH_PER_MINUTE: '1000' },
+    { pushSenders: async () => ({}) },
+  );
   world = await buildWorld(server);
   if (hasS3) {
     const png = await sharp({ create: { width: 8, height: 8, channels: 3, background: '#123456' } })
@@ -331,6 +336,19 @@ function cases(): MatrixCase[] {
         return { params: { id: target.id } };
       },
       expect: only(['owner'], 204),
+    }),
+    matrixCase({
+      route: testPushTarget,
+      prepare: async () => {
+        const { target } = await world.members.owner.client.ok(createPushTarget, {
+          body: {
+            kind: 'expo',
+            endpoint: `ExponentPushToken[matrix${Math.random().toString(36).slice(2, 14)}]`,
+          },
+        });
+        return { params: { id: target.id }, body: {} };
+      },
+      expect: only(['owner'], 200),
     }),
     matrixCase({
       route: getVideo,

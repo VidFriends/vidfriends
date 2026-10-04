@@ -27,5 +27,6 @@ These records follow the rules in [ADR-0001](0001-record-architecture-decisions.
 | [0017](0017-single-react-version-pinned-by-expo.md) | One React version for the monorepo, set by the Expo SDK | Accepted | Claude (delegated) |
 | [0018](0018-passkey-only-sign-in.md) | Passkey-only sign-in; no passwords; mobile sign-in by browser hand-off | Accepted | Owner (+ Claude for the mechanism) |
 | [0019](0019-realtime-invalidation-over-sse.md) | Realtime updates: server-sent invalidation hints over Postgres LISTEN/NOTIFY | Accepted | Owner (+ Claude for the mechanism) |
+| [0020](0020-ntfy-and-gotify-push-channels.md) | ntfy and Gotify push channels; UnifiedPush deferred | Accepted | Owner (+ Claude for the mechanism) |
 
 **Template for new ADRs:** use the header fields Status, Date, Decided by and Supersedes, then the sections Context, Decision, Alternatives considered, Consequences, and Revisit when.

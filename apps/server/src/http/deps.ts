@@ -6,7 +6,7 @@ import type { Logger } from '../infra/logger.js';
 import type { RateLimiter } from '../infra/rate-limit.js';
 import type { RealtimeHub } from '../infra/realtime.js';
 import type { JobQueue } from '../infra/queue.js';
-import type { PushSender } from '../infra/push/channels.js';
+import type { PushKind, PushSender } from '../infra/push/channels.js';
 import type { Storage } from '../infra/storage.js';
 import type { FetchLike, Lookup } from '../modules/videos/url.js';
 import type { AppContext } from './context.js';
@@ -33,7 +33,7 @@ export interface Deps {
   /** Durable job queue (pg-boss); null until started, so enqueueing fails loudly. */
   queue: JobQueue | null;
   /** Push channels by target kind, resolved lazily (VAPID keys live in the database). */
-  pushSenders(): Promise<Partial<Record<'webpush' | 'expo', PushSender>>>;
+  pushSenders(): Promise<Partial<Record<PushKind, PushSender>>>;
   /** Outbound network primitives used by link handling (injectable for tests). */
   net: { lookup: Lookup; fetch: FetchLike };
   /** Direct TCP peer address of the request (overridable in tests). */
