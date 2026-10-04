@@ -1,5 +1,6 @@
 # Production stack (HLD §3, TDD §6, NFR-OPS-01). Only Caddy publishes ports.
 # Secrets come from deploy/.env (see .env.example); this file never contains secret values (L-06).
+# Third-party images are pinned by digest (TDD §5); Dependabot proposes updates.
 name: vidfriends
 
 x-app-env: &app-env
@@ -14,6 +15,9 @@ x-app-env: &app-env
   S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?set S3_SECRET_ACCESS_KEY in .env}
   LOG_LEVEL: ${LOG_LEVEL:-info}
   RATE_LIMIT_AUTH_PER_MINUTE: ${RATE_LIMIT_AUTH_PER_MINUTE:-10}
+  RATE_LIMIT_USER_PER_MINUTE: ${RATE_LIMIT_USER_PER_MINUTE:-300}
+  RATE_LIMIT_IP_PER_MINUTE: ${RATE_LIMIT_IP_PER_MINUTE:-1200}
+  FETCH_PROXY_URL: ${FETCH_PROXY_URL:-}
 
 x-logging: &logging
   driver: json-file
@@ -23,7 +27,7 @@ x-logging: &logging
 
 services:
   caddy:
-    image: caddy:2-alpine
+    image: caddy:2-alpine@sha256:881bbc60f9986d5ab8e7cfd6cf7e4ef3c9c0439fef2429d035d065577882f028 # 2.11.6
     restart: unless-stopped
     ports:
       - '${HTTP_PORT:-80}:80'
@@ -41,7 +45,7 @@ services:
     logging: *logging
 
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea # 16.15
     restart: unless-stopped
     environment:
       POSTGRES_USER: vidfriends
@@ -57,19 +61,21 @@ services:
     logging: *logging
 
   seaweedfs:
-    image: chrislusf/seaweedfs:4.48
+    image: chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d
     restart: unless-stopped
     environment:
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?set S3_ACCESS_KEY_ID in .env}
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?set S3_SECRET_ACCESS_KEY in .env}
     # The S3 identity file is written from the environment at start, so no secret is committed.
+    # Only the S3 gateway (authenticated) listens on the network. The master, volume and filer APIs are
+    # unauthenticated, so they bind to loopback: a redirect followed by yt-dlp cannot reach them.
     entrypoint:
       - /bin/sh
       - -c
       - |
         umask 077
         printf '{"identities":[{"name":"vidfriends","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Admin","Read","Write","List","Tagging"]}]}' "$$S3_ACCESS_KEY_ID" "$$S3_SECRET_ACCESS_KEY" > /tmp/s3.json
-        exec weed server -dir=/data -ip.bind=0.0.0.0 -s3 -s3.port=8333 -s3.config=/tmp/s3.json -volume.max=0 -master.volumeSizeLimitMB=1024
+        exec weed server -dir=/data -ip=127.0.0.1 -ip.bind=127.0.0.1 -s3 -s3.ip.bind=0.0.0.0 -s3.port=8333 -s3.config=/tmp/s3.json -volume.max=0 -master.volumeSizeLimitMB=1024
     volumes:
       - s3data:/data
     healthcheck:

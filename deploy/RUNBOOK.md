@@ -10,6 +10,7 @@ environment reference: [ENV.md](ENV.md).
 - [3. Backup](#3-backup)
 - [4. Restore](#4-restore)
 - [5. Monitoring](#5-monitoring)
+- [5a. Hardening (optional)](#5a-hardening-optional)
 - [6. Routine operations](#6-routine-operations)
 - [7. Records](#7-records)
 
@@ -159,6 +160,17 @@ ssh -L 3000:127.0.0.1:3000 you@your-vm   # then open http://localhost:3000 (user
 Grafana listens on `127.0.0.1` only. Without the overlay: `/healthz` (process up) and `/readyz`
 (database and storage reachable) for an external uptime check, and `docker compose logs` (JSON,
 rotated at 10 MB × 5 per container, no access log, no tokens or content).
+
+## 5a. Hardening (optional)
+
+- **Egress proxy for link downloads.** yt-dlp may follow redirects from an allowed site to other
+  hosts ([ADR-0016](../docs/adr/0016-accepted-residual-security-risks-v0-1.md)). To confine it, run
+  an HTTP proxy that refuses private, loopback and link-local destinations (for example Stripe's
+  Smokescreen, which does this by default) as a service on the compose network, and set
+  `FETCH_PROXY_URL=http://<service>:<port>` in `.env`. Every yt-dlp request then goes through it.
+- **Internal store APIs stay internal.** Only SeaweedFS's authenticated S3 port is reachable on the
+  compose network; keep the `-ip.bind=127.0.0.1` flags if you customise `compose.yml`.
+- **Host:** enable unattended security updates and a firewall allowing only 22, 80 and 443.
 
 ## 6. Routine operations
 

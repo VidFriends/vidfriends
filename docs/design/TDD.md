@@ -100,8 +100,8 @@
 | Elevation of privilege | Stale role, suspended user | Role and status read from the DB on every request; sessions revoked on change [FR-AUTH-05/06] |
 | SSRF | Link to internal services | Allowlist + private-IP block + `--` [NFR-SEC-05] |
 
-**Residual risks (accepted, revisit at M5):**
-- yt-dlp redirect-following can reach hosts outside the allowlist. Mitigation: the optional egress proxy.
+**Residual risks (accepted in [ADR-0016](../adr/0016-accepted-residual-security-risks-v0-1.md) after the M5 review):**
+- yt-dlp redirect-following can reach hosts outside the allowlist. Mitigation: SeaweedFS's unauthenticated master/volume/filer APIs bind to loopback (only the authenticated S3 gateway is on the network), and the optional egress proxy `FETCH_PROXY_URL`.
 - The operator can read all data. Mitigation: disclosed to users.
 
 **Secrets:**
@@ -117,7 +117,7 @@
 
 **Supply chain:**
 - Lockfiles committed. `pnpm audit` and Trivy (blocking on fixable criticals) in CI.
-- Images pinned by digest in the release compose file.
+- Third-party images (and the Node base image) pinned by digest in `deploy/compose*.yml` and the `Dockerfile`; Dependabot proposes updates. npm, corepack and pip are removed from the runtime images.
 - SBOMs generated (NFR-SEC-07, NFR-OPS-04).
 
 ## 6. Deployment and operations

@@ -4,7 +4,7 @@
 # Nothing here is published publicly: Grafana listens on 127.0.0.1 only (use an SSH tunnel).
 services:
   prometheus:
-    image: prom/prometheus:v3.5.0
+    image: prom/prometheus:v3.5.0@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996
     restart: unless-stopped
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -21,7 +21,7 @@ services:
       options: { max-size: 10m, max-file: '5' }
 
   grafana:
-    image: grafana/grafana-oss:12.1.0
+    image: grafana/grafana-oss:12.1.0@sha256:6ac590e7cabc2fbe8d7b8fc1ce9c9f0582177b334e0df9c927ebd9670469440f
     restart: unless-stopped
     ports:
       - '127.0.0.1:${GRAFANA_PORT:-3000}:3000'

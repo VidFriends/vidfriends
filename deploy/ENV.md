@@ -34,6 +34,7 @@ Product policy (signup mode, quotas, retention, session lifetimes and so on) is 
 | `WORKER_FETCH_CONCURRENCY` | `2` | Concurrent `video.fetch` jobs per worker (NFR-PERF-03). |
 | `WORKER_PROCESS_CONCURRENCY` | `1` | Concurrent `video.process` (transcode) jobs per worker (NFR-PERF-03). |
 | `YTDLP_PATH` | `yt-dlp` | yt-dlp executable. |
+| `FETCH_PROXY_URL` | (unset) | Optional HTTP(S) proxy for every yt-dlp request, including redirects. Point it at a filtering egress proxy that refuses private and link-local addresses to close the redirect residual risk (TDD §5). |
 | `FFMPEG_PATH` | `ffmpeg` | ffmpeg executable. |
 | `FFPROBE_PATH` | `ffprobe` | ffprobe executable. |
 | `FETCH_TIMEOUT_SECONDS` | `600` | Wall-clock limit for one yt-dlp run (BR-MED-2). |

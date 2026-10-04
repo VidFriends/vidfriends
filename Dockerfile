@@ -2,7 +2,7 @@
 # One image definition, two targets (ADR-0007, TDD §6): `server` (API + web app) and `worker`
 # (jobs; adds ffmpeg and a pinned yt-dlp). Both run as non-root.
 
-ARG NODE_IMAGE=node:24-alpine
+ARG NODE_IMAGE=node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1
 
 FROM ${NODE_IMAGE} AS build
 COPY deploy/docker/with-extra-ca.sh /usr/local/bin/with-extra-ca
@@ -28,6 +28,10 @@ RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     && cp -r apps/web/dist /out/web
 
 FROM ${NODE_IMAGE} AS server
+# The runtime never uses npm or corepack; removing them drops their bundled dependencies (and
+# their CVEs) from the image (M5-T7 dependency audit).
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+    /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
 ENV NODE_ENV=production \
     ROLE=api \
     WEB_DIST=/app/web \
@@ -43,6 +47,10 @@ HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=5 \
 ENTRYPOINT ["node", "dist/main.js"]
 
 FROM ${NODE_IMAGE} AS worker
+# The runtime never uses npm or corepack; removing them drops their bundled dependencies (and
+# their CVEs) from the image (M5-T7 dependency audit).
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+    /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
 # ffmpeg/ffprobe from Alpine; yt-dlp pinned in deploy/worker/requirements.txt and bumped by a
 # scheduled workflow independently of server releases (NFR-OPS-05).
 COPY deploy/docker/with-extra-ca.sh /usr/local/bin/with-extra-ca
@@ -52,6 +60,7 @@ RUN --mount=type=secret,id=extra_ca,required=false \
 COPY deploy/worker/requirements.txt /opt/yt-dlp/requirements.txt
 RUN --mount=type=secret,id=extra_ca,required=false \
     with-extra-ca /opt/yt-dlp/bin/pip install --no-cache-dir -r /opt/yt-dlp/requirements.txt \
+    && /opt/yt-dlp/bin/python -m pip uninstall --yes --quiet pip \
     && ln -s /opt/yt-dlp/bin/yt-dlp /usr/local/bin/yt-dlp \
     && mkdir -p /work && chown node:node /work
 ENV NODE_ENV=production \
