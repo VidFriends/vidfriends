@@ -13,6 +13,7 @@ import type { QueueDefinition } from '../infra/queue.js';
 import { handleNotify, type NotifyJob } from './notify.js';
 import { JOB_NOTIFY } from '../modules/notifications/service.js';
 import { JOB_PURGE_ACCOUNT_MEDIA, JOB_RETENTION } from '../modules/admin/service.js';
+import { buildExport, JOB_EXPORT } from '../modules/exports/service.js';
 import {
   JOB_CLEANUP,
   JOB_SWEEP,
@@ -49,6 +50,8 @@ export const QUEUES: QueueDefinition[] = [
     retryBackoff: true,
     expireInSeconds: 900,
   },
+  // Failures are recorded on the export row; members can request again (WF-ACCT-4).
+  { name: JOB_EXPORT, retryLimit: 0, expireInSeconds: 3600 },
 ];
 
 /** Cron schedules (UTC): retention daily 03:30, sweeper weekly, housekeeping hourly (SDD §4). */
@@ -79,6 +82,7 @@ export async function startWorker(deps: Deps): Promise<Worker> {
   await queue.work<{ video_ids: string[]; keys: string[] }>(JOB_PURGE_ACCOUNT_MEDIA, 1, (job) =>
     runAccountPurge(deps, job),
   );
+  await queue.work<{ export_id: string }>(JOB_EXPORT, 1, (job) => buildExport(deps, job));
   for (const [name, cron] of SCHEDULES) await queue.boss.schedule(name, cron, {}, { tz: 'UTC' });
   deps.log.info('worker started');
   return {
@@ -91,6 +95,7 @@ export async function startWorker(deps: Deps): Promise<Worker> {
         JOB_SWEEP,
         JOB_CLEANUP,
         JOB_PURGE_ACCOUNT_MEDIA,
+        JOB_EXPORT,
       ]) {
         await queue.boss.offWork(name, { wait: true }).catch(() => {});
       }

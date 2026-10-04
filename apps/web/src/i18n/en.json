@@ -69,7 +69,8 @@
     "video_not_found": "That video isn't available.",
     "invalid_reaction": "Pick one of the reactions.",
     "last_admin": "This is the only admin. Promote someone else first.",
-    "reset_invalid": "This password-reset link is not valid. It may have expired or already been used. Ask your admin for a new one."
+    "reset_invalid": "This password-reset link is not valid. It may have expired or already been used. Ask your admin for a new one.",
+    "export_in_progress": "Your data is already being prepared."
   },
   "fieldErrors": {
     "required": "Required.",
@@ -158,6 +159,24 @@
     "sessionSeen": "Last active {{when}}",
     "sessionRevoke": "Revoke",
     "sessionRevoked": "Session revoked.",
+    "exportTitle": "Download your data",
+    "exportHelp": "Get a ZIP file with your profile, friends, the videos you sent and received with their notes and conversations, and your sign-in history. It is prepared in the background and can be downloaded for 7 days.",
+    "exportIncludeMedia": "Include the video files I added (can be large)",
+    "exportSubmit": "Prepare my data",
+    "exportRequested": "Preparing your data. This page updates when it is ready.",
+    "exportRateLimited": "You can prepare your data 3 times a day. Try again tomorrow.",
+    "exportList": "Your data exports",
+    "exportWithMedia": "with videos",
+    "exportExpires": "Expires {{when}}",
+    "exportRequestedAt": "Requested {{when}}",
+    "exportDownload": "Download",
+    "exportState": {
+      "queued": "Waiting to start",
+      "building": "Preparing…",
+      "ready": "Ready",
+      "failed": "Failed",
+      "expired": "Expired"
+    },
     "deleteTitle": "Delete account",
     "deleteHelp": "Permanently deletes your account, your friendships, the videos you sent and your conversations. This can't be undone.",
     "deleteConfirm": "Enter your password to delete your account.",
@@ -554,6 +573,7 @@
         "title": "Your choices",
         "body": [
           "Change your profile, password, notifications and sessions in Settings. You can log out of every device at once.",
+          "Download a copy of your data in Settings: a ZIP file with your profile, friends, the videos you sent and received with their notes and conversations, and your sign-in history, optionally with the video files you added. Only you can download it, for 7 days.",
           "Delete your account in Settings. It removes your account, friendships, every share you sent or received with their conversations, and your notifications, immediately; video files nobody else needs are cleaned up shortly after. Backups the operator keeps may hold a copy until they expire."
         ]
       }
@@ -606,7 +626,8 @@
       {
         "title": "Installing the app",
         "body": [
-          "In Chrome, Edge or Safari, use \"Install app\" or \"Add to Home Screen\" to open VidFriends like an app. On Android, the installed app also appears in the share menu of other apps."
+          "In Chrome, Edge or Safari, use \"Install app\" or \"Add to Home Screen\" to open VidFriends like an app. On Android, the installed app also appears in the share menu of other apps.",
+          "Android app: until VidFriends is in Google Play, each release on the project's GitHub page has an app file (.apk) you can install directly. Open it, then scan your server's QR code or paste your join link; install newer releases the same way. There is no iPhone app yet."
         ]
       },
       {

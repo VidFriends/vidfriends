@@ -42,6 +42,7 @@
 | FR-ACCT-02 | Members can change their password, which revokes their other sessions. | M | WF-ACCT-2 | LLD §3 | M1 | API |
 | FR-ACCT-03 | Members can delete their account with password re-entry, with the effects of WF-ACCT-3, including media garbage-collection eligibility. | M | WF-ACCT-3 | LLD §2 | M5 | API, E2E |
 | FR-ACCT-04 | Members can list their active sessions and revoke one. | S | BR-SES-2 | LLD §3 | M5 | API |
+| FR-ACCT-05 | Members can request an export of their own data as a ZIP (WF-ACCT-4): profile, friends, requests and blocks, shares sent and received with notes, reactions and conversations, videos they added, their security log and avatar, and optionally the media files of videos they added. The archive is downloadable for 7 days. | S | WF-ACCT-4, BO-5, CAP-18 | LLD §2–3 | M7 | API, E2E |
 
 ### 1.3 Invites (FR-INV)
 

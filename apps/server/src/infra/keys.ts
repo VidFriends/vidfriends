@@ -6,7 +6,15 @@ export const keys = {
   fetchSource: (videoId: string) => `tmp/fetch/${videoId}`,
   media: (videoId: string, rendition = 'main') => `media/${videoId}/${rendition}.mp4`,
   thumb: (videoId: string) => `thumbs/${videoId}.webp`,
+  export: (userId: string, exportId: string) => `exports/${userId}/${exportId}.zip`,
 };
 
 /** Prefixes owned by the database; anything else in the bucket is an orphan (NFR-REL-05). */
-export const KEY_PREFIXES = ['tmp/', 'avatars/', 'uploads/', 'media/', 'thumbs/'] as const;
+export const KEY_PREFIXES = [
+  'tmp/',
+  'avatars/',
+  'uploads/',
+  'media/',
+  'thumbs/',
+  'exports/',
+] as const;

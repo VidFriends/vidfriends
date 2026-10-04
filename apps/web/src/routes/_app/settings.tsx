@@ -4,9 +4,12 @@ import { useApiMutation } from '@vidfriends/api-client/react';
 import {
   AVATAR_MAX_BYTES,
   changePassword,
+  createExport,
+  type DataExport,
   createAvatarUpload,
   deleteAvatar,
   deleteMe,
+  listExports,
   listSessions,
   revokeSessionRoute,
   type Session,
@@ -21,9 +24,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Avatar } from '@/components/avatar';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { SiteFooter } from '@/components/info-page';
-import { formatRelative } from '@/i18n';
+import { formatBytes, formatRelative } from '@/i18n';
 import { PushCard } from '@/features/notifications/push-card';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { meQuery } from '@/lib/session';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -61,6 +65,7 @@ function SettingsPage() {
       <PasswordCard />
       <SessionsCard />
       <AppearanceCard />
+      <ExportCard />
       <DeleteAccountCard />
       <SiteFooter />
     </div>
@@ -186,6 +191,87 @@ function SessionsCard() {
           {t('settings.logoutEverywhere')}
         </Button>
       </div>
+    </Card>
+  );
+}
+
+/** FR-ACCT-05 / WF-ACCT-4: download a copy of my data. */
+function ExportCard() {
+  const { t } = useTranslation();
+  const queryClient = Route.useRouteContext().queryClient;
+  const [includeMedia, setIncludeMedia] = useState(false);
+  const exports = useApiQuery(
+    listExports,
+    {},
+    {
+      // Poll while an export is being prepared.
+      refetchInterval: (q) =>
+        q.state.data?.items.some((e) => e.state === 'queued' || e.state === 'building')
+          ? 3000
+          : false,
+    },
+  );
+  const request = useApiMutation(createExport, {
+    onSuccess: async () => {
+      toast.success(t('settings.exportRequested'));
+      await queryClient.invalidateQueries({ queryKey: [listExports.id] });
+    },
+    onError: (err) =>
+      toast.error(
+        err.code === 'rate_limited' ? t('settings.exportRateLimited') : errorMessage(t, err),
+      ),
+  });
+  const items = (exports.data?.items ?? []) as DataExport[];
+  const busy = items.some((e) => e.state === 'queued' || e.state === 'building');
+  return (
+    <Card className="grid gap-3">
+      <CardTitle>{t('settings.exportTitle')}</CardTitle>
+      <CardDescription>{t('settings.exportHelp')}</CardDescription>
+      <label className="flex items-center gap-3 text-sm">
+        <Switch checked={includeMedia} onCheckedChange={setIncludeMedia} />
+        {t('settings.exportIncludeMedia')}
+      </label>
+      <div>
+        <Button
+          variant="outline"
+          disabled={busy || request.isPending}
+          onClick={() => request.mutate({ body: { include_media: includeMedia } })}
+        >
+          {t('settings.exportSubmit')}
+        </Button>
+      </div>
+      {exports.isError && <Alert variant="destructive">{errorMessage(t, exports.error)}</Alert>}
+      {items.length > 0 && (
+        <ul className="grid gap-2" aria-label={t('settings.exportList')}>
+          {items.map((e) => (
+            <li
+              key={e.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
+            >
+              <div className="grid gap-0.5">
+                <span className="font-medium">
+                  {t(`settings.exportState.${e.state}`)}
+                  {e.include_media && ` · ${t('settings.exportWithMedia')}`}
+                  {e.bytes !== null && ` · ${formatBytes(e.bytes)}`}
+                </span>
+                <span className="text-muted-foreground">
+                  {e.state === 'ready' && e.expires_at
+                    ? t('settings.exportExpires', { when: formatRelative(e.expires_at) })
+                    : t('settings.exportRequestedAt', { when: formatRelative(e.created_at) })}
+                </span>
+                {e.state === 'failed' && e.error && (
+                  <span className="text-destructive">{e.error}</span>
+                )}
+              </div>
+              {e.state === 'ready' && (
+                <Button asChild size="sm">
+                  <a href={`/api/v1/me/exports/${e.id}/download`}>{t('settings.exportDownload')}</a>
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   );
 }

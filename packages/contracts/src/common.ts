@@ -29,6 +29,7 @@ export const ERROR_STATUS = {
   already_friends: 409,
   already_watched: 409,
   last_admin: 409,
+  export_in_progress: 409,
   cooldown: 409,
   conflict: 409,
   not_playable: 409,
