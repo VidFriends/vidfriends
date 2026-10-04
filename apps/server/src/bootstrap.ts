@@ -7,7 +7,12 @@ import { createTrustedProxies } from './infra/ip.js';
 import type { Logger } from './infra/logger.js';
 import { createRateLimiter } from './infra/rate-limit.js';
 import { createStorage } from './infra/storage.js';
-import { createWebPushSender, vapidKeys, type PushSender } from './infra/push/channels.js';
+import {
+  createExpoPushSender,
+  createWebPushSender,
+  vapidKeys,
+  type PushSender,
+} from './infra/push/channels.js';
 import { newToken } from './infra/tokens.js';
 import type { Deps } from './http/deps.js';
 import { adminExists } from './modules/auth/service.js';
@@ -25,6 +30,7 @@ export function buildDeps(
     pushSenders: () =>
       (senders ??= vapidKeys(database.db, env.APP_SECRET).then((keys) => ({
         webpush: createWebPushSender(keys, env.PUBLIC_URL),
+        expo: createExpoPushSender({ accessToken: env.EXPO_ACCESS_TOKEN }),
       }))),
     env,
     database,

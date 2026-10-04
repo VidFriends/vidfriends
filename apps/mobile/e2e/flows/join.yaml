@@ -1,0 +1,48 @@
+# J-2: pair by pasting the join link (no default server, ADR-0014), then register.
+# Every field is scrolled into view and the keyboard closed after typing: on a phone-sized
+# emulator the keyboard covers the lower half of the form.
+appId: io.github.vidfriends.app
+---
+- assertVisible: 'Connect to your server'
+- tapOn:
+    id: pair-input
+- inputText: ${JOIN_URL}
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: pair-connect
+- tapOn:
+    id: pair-connect
+- extendedWaitUntil:
+    visible: 'Join Mobile E2E'
+    timeout: 15000
+- assertVisible: 'This connection is not encrypted. Use it only on your home network.'
+- scrollUntilVisible:
+    element:
+      id: join-username
+- tapOn:
+    id: join-username
+- inputText: mia
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: join-display-name
+- tapOn:
+    id: join-display-name
+- inputText: Mia
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: join-password
+- tapOn:
+    id: join-password
+- inputText: plum-lantern-2042
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: join-submit
+- tapOn:
+    id: join-submit
+- extendedWaitUntil:
+    visible: 'Nothing here yet'
+    timeout: 20000

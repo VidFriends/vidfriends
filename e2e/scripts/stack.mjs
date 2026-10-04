@@ -41,8 +41,10 @@ if (cmd === 'up') {
     writeFileSync(
       envFile,
       [
-        'DOMAIN=localhost',
-        `PUBLIC_URL=https://localhost:${port}`,
+        // E2E_PUBLIC_URL lets the mobile E2E serve plain http://10.0.2.2:<port> (the Android
+        // emulator's address for the host, a private address the app accepts, WF-PAIR-3).
+        `DOMAIN=${process.env.E2E_DOMAIN ?? 'localhost'}`,
+        `PUBLIC_URL=${process.env.E2E_PUBLIC_URL ?? `https://localhost:${port}`}`,
         `HTTPS_PORT=${port}`,
         `HTTP_PORT=${process.env.E2E_HTTP_PORT ?? '8080'}`,
         `POSTGRES_PASSWORD=${hex(16)}`,

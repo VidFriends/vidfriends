@@ -130,6 +130,12 @@ export const ENV_SPEC = {
     schema: int(1, 8).default(1),
     description: 'Concurrent `video.process` (transcode) jobs per worker (NFR-PERF-03).',
   },
+  EXPO_ACCESS_TOKEN: {
+    schema: z.string().min(10).optional(),
+    description:
+      'Optional Expo access token, needed only if the Expo project behind your mobile app build enforces push security (FR-NOTIF-03).',
+    secret: true,
+  },
   YTDLP_PATH: { schema: z.string().default('yt-dlp'), description: 'yt-dlp executable.' },
   FETCH_PROXY_URL: {
     schema: z.url().optional(),
