@@ -286,5 +286,10 @@
   "language": {
     "title": "Idioma",
     "system": "Idioma del teléfono"
+  },
+  "groups": {
+    "add_one": "Grupo: {{name}} ({{count}} amigo)",
+    "add_other": "Grupo: {{name}} ({{count}} amigos)",
+    "add_many": "Grupo: {{name}} ({{count}} amigos)"
   }
 }

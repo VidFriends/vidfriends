@@ -5,16 +5,33 @@ import {
   declineFriendRequest,
   listBlocks,
   listFriendRequests,
+  createFriendGroup,
+  deleteFriendGroup,
+  listFriendGroups,
   listFriends,
+  updateFriendGroup,
   removeFriend,
   searchUsers,
   sendFriendRequest,
   unblockUser,
 } from '@vidfriends/contracts';
 import { handler } from '../../http/register.js';
+import * as groups from './groups.js';
 import * as friends from './service.js';
 
 export const friendHandlers = [
+  handler(listFriendGroups, async ({ deps, viewer }) => ({
+    items: await groups.listGroups(deps, viewer),
+  })),
+  handler(createFriendGroup, async ({ deps, viewer, body }) => ({
+    group: await groups.createGroup(deps, viewer, body),
+  })),
+  handler(updateFriendGroup, async ({ deps, viewer, params, body }) => ({
+    group: await groups.updateGroup(deps, viewer, params.id, body),
+  })),
+  handler(deleteFriendGroup, async ({ deps, viewer, params }) => {
+    await groups.deleteGroup(deps, viewer, params.id);
+  }),
   handler(searchUsers, async ({ deps, viewer, query }) => ({
     items: await friends.search(deps, viewer, query.q),
   })),

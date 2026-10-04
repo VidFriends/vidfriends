@@ -16,6 +16,9 @@ import {
   createPushTarget,
   deletePushTarget,
   testPushTarget,
+  createFriendGroup,
+  updateFriendGroup,
+  deleteFriendGroup,
   deleteReply,
   getShare,
   getShareMedia,
@@ -349,6 +352,29 @@ function cases(): MatrixCase[] {
         return { params: { id: target.id }, body: {} };
       },
       expect: only(['owner'], 200),
+    }),
+    matrixCase({
+      route: updateFriendGroup,
+      prepare: async () => {
+        const { group } = await world.members.owner.client.ok(createFriendGroup, {
+          body: { name: `g${Math.random().toString(36).slice(2, 10)}`, member_ids: [] },
+        });
+        return {
+          params: { id: group.id },
+          body: { name: `r${Math.random().toString(36).slice(2, 10)}` },
+        };
+      },
+      expect: only(['owner'], 200),
+    }),
+    matrixCase({
+      route: deleteFriendGroup,
+      prepare: async () => {
+        const { group } = await world.members.owner.client.ok(createFriendGroup, {
+          body: { name: `g${Math.random().toString(36).slice(2, 10)}`, member_ids: [] },
+        });
+        return { params: { id: group.id } };
+      },
+      expect: only(['owner'], 204),
     }),
     matrixCase({
       route: getVideo,

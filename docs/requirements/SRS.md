@@ -61,6 +61,7 @@
 | FR-FRND-03 | Block and unblock follow BR-FRND-5..6, including deleting shares between the pair and excluding the blocked user from search. | M | BR-FRND-5..6 | LLD §2 | M2 | API |
 | FR-FRND-04 | Friend-request rate limit: 30 per 24 h per user. | M | BR-FRND-7 | TDD §3 | M2 | API |
 | FR-FRND-05 | Members can see lists of friends, incoming requests, outgoing requests and blocked users. | M | CAP-03 | LLD §3 | M2 | API, E2E |
+| FR-FRND-06 | Members can keep named groups of friends and pick a group when sending, to send one video to all its members at once (each still gets their own share). | S | BR-GRP-1..3 | ADR-0010 | M7 | API, E2E |
 
 ### 1.5 Videos and media (FR-VID)
 
@@ -228,6 +229,6 @@ The tables above are the trace matrix: each row links a requirement to its PRD c
 | M4 | FR-SHR-01..03,05; FR-FEED-01..06; FR-ENG-01..02; FR-NOTIF-01,04,05; NFR-A11Y-01; NFR-COMPAT-01 |
 | M5 | FR-ACCT-03; FR-VID-06; FR-ADM-01..05 (UI); NFR-REL-04,05; NFR-DATA-01; NFR-OPS-01,03(metrics),04 |
 | M6 | FR-PAIR-03,04(in-app); FR-NOTIF-03; FR-MOB-01..03; NFR-A11Y-02; NFR-COMPAT-02 |
-| M7 | Passkey-only sign-in (ADR-0018): FR-AUTH-01..04, FR-ACCT-02,03, FR-ADM-03, FR-PAIR-03 (https-only), NFR-SEC-02 change their mechanism; FR-ACCT-05 (S) data export; FR-NOTIF-06 (S) realtime updates (ADR-0019); FR-NOTIF-07 (S) ntfy and Gotify push (ADR-0020); FR-MOB-04 (S) offline downloads; NFR-I18N-01 Spanish |
+| M7 | Passkey-only sign-in (ADR-0018): FR-AUTH-01..04, FR-ACCT-02,03, FR-ADM-03, FR-PAIR-03 (https-only), NFR-SEC-02 change their mechanism; FR-ACCT-05 (S) data export; FR-NOTIF-06 (S) realtime updates (ADR-0019); FR-NOTIF-07 (S) ntfy and Gotify push (ADR-0020); FR-MOB-04 (S) offline downloads; NFR-I18N-01 Spanish; FR-FRND-06 (S) groups of friends |
 
 Every Must requirement appears in exactly one delivery milestone (or is split explicitly by layer); the M7 row lists requirements whose mechanism M7 replaced. NFR-MAINT-03 applies to every milestone.

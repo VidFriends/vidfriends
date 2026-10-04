@@ -188,3 +188,72 @@ export const unblockUser = defineRoute({
   response: null,
   errors: ['not_found'],
 });
+
+/** BR-GRP-1: group names and sizes. */
+export const GroupName = z.string().trim().min(1).max(40);
+export const MAX_GROUPS = 20;
+export const MAX_GROUP_MEMBERS = 20;
+
+export const FriendGroup = z.object({
+  id: Id,
+  name: z.string(),
+  /** Current friends only: members who stopped being friends are left out (BR-GRP-2). */
+  members: z.array(PublicUser),
+});
+export type FriendGroup = z.infer<typeof FriendGroup>;
+
+const GroupId = z.object({ id: Id });
+const MemberIds = z.array(Id).max(MAX_GROUP_MEMBERS);
+
+export const listFriendGroups = defineRoute({
+  id: 'listFriendGroups',
+  method: 'get',
+  path: '/friend-groups',
+  auth: 'member',
+  tag: 'friends',
+  summary: 'My groups of friends, for sending to several at once (FR-FRND-06)',
+  status: 200,
+  response: z.object({ items: z.array(FriendGroup) }),
+});
+
+export const createFriendGroup = defineRoute({
+  id: 'createFriendGroup',
+  method: 'post',
+  path: '/friend-groups',
+  auth: 'member',
+  tag: 'friends',
+  summary: 'Create a group of my friends (FR-FRND-06, BR-GRP-1)',
+  body: z.object({ name: GroupName, member_ids: MemberIds }),
+  status: 201,
+  response: z.object({ group: FriendGroup }),
+  errors: ['validation_failed', 'too_many_groups', 'group_name_taken'],
+});
+
+export const updateFriendGroup = defineRoute({
+  id: 'updateFriendGroup',
+  method: 'patch',
+  path: '/friend-groups/{id}',
+  auth: 'member',
+  tag: 'friends',
+  summary: 'Rename a group or replace its members (FR-FRND-06)',
+  params: GroupId,
+  body: z
+    .object({ name: GroupName.optional(), member_ids: MemberIds.optional() })
+    .refine((b) => b.name !== undefined || b.member_ids !== undefined, 'empty'),
+  status: 200,
+  response: z.object({ group: FriendGroup }),
+  errors: ['not_found', 'validation_failed', 'group_name_taken'],
+});
+
+export const deleteFriendGroup = defineRoute({
+  id: 'deleteFriendGroup',
+  method: 'delete',
+  path: '/friend-groups/{id}',
+  auth: 'member',
+  tag: 'friends',
+  summary: 'Delete one of my groups (FR-FRND-06)',
+  params: GroupId,
+  status: 204,
+  response: null,
+  errors: ['not_found'],
+});

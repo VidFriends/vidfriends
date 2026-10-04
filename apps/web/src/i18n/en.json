@@ -75,7 +75,9 @@
     "reauth_required": "Confirm with your passkey first.",
     "last_passkey": "You can't remove your last passkey. Add another one first.",
     "too_many_passkeys": "You already have 10 passkeys. Remove one first.",
-    "too_many_push_targets": "You already have 5 ntfy or Gotify targets. Remove one first."
+    "too_many_push_targets": "You already have 5 ntfy or Gotify targets. Remove one first.",
+    "too_many_groups": "You already have 20 groups. Delete one first.",
+    "group_name_taken": "You already have a group with this name."
   },
   "fieldErrors": {
     "required": "Required.",
@@ -86,7 +88,8 @@
     "not_an_image": "That file is not an image we can use.",
     "not_a_video": "That file isn't a video we can use.",
     "push_endpoint_not_allowed": "Use an https:// address on the internet. Servers on your home network work only if the server operator allows them.",
-    "invalid_url": "That isn't a valid web address."
+    "invalid_url": "That isn't a valid web address.",
+    "not_a_friend": "Only your current friends can be in a group."
   },
   "setup": {
     "title": "Set up your VidFriends server",
@@ -698,5 +701,20 @@
   "language": {
     "title": "Language",
     "system": "Browser language"
+  },
+  "groups": {
+    "title": "Groups",
+    "help": "Groups of friends you send to often, like family or a team. Picking a group on Send selects all its members; everyone still gets their own private conversation.",
+    "noMembers": "No members yet",
+    "new": "New group",
+    "edit": "Edit",
+    "name": "Group name",
+    "members": "Members (up to {{max}})",
+    "save": "Save group",
+    "saved": "Group saved.",
+    "delete": "Delete group",
+    "deleted": "Group deleted.",
+    "add_one": "{{name}} ({{count}} friend)",
+    "add_other": "{{name}} ({{count}} friends)"
   }
 }
