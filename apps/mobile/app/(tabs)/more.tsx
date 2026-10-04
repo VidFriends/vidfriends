@@ -15,6 +15,7 @@ export default function More() {
     [t('lists.saved'), '/saved'],
     [t('lists.history'), '/history'],
     [t('lists.sent'), '/sent'],
+    [t('offline.title'), '/downloads'],
     [t('settings.title'), '/settings'],
   ];
   return (

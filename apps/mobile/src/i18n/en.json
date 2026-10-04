@@ -257,5 +257,24 @@
     "hours": "{{count}} hours",
     "day": "1 day",
     "days": "{{count}} days"
+  },
+  "offline": {
+    "title": "Downloads",
+    "download": "Download for offline ({{size}})",
+    "downloading": "Downloading… {{pct}}%",
+    "cancel": "Cancel download",
+    "remove": "Remove download",
+    "play": "Play {{title}}",
+    "usage": "Using {{used}} of {{cap}} on this phone.",
+    "help": "Downloads stay on this phone only and play without a connection. They are removed when you sign out, and when the sender unsends the video or your server removes it.",
+    "empty": "Nothing downloaded yet. Open a video you received and choose Download for offline.",
+    "missing": "This download is no longer on this phone.",
+    "capTitle": "Storage limit",
+    "errors": {
+      "over_cap": "This would go over your storage limit. Remove a download or raise the limit in Downloads.",
+      "no_space": "Not enough free space on this phone.",
+      "not_ready": "This video isn't ready to download yet.",
+      "failed": "The download failed. Check your connection and try again."
+    }
   }
 }

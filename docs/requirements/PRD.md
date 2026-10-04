@@ -43,7 +43,7 @@ MoSCoW priority applies to v1. "v1" means milestones M1–M6 in the [roadmap](..
 | CAP-12 | Installable PWA, plus Android Web Share Target | Should | BO-1 | FR-PWA | M4 |
 | CAP-13 | Duplicate awareness: "Sam already sent you this" (same normalised URL or identical file) | Could | BO-2 | FR-VID-08 | M4 |
 | CAP-14 | Collections / playlists of saved videos | Won't (v1) | – | – | Backlog |
-| CAP-15 | Offline downloads on mobile | Could | – | – | Backlog |
+| CAP-15 | Offline downloads on mobile | Should (post-v1; scheduled by the owner 2026-10-04) | BO-2 | FR-MOB-04 | M7 |
 | CAP-16 | Passkey-only sign-in (no passwords), passkey management, admin recovery link, mobile sign-in by browser hand-off | Must (scheduled by the owner 2026-10-04) | BO-5 | FR-AUTH-01..04, FR-ACCT-02/03, FR-ADM-03 | M7 |
 | CAP-17 | Import from YouTube or other playlists via OAuth | Won't | – | – | Not planned |
 | CAP-18 | Self-service data export | Should (post-v1; scheduled by the owner 2026-10-04) | BO-5 | FR-ACCT-05 | M7 |

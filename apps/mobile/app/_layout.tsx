@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useTranslation } from 'react-i18next';
 import '@/i18n';
 import { PushRegistration } from '@/features/push';
+import { OfflineProvider } from '@/features/offline/store';
 import { RealtimeUpdates } from '@/features/realtime';
 import { SessionProvider } from '@/lib/session';
 import { useTheme } from '@/ui/theme';
@@ -15,7 +16,9 @@ export default function RootLayout() {
         <StatusBar style="auto" />
         <PushRegistration />
         <RealtimeUpdates />
-        <Screens />
+        <OfflineProvider>
+          <Screens />
+        </OfflineProvider>
       </SessionProvider>
     </ShareIntentProvider>
   );
@@ -45,6 +48,8 @@ function Screens() {
       <Stack.Screen name="sent" options={{ title: t('lists.sent') }} />
       <Stack.Screen name="notifications" options={{ title: t('notifications.title') }} />
       <Stack.Screen name="settings" options={{ title: t('settings.title') }} />
+      <Stack.Screen name="downloads" options={{ title: t('offline.title') }} />
+      <Stack.Screen name="offline/[id]" options={{ title: t('offline.title') }} />
     </Stack>
   );
 }
