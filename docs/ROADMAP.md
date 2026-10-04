@@ -287,6 +287,7 @@ Each item needs a PRD update and, where architectural, an ADR before work starts
 | M7-T9 Realtime on mobile | `expo/fetch` stream while signed in and in the foreground, reconnect with backoff, same invalidation map | M7-T7 | Maestro `watch.yaml`: a reply sent from another device shows in the open conversation within 8 s (it does not poll) |
 | M7-T10 ntfy and Gotify on the server | ADR-0020: `ntfy`/`gotify` push target kinds with encrypted tokens (migration `0006_push_channels`), senders through the egress guard (https, public addresses pinned per connection, `PUSH_PRIVATE_HOSTS` for home-network servers), gone on 401/403/404, `GET /push-targets`, `POST /push-targets/{id}/test` (5 per 10 min), 5 targets per member | FR-NOTIF-07, BR-NOT-8, owner answer 2026-10-04 | `apps/server/test/push-servers.test.ts` (delivery with token and click link, private previews, gone, limits, SSRF refusals, guard pinning); authz matrix `testPushTarget` |
 | M7-T11 ntfy and Gotify in Settings (web) | Card to add (URL, token, private previews), test and remove targets; privacy and self-hosting texts | M7-T10 | Playwright `e2e/tests/push-servers.spec.ts` against a fake ntfy service on the compose network |
+| M7-T12 Cloudflare test instance | ADR-0021: one container (app `ROLE=all`, PostgreSQL, SeaweedFS) behind a Worker on `vidfriends.app`, backups to a private R2 bucket every 15 min and on shutdown, restore on start; `deploy/cloudflare/deploy.sh` | Owner answers 2026-10-04 | Local round trip: claim, stop (final backup), fresh container restores; deployed: `/readyz` ok, web app served, `/__backup` refuses unauthenticated requests, `www` redirects. **Owner:** claim with the setup token from the container logs; upload an avatar or video to confirm media through `/media-store` |
 
 Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7..T9):
 
@@ -324,6 +325,7 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7
 
 | Date | Change |
 |---|---|
+| 2026-10-04 | Owner answers (multiple choice): deploy a **Cloudflare test instance** at `vidfriends.app`, data kept by backups to R2, real link downloads (M7-T12, ADR-0021). |
 | 2026-10-04 | Owner answer (multiple choice): after realtime, **more push channels**: ntfy and Gotify (M7-T10/T11, ADR-0020, FR-NOTIF-07); UnifiedPush stays in the backlog. |
 | 2026-10-04 | Owner answers (multiple choice): next is **realtime updates** (CAP-19 → M7-T7..T9, ADR-0019, FR-NOTIF-06); build a fresh passkey test APK. |
 | 2026-10-04 | M7-T3..T5 ✅ and M7-T6 🟡 (real-device check pending): merged in [PR #121](https://github.com/VidFriends/vidfriends/pull/121) with CI green, including the Android Maestro suite. |

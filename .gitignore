@@ -13,3 +13,4 @@ blob-report/
 *.tsbuildinfo
 .vite/
 test/.fixtures/
+deploy/cloudflare/worker/wrangler.deploy.jsonc
