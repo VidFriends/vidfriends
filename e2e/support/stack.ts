@@ -14,6 +14,8 @@ function compose(args: string[]): string {
       join(root, 'e2e/.stack/e2e.env'),
       '-f',
       join(root, 'deploy/compose.yml'),
+      '-f',
+      join(root, 'e2e/compose.e2e.yml'),
       ...args,
     ],
     { cwd: root, encoding: 'utf8' },

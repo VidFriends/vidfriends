@@ -1,0 +1,8 @@
+# E2E-only override: the worker uses the deterministic fake yt-dlp from the API tests, so no
+# test ever depends on a real platform (M3 exit criterion, TDD §7).
+services:
+  worker:
+    environment:
+      YTDLP_PATH: /opt/e2e/fake-yt-dlp.mjs
+    volumes:
+      - ../apps/server/test/fixtures/fake-yt-dlp.mjs:/opt/e2e/fake-yt-dlp.mjs:ro

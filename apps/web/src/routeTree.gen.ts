@@ -15,6 +15,7 @@ import { Route as SetupRouteImport } from './routes/setup'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppFriendsRouteImport } from './routes/_app/friends'
 import { Route as AppInvitesRouteImport } from './routes/_app/invites'
+import { Route as AppSendRouteImport } from './routes/_app/send'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as JoinCodeRouteImport } from './routes/join.$code'
 
@@ -47,6 +48,11 @@ const AppInvitesRoute = AppInvitesRouteImport.update({
   path: '/invites',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSendRoute = AppSendRouteImport.update({
+  id: '/send',
+  path: '/send',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/setup': typeof SetupRoute
   '/friends': typeof AppFriendsRoute
   '/invites': typeof AppInvitesRoute
+  '/send': typeof AppSendRoute
   '/settings': typeof AppSettingsRoute
   '/join/$code': typeof JoinCodeRoute
 }
@@ -72,6 +79,7 @@ export interface FileRoutesByTo {
   '/setup': typeof SetupRoute
   '/friends': typeof AppFriendsRoute
   '/invites': typeof AppInvitesRoute
+  '/send': typeof AppSendRoute
   '/settings': typeof AppSettingsRoute
   '/join/$code': typeof JoinCodeRoute
   '/': typeof AppIndexRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   '/setup': typeof SetupRoute
   '/_app/friends': typeof AppFriendsRoute
   '/_app/invites': typeof AppInvitesRoute
+  '/_app/send': typeof AppSendRoute
   '/_app/settings': typeof AppSettingsRoute
   '/join/$code': typeof JoinCodeRoute
   '/_app/': typeof AppIndexRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
     | '/setup'
     | '/friends'
     | '/invites'
+    | '/send'
     | '/settings'
     | '/join/$code'
   fileRoutesByTo: FileRoutesByTo
@@ -103,6 +113,7 @@ export interface FileRouteTypes {
     | '/setup'
     | '/friends'
     | '/invites'
+    | '/send'
     | '/settings'
     | '/join/$code'
     | '/'
@@ -113,6 +124,7 @@ export interface FileRouteTypes {
     | '/setup'
     | '/_app/friends'
     | '/_app/invites'
+    | '/_app/send'
     | '/_app/settings'
     | '/join/$code'
     | '/_app/'
@@ -169,6 +181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInvitesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/send': {
+      id: '/_app/send'
+      path: '/send'
+      fullPath: '/send'
+      preLoaderRoute: typeof AppSendRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/settings': {
       id: '/_app/settings'
       path: '/settings'
@@ -189,6 +208,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppFriendsRoute: typeof AppFriendsRoute
   AppInvitesRoute: typeof AppInvitesRoute
+  AppSendRoute: typeof AppSendRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
 }
@@ -196,6 +216,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppFriendsRoute: AppFriendsRoute,
   AppInvitesRoute: AppInvitesRoute,
+  AppSendRoute: AppSendRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
 }

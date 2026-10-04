@@ -128,9 +128,11 @@ jobs:
       - name: Start the production stack
         run: pnpm --filter @vidfriends/e2e stack:up
       - name: Install Playwright Chromium
-        run: pnpm --filter @vidfriends/e2e exec playwright install --with-deps chromium
-      - name: Playwright E2E (Chromium)
+        run: pnpm --filter @vidfriends/e2e exec playwright install --with-deps chromium chrome
+      - name: Playwright E2E (Chrome)
         run: pnpm --filter @vidfriends/e2e e2e
+        env:
+          E2E_CHROME_CHANNEL: '1'
       - name: Stack logs
         if: failure()
         run: node e2e/scripts/stack.mjs logs

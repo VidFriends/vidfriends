@@ -4,6 +4,8 @@ import { defineConfig, devices } from '@playwright/test';
 // Start the stack with `pnpm --filter @vidfriends/e2e stack:up` (CI does this before the tests).
 const baseURL = process.env.E2E_BASE_URL ?? 'https://localhost:8443';
 const executablePath = process.env.PW_CHROMIUM_PATH || undefined;
+// Branded Chrome plays H.264/AAC like users' browsers; open-source Chromium builds cannot (CI sets this).
+const chromeChannel = process.env.E2E_CHROME_CHANNEL === '1' ? { channel: 'chrome' as const } : {};
 const allBrowsers = process.env.E2E_ALL_BROWSERS === '1';
 
 export default defineConfig({
@@ -30,7 +32,7 @@ export default defineConfig({
       name: 'chromium',
       testIgnore: /setup\.spec\.ts/,
       dependencies: ['setup'],
-      use: { ...devices['Desktop Chrome'], launchOptions: { executablePath } },
+      use: { ...devices['Desktop Chrome'], ...chromeChannel, launchOptions: { executablePath } },
     },
     ...(allBrowsers
       ? [
