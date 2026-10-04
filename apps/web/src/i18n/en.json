@@ -1,0 +1,621 @@
+{
+  "app": {
+    "name": "VidFriends",
+    "tagline": "Videos from your friends, and nobody else."
+  },
+  "nav": {
+    "main": "Main navigation",
+    "skip": "Skip to content",
+    "home": "Home",
+    "invites": "Invites",
+    "settings": "Settings",
+    "logout": "Log out",
+    "account": "Signed in as {{name}}",
+    "friends": "Friends",
+    "send": "Send",
+    "inbox": "Inbox",
+    "saved": "Saved",
+    "history": "History",
+    "sent": "Sent",
+    "notifications": "Notifications",
+    "notificationsCount": "Notifications ({{count}} unread)",
+    "more": "More",
+    "admin": "Admin"
+  },
+  "common": {
+    "loading": "Loading…",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "save": "Save",
+    "copy": "Copy",
+    "copied": "Copied",
+    "close": "Close",
+    "loadMore": "Load more",
+    "optional": "optional",
+    "genericError": "Something went wrong. Please try again.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "theme": "Theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "back": "Back"
+  },
+  "errors": {
+    "validation_failed": "Please check the highlighted fields.",
+    "invite_invalid": "This invite link is not valid. It may have expired, been used up or been revoked. Ask your friend for a new one.",
+    "setup_invalid": "That setup token is not correct. Copy it again from the server log.",
+    "unauthorized": "Please log in.",
+    "invalid_credentials": "Wrong username or password.",
+    "account_suspended": "This account is suspended. Contact your server admin.",
+    "forbidden": "You are not allowed to do that.",
+    "csrf_failed": "Your session needs refreshing. Reload the page and try again.",
+    "not_found": "Not found.",
+    "username_taken": "That username is taken.",
+    "rate_limited": "Too many attempts. Wait a minute and try again.",
+    "network_error": "Could not reach the server. Check your connection.",
+    "internal_error": "Something went wrong on the server. Please try again.",
+    "unavailable": "The server is temporarily unavailable.",
+    "cooldown": "You can send another request to this person later.",
+    "already_friends": "You are already friends.",
+    "query_too_short": "Type at least 2 characters.",
+    "too_large": "That file is too large.",
+    "upload_incomplete": "The upload did not finish. Please try again.",
+    "url_not_allowed": "That link isn't from a supported site, or it isn't a public web address.",
+    "quota_exceeded": "You've used all your storage. Ask your server admin for more.",
+    "storage_full": "This server is out of storage space.",
+    "not_playable": "This video isn't ready yet.",
+    "already_watched": "Your friend already watched this, so it can't be unsent.",
+    "video_not_found": "That video isn't available.",
+    "invalid_reaction": "Pick one of the reactions.",
+    "last_admin": "This is the only admin. Promote someone else first.",
+    "reset_invalid": "This password-reset link is not valid. It may have expired or already been used. Ask your admin for a new one."
+  },
+  "fieldErrors": {
+    "required": "Required.",
+    "username_format": "Use 3–30 characters: lowercase letters, digits, dots or underscores, starting with a letter or digit.",
+    "password_too_short": "Use at least 10 characters.",
+    "password_too_long": "Use at most 128 characters.",
+    "password_common": "This password is too common. Pick something less guessable.",
+    "password_equals_username": "Your password must not be your username.",
+    "password_mismatch": "The passwords do not match.",
+    "too_long": "Too long.",
+    "invalid": "Invalid value.",
+    "username_taken": "That username is taken.",
+    "not_an_image": "That file is not an image we can use.",
+    "not_a_video": "That file isn't a video we can use."
+  },
+  "setup": {
+    "title": "Set up your VidFriends server",
+    "intro": "Claim this server to become its admin. You'll find the one-time setup token in the server log.",
+    "token": "Setup token",
+    "tokenHelp": "Printed in the server log as “enter the setup token: …”.",
+    "instanceName": "Server name",
+    "instanceNameHelp": "Shown to everyone who joins, for example “The Smiths”.",
+    "username": "Admin username",
+    "password": "Admin password",
+    "submit": "Claim server",
+    "claimed": "This server has already been set up.",
+    "goLogin": "Go to log in"
+  },
+  "login": {
+    "title": "Log in",
+    "subtitle": "to {{name}}",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Log in",
+    "noAccount": "No account? Ask a friend on this server for an invite link.",
+    "expired": "Your session ended. Please log in again."
+  },
+  "join": {
+    "title": "Join {{name}}",
+    "invitedBy": "{{name}} invited you.",
+    "expires": "This invite expires {{when}}.",
+    "displayName": "Display name",
+    "displayNameHelp": "What friends see. You can change it later.",
+    "username": "Username",
+    "usernameHelp": "3–30 characters: lowercase letters, digits, dots and underscores. It can't be changed.",
+    "password": "Password",
+    "passwordHelp": "At least 10 characters.",
+    "submit": "Create account",
+    "trust": "Your server admin can technically access stored data. Only join servers run by people you trust.",
+    "appHint": "Using the VidFriends app? Open it and scan the same QR code from inside the app.",
+    "haveAccount": "Already have an account? Log in"
+  },
+  "home": {
+    "title": "Home",
+    "welcome": "Welcome, {{name}}!",
+    "intro": "This is your private feed of videos your friends send you. Invite friends to get started.",
+    "inviteCta": "Invite a friend"
+  },
+  "settings": {
+    "title": "Settings",
+    "passwordTitle": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Repeat new password",
+    "passwordSubmit": "Change password",
+    "passwordChanged": "Password changed. Your other sessions were logged out.",
+    "sessionsTitle": "Sessions",
+    "logoutEverywhere": "Log out everywhere",
+    "logoutEverywhereHelp": "Ends every session on every device, including this one.",
+    "appearanceTitle": "Appearance",
+    "profileTitle": "Profile",
+    "displayName": "Display name",
+    "displayNameHelp": "What your friends see. Up to 50 characters.",
+    "saveProfile": "Save",
+    "profileSaved": "Profile saved.",
+    "avatar": "Profile picture",
+    "avatarHelp": "An image up to 2 MB. It's cropped to a square.",
+    "avatarChoose": "Choose a picture",
+    "avatarRemove": "Remove picture",
+    "avatarSaved": "Profile picture updated.",
+    "username": "Username: {{username}}",
+    "sessionsHelp": "Devices where you're logged in. Revoke any you don't recognise.",
+    "sessionCurrent": "This device",
+    "sessionWeb": "Web",
+    "sessionMobile": "Mobile app",
+    "sessionSeen": "Last active {{when}}",
+    "sessionRevoke": "Revoke",
+    "sessionRevoked": "Session revoked.",
+    "deleteTitle": "Delete account",
+    "deleteHelp": "Permanently deletes your account, your friendships, the videos you sent and your conversations. This can't be undone.",
+    "deleteConfirm": "Enter your password to delete your account.",
+    "deleteSubmit": "Delete my account",
+    "deleted": "Your account was deleted."
+  },
+  "invites": {
+    "title": "Invites",
+    "intro": "Invite people you trust. Each invite is a link (and QR code) that lets someone create an account on this server.",
+    "createTitle": "New invite",
+    "maxUses": "How many people can use it",
+    "expiresInDays": "Expires after (days)",
+    "autoFriend": "Become friends automatically",
+    "autoFriendHelp": "People who join with this invite become your friends right away.",
+    "create": "Create invite",
+    "createdTitle": "Invite ready",
+    "createdHelp": "Share this link or let them scan the QR code. For security it is shown only now.",
+    "joinUrl": "Join link",
+    "qrLabel": "QR code for the join link",
+    "listTitle": "Your invites",
+    "listTitleAll": "All invites",
+    "showAll": "Show all invites",
+    "empty": "No invites yet.",
+    "uses": "{{uses}} of {{max}} used",
+    "expires": "Expires {{when}}",
+    "createdBy": "Created by {{name}}",
+    "revoke": "Revoke",
+    "revokeConfirm": "Revoke this invite? Nobody will be able to use it any more.",
+    "revoked": "Invite revoked.",
+    "notAllowed": "Only admins can create invites on this server.",
+    "status": {
+      "active": "Active",
+      "expired": "Expired",
+      "revoked": "Revoked",
+      "exhausted": "Used up"
+    }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "home": "Go home"
+  },
+  "friends": {
+    "title": "Friends",
+    "intro": "Friends are people who can send you videos and receive yours. Friendship needs both of you to agree.",
+    "searchLabel": "Find people on this server",
+    "searchPlaceholder": "Search by username or name",
+    "searchHelp": "Type at least 2 characters.",
+    "searchEmpty": "Nobody found.",
+    "incoming": "Requests for you",
+    "outgoing": "Requests you sent",
+    "friendsList": "Your friends",
+    "blocked": "Blocked",
+    "noFriends": "No friends yet. Search above or send someone an invite.",
+    "noIncoming": "No pending requests.",
+    "noOutgoing": "No requests waiting.",
+    "noBlocked": "You haven't blocked anyone.",
+    "add": "Add friend",
+    "accept": "Accept",
+    "decline": "Decline",
+    "cancel": "Cancel request",
+    "remove": "Remove",
+    "block": "Block",
+    "unblock": "Unblock",
+    "state": {
+      "none": "",
+      "friends": "Friends",
+      "request_sent": "Request sent",
+      "request_received": "Wants to be friends",
+      "blocked": "Blocked"
+    },
+    "blockConfirmTitle": "Block {{name}}?",
+    "blockConfirm": "They won't be able to find you, send you videos or ask to be friends. Videos between you are deleted. You can unblock later, but the friendship won't come back automatically.",
+    "removeConfirmTitle": "Remove {{name}}?",
+    "removeConfirm": "You will stop seeing each other as friends. You can ask again later.",
+    "cooldown": "You can ask again later.",
+    "done": {
+      "request": "Friend request sent.",
+      "accept": "You are now friends.",
+      "decline": "Request declined.",
+      "cancel": "Request cancelled.",
+      "remove": "Friend removed.",
+      "block": "Blocked.",
+      "unblock": "Unblocked."
+    }
+  },
+  "send": {
+    "title": "Send a video",
+    "intro": "Paste a link from TikTok, YouTube, Instagram and more, or upload a video file.",
+    "linkTab": "Paste a link",
+    "uploadTab": "Upload a file",
+    "linkLabel": "Video link",
+    "linkPlaceholder": "https://…",
+    "linkSubmit": "Add video",
+    "fileLabel": "Video file",
+    "fileHelp": "Up to {{size}}.",
+    "uploadSubmit": "Upload",
+    "uploading": "Uploading… {{percent}}%",
+    "status": {
+      "queued": "Waiting to fetch the video…",
+      "fetching": "Fetching the video…",
+      "processing": "Preparing the video…",
+      "ready": "Ready to send.",
+      "link_only": "We couldn't download this one, so friends will get a link to the original.",
+      "failed": "This video couldn't be processed.",
+      "expired": "This video's file has expired."
+    },
+    "reasons": {
+      "too_large": "It's larger than this server allows.",
+      "too_long": "It's longer than this server allows.",
+      "unsupported": "That site or link isn't supported.",
+      "downloads_disabled": "This server doesn't download videos.",
+      "unplayable": "The file isn't a playable video.",
+      "fetch_failed": "The site didn't let us download it.",
+      "quota_exceeded": "You've used all your storage."
+    },
+    "preview": "Preview",
+    "openOriginal": "Open original",
+    "another": "Add another video",
+    "notAVideo": "That file isn't a video we can use."
+  },
+  "feed": {
+    "title": "Your feed",
+    "label": "Videos from your friends",
+    "empty": "Nothing here yet. When friends send you videos, they show up here.",
+    "caughtUp": "You're all caught up",
+    "caughtUpHelp": "Keep scrolling for videos you watched recently.",
+    "from": "From {{name}}",
+    "alsoSentBy": "Also sent by {{names}}",
+    "newVideos": "New videos — show them",
+    "unmute": "Unmute",
+    "mute": "Mute",
+    "play": "Play",
+    "pause": "Pause",
+    "save": "Save",
+    "saved": "Saved",
+    "openOriginal": "Open original",
+    "linkOnly": "This video is only available on the original site.",
+    "expired": "This video's file has expired.",
+    "position": "Video {{index}} of {{total}}",
+    "keyboardHelp": "Use ↑ and ↓ (or j and k) to move, Space to play or pause, m to mute.",
+    "loadingMore": "Loading more…",
+    "conversation_one": "Conversation ({{count}} reply)",
+    "conversation_other": "Conversation ({{count}} replies)"
+  },
+  "reactions": {
+    "label": "React",
+    "clear": "Remove reaction",
+    "👍": "Thumbs up",
+    "❤️": "Love",
+    "😂": "Laugh",
+    "😮": "Wow",
+    "😢": "Sad",
+    "🔥": "Fire"
+  },
+  "lists": {
+    "inboxTitle": "Inbox",
+    "inboxEmpty": "Your inbox is empty.",
+    "savedTitle": "Saved",
+    "savedEmpty": "Nothing saved yet. Save videos from the feed to find them here.",
+    "historyTitle": "History",
+    "historyEmpty": "No watched videos.",
+    "historyFilterTitle": "Search titles",
+    "historyFilterSender": "Sender",
+    "anySender": "Anyone",
+    "sentTitle": "Sent",
+    "sentEmpty": "You haven't sent anything yet.",
+    "unwatched": "New",
+    "watchedAt": "Watched {{when}}",
+    "sentAt": "Sent {{when}}",
+    "status": {
+      "processing": "Processing",
+      "delivered": "Delivered",
+      "watched": "Watched"
+    },
+    "lastReply": "Last reply: {{text}}",
+    "replyDeleted": "Reply deleted",
+    "unsend": "Unsend",
+    "unsendConfirm": "Unsend this video? Your friend won't see it any more.",
+    "unsent": "Unsent.",
+    "hide": "Remove from inbox",
+    "unhide": "Restore",
+    "open": "Open",
+    "replies_one": "{{count}} reply",
+    "replies_other": "{{count}} replies"
+  },
+  "share": {
+    "title": "Conversation",
+    "with": "With {{name}}",
+    "note": "Note from {{name}}",
+    "replyLabel": "Write a reply",
+    "replyPlaceholder": "Say something…",
+    "send": "Send",
+    "deleteReply": "Delete reply",
+    "replyDeleted": "Reply deleted",
+    "noReplies": "No replies yet.",
+    "private": "Only you and {{name}} can see this conversation.",
+    "you": "You"
+  },
+  "sendStep2": {
+    "title": "Send to friends",
+    "chooseFriends": "Choose friends",
+    "noFriends": "You don't have friends here yet. Add some on the Friends page.",
+    "note": "Note",
+    "noteHelp": "Optional, up to 500 characters.",
+    "send": "Send",
+    "sending": "Sending…",
+    "resultSent": "Sent to {{name}}",
+    "resultAlready": "Already sent to {{name}}",
+    "resultNotAllowed": "Couldn't send to {{name}}",
+    "pendingNote": "It will reach them as soon as the video is ready."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications.",
+    "markAll": "Mark all as read",
+    "types": {
+      "share_received": "{{name}} sent you a video",
+      "reaction_received": "{{name}} reacted {{emoji}} to your video",
+      "reply_received": "{{name}} replied",
+      "friend_request_received": "{{name}} wants to be friends",
+      "friend_request_accepted": "{{name}} accepted your friend request",
+      "share_watched": "{{name}} watched your video"
+    },
+    "someone": "Someone",
+    "unread": "Unread"
+  },
+  "push": {
+    "title": "Notifications on this device",
+    "help": "Get a notification when friends send videos, react or reply. Messages show only the sender's name, never the content.",
+    "enable": "Turn on notifications",
+    "disable": "Turn off on this device",
+    "enabled": "Notifications are on for this device.",
+    "unsupported": "This browser doesn't support push notifications.",
+    "denied": "Notifications are blocked in your browser settings.",
+    "privatePreviews": "Private previews (hide the sender's name)",
+    "prefsTitle": "Notify me about",
+    "types": {
+      "share_received": "New videos",
+      "reaction_received": "Reactions",
+      "reply_received": "Replies",
+      "friend_request_received": "Friend requests",
+      "friend_request_accepted": "Accepted requests",
+      "share_watched": "When friends watch what I sent"
+    }
+  },
+  "reset": {
+    "title": "Choose a new password",
+    "subtitle": "Your admin gave you this link. It works once and expires after 24 hours.",
+    "submit": "Set password",
+    "done": "Password changed. Log in with your new password.",
+    "toLogin": "Go to login"
+  },
+  "admin": {
+    "title": "Admin",
+    "nav": "Admin sections",
+    "users": "Members",
+    "invites": "Invites",
+    "settings": "Settings",
+    "storage": "Storage",
+    "audit": "Audit log",
+    "invitesHelp": "Create, list and revoke invites for this server. Turn on “Show all invites” to see everyone's.",
+    "invitesLink": "Open invites",
+    "search": "Search by name",
+    "statusFilter": "Status",
+    "statusAll": "All",
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "role": {
+      "admin": "Admin",
+      "member": "Member"
+    },
+    "usersEmpty": "No members match.",
+    "joined": "Joined {{when}}",
+    "lastActive": "Last active {{when}}",
+    "neverActive": "Not active yet",
+    "storageUsed": "{{bytes}} stored",
+    "counts": "{{sent}} sent · {{received}} received",
+    "quotaOverride": "Quota override: {{bytes}}",
+    "you": "(you)",
+    "suspend": "Suspend",
+    "unsuspend": "Unsuspend",
+    "promote": "Make admin",
+    "demote": "Remove admin",
+    "resetLink": "Password-reset link",
+    "delete": "Delete",
+    "updated": "Member updated.",
+    "suspendConfirm": "{{name}} will be logged out everywhere and can't log in. Their shares are hidden until you unsuspend them.",
+    "deleteConfirm": "Delete {{name}}'s account and everything they sent? This can't be undone.",
+    "deletedUser": "Member deleted.",
+    "resetTitle": "Password-reset link for {{name}}",
+    "resetHelp": "Give this link to {{name}} privately. It works once and expires {{when}}. Using it logs them out everywhere.",
+    "quotaTitle": "Storage quota",
+    "quotaLabel": "Quota override in MB (empty = server default)",
+    "settingsSaved": "Settings saved.",
+    "fields": {
+      "instance_name": "Server name",
+      "signup_mode": "Who can join",
+      "signup_invite_only": "Invite only",
+      "signup_open": "Anyone with the link",
+      "members_can_invite": "Members can create invites",
+      "link_download_enabled": "Download videos from links",
+      "platform_allowlist": "Allowed sites (one per line)",
+      "max_media_bytes": "Largest video (MB)",
+      "max_duration_seconds": "Longest video (seconds)",
+      "per_user_quota_bytes": "Storage per member (MB, empty = unlimited)",
+      "instance_storage_cap_bytes": "Server storage cap (MB, empty = unlimited)",
+      "retention_days": "Keep watched videos for (days, 0 = forever)",
+      "session_idle_days": "Log out after inactivity (days)",
+      "session_absolute_days": "Maximum session length (days)"
+    },
+    "totalBytes": "Total stored: {{bytes}}",
+    "byState": "Videos by state",
+    "perUser": "Storage by member",
+    "retention": "Watched videos are kept for {{days}} days. Next retention run {{when}}.",
+    "retentionOff": "Retention is off: videos are kept until deleted. Next scheduled run {{when}}.",
+    "runRetention": "Run retention now",
+    "retentionQueued": "Retention run queued.",
+    "auditEmpty": "No audit entries match.",
+    "auditActor": "Actor",
+    "auditAction": "Action",
+    "auditBefore": "Before",
+    "auditSystem": "System",
+    "filter": "Filter",
+    "clear": "Clear",
+    "auditTarget": "Target",
+    "auditTime": "Time",
+    "videoState": {
+      "queued": "Queued",
+      "fetching": "Downloading",
+      "processing": "Processing",
+      "ready": "Ready",
+      "link_only": "Link only",
+      "failed": "Failed",
+      "expired": "Expired"
+    }
+  },
+  "footer": {
+    "privacy": "Privacy",
+    "help": "Help",
+    "label": "About this server"
+  },
+  "privacy": {
+    "title": "Privacy on {{name}}",
+    "intro": "VidFriends is private by design: no ads, no strangers, no tracking. This page explains exactly what this server stores and who can see it.",
+    "sections": [
+      {
+        "title": "Who runs this server",
+        "body": [
+          "This server is run by its operator, usually the person who invited you. It is not run by the VidFriends project, and there is no central VidFriends service.",
+          "The operator controls the machine, so they can technically access everything stored on it, including videos and conversations, by reading the database or storage directly. Only join a server run by someone you trust."
+        ]
+      },
+      {
+        "title": "What is stored about you",
+        "body": [
+          "Your username, display name, optional profile picture and a hash of your password (never the password itself). No email address or phone number is collected.",
+          "The videos you add, who you send them to, your notes, reactions and replies, what you have watched, saved or hidden, your friend list and blocks, and your notification settings.",
+          "Your active sessions (device type, browser or app name, last activity) and, if you enable push notifications, the push address your browser or phone gave us."
+        ]
+      },
+      {
+        "title": "Who can see what",
+        "body": [
+          "Only you and the friends you send a video to can see that share, its note and its conversation. There is no public profile, global feed or follower list.",
+          "Other members can find you by username or display name to send a friend request; they see only your username, display name and profile picture.",
+          "Admins of this server can see a list of members with counts (videos sent and received, storage used) and an audit log of account events. The app gives them no way to read your conversations, notes or feed."
+        ]
+      },
+      {
+        "title": "Logs and the audit log",
+        "body": [
+          "The server keeps an audit log of security events (logins and failed logins, admin actions, account deletions, invite use, setting changes) with the network address they came from. It is kept for 365 days.",
+          "Server logs never contain passwords, session tokens, invite codes, notes or replies."
+        ]
+      },
+      {
+        "title": "How long things are kept",
+        "body": [
+          "Watched video files are deleted after the server's retention period ({{days}} days on this server) unless someone saved them; the title and thumbnail stay, with a link to the original. A video nobody was sent is deleted after a day.",
+          "Notifications are deleted after 90 days. Sessions end after a period of inactivity or when you log out."
+        ]
+      },
+      {
+        "title": "Third parties",
+        "body": [
+          "The apps load nothing from other companies: no analytics, trackers, ads, fonts or CDNs.",
+          "When you add a link, this server downloads the video from that site, so the site sees a request from this server, not from you. Opening the original link takes you to that site.",
+          "Push notifications travel through your browser's or phone's push service (for example Google, Apple or Mozilla). They contain only a short generic text such as \"New video from Sam\", or no name at all with private previews on."
+        ]
+      },
+      {
+        "title": "Your choices",
+        "body": [
+          "Change your profile, password, notifications and sessions in Settings. You can log out of every device at once.",
+          "Delete your account in Settings. It removes your account, friendships, every share you sent or received with their conversations, and your notifications, immediately; video files nobody else needs are cleaned up shortly after. Backups the operator keeps may hold a copy until they expire."
+        ]
+      }
+    ]
+  },
+  "help": {
+    "title": "How VidFriends works",
+    "intro": "A private feed made only of videos your friends sent you.",
+    "sections": [
+      {
+        "title": "Adding friends",
+        "body": [
+          "Join with an invite link from a friend. If they chose to, you are friends right away.",
+          "Find more people under Friends by username or name and send a request. They appear in your friend list once they accept. You can remove or block someone at any time; blocking also removes what you sent each other."
+        ]
+      },
+      {
+        "title": "Sending a video",
+        "body": [
+          "Open Send, paste a link from a supported site (or share it to VidFriends from your phone), or upload a video file.",
+          "Pick friends, add a note if you like, and send. If the video is still downloading, your friends get it as soon as it is ready. You can unsend while they haven't watched it."
+        ]
+      },
+      {
+        "title": "Watching",
+        "body": [
+          "Home is your feed: videos you haven't watched come first, oldest first, then the ones you watched recently. Scroll or use the arrow keys to move between videos.",
+          "A video counts as watched after 10 seconds or half of it, whichever comes first, or when you open the original. Your friend sees when you watched it.",
+          "If a site doesn't allow downloads, or the file was cleaned up, you get a card with a link to the original instead."
+        ]
+      },
+      {
+        "title": "Reacting and replying",
+        "body": [
+          "Tap a reaction or reply under a video. Each share has its own private conversation between you and the friend who sent it. You can delete your own replies."
+        ]
+      },
+      {
+        "title": "Keeping track",
+        "body": [
+          "Inbox shows what is new, Saved keeps videos you want to keep (saved videos are never cleaned up), History lists everything you watched, and Sent shows what your friends did with the videos you sent."
+        ]
+      },
+      {
+        "title": "Notifications",
+        "body": [
+          "The bell shows new videos, reactions, replies and friend requests. To get notifications when the app is closed, turn on push notifications in Settings, and turn on private previews if you don't want names on your lock screen."
+        ]
+      },
+      {
+        "title": "Installing the app",
+        "body": [
+          "In Chrome, Edge or Safari, use \"Install app\" or \"Add to Home Screen\" to open VidFriends like an app. On Android, the installed app also appears in the share menu of other apps."
+        ]
+      },
+      {
+        "title": "Account help",
+        "body": [
+          "Forgot your password? Ask an admin of this server for a password-reset link; it works once and expires after 24 hours.",
+          "You can delete your account in Settings. See Privacy for what that removes."
+        ]
+      }
+    ]
+  }
+}

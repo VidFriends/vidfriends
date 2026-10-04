@@ -1,0 +1,21 @@
+{
+  "name": "@vidfriends/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "stack:up": "node scripts/stack.mjs up",
+    "stack:down": "node scripts/stack.mjs down",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint .",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.19.1",
+    "@vidfriends/config": "workspace:*",
+    "@vidfriends/contracts": "workspace:*",
+    "eslint": "9.39.5"
+  }
+}

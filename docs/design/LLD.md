@@ -48,6 +48,7 @@ erDiagram
 
 **`sessions`**
 - `token_hash` bytea PK (sha256)
+- `id` uuid UNIQUE: a public handle so a session can be listed and revoked (FR-ACCT-04) without exposing its token hash
 - `user_id` FK → users ON DELETE CASCADE
 - `client` text CHECK in (`web`, `mobile`)
 - `user_agent` text NOT NULL DEFAULT ''
@@ -76,7 +77,7 @@ erDiagram
 
 **`relationships`** (one row per pair, BR-FRND-2)
 - `user_low`, `user_high`: FK users CASCADE, CHECK `user_low < user_high`, PK (`user_low`, `user_high`)
-- `state` text CHECK in (`pending`, `accepted`, `blocked`)
+- `state` text CHECK in (`none`, `pending`, `accepted`, `blocked`). `none` is a tombstone that only carries a decline cooldown (BR-FRND-4): `requested_by` then names the declined requester and `cooldown_until` when they may ask again. Migration 0001.
 - `requested_by` uuid NULL (set when `pending`)
 - `blocked_by` uuid NULL (set when `blocked`)
 - `cooldown_until` timestamptz NULL (decline cooldown, BR-FRND-4)
@@ -100,12 +101,17 @@ erDiagram
 - `media_bytes` bigint NOT NULL DEFAULT 0
 - `created_at`, `updated_at`, `ready_at` NULL, `expired_at` NULL
 
+**`video_additions`** (migration 0002)
+- `video_id` FK videos CASCADE, `user_id` FK users CASCADE, `created_at`; PK (`video_id`, `user_id`)
+- One row per member who added the video, by link or upload. Dedup reuses media only (BR-MED-4), so a member who adds an existing video gets a row here: it drives visibility (BR-SHR-6) and the send precondition (WF-SHR-1). `videos.added_by` remains the first adder, for quota attribution (BR-MED-6).
+
 **`uploads`**
 - `id` PK
 - `user_id` FK CASCADE
 - `object_key` text
 - `declared_bytes` bigint
 - `content_type` text
+- `multipart_id` text NULL (S3 multipart upload id for files above 64 MB)
 - `state` CHECK in (`pending`, `completed`, `aborted`)
 - `video_id` NULL FK videos SET NULL
 - `expires_at`
@@ -121,6 +127,7 @@ erDiagram
 - `watched_at` NULL
 - `progress_ms` int NOT NULL DEFAULT 0
 - `saved` bool DEFAULT false
+- `saved_at` NULL (orders the Saved view, BR-FEED-3; migration 0003)
 - `hidden` bool DEFAULT false
 - `reaction` text NULL, CHECK in the fixed set
 - `reaction_at` NULL
@@ -155,6 +162,7 @@ erDiagram
 - `share_id` NULL FK shares CASCADE
 - `data` jsonb NOT NULL DEFAULT '{}'. No content; ids only.
 - `read_at` NULL
+- `pushed_at` NULL (set when the dispatcher has handled it; coalescing collects unpushed `share_received` rows from one sender, BR-NOT-4)
 - `created_at`
 - Index (`user_id`, `read_at` NULLS FIRST, `created_at` DESC).
 
@@ -222,7 +230,8 @@ ORDER BY (s.watched_at IS NOT NULL), s.delivered_at, s.id
 LIMIT :n + 1;
 ```
 
-- "Also sent by" grouping (BR-FEED-7) is done in the service over each page by `video_id`.
+- "Also sent by" grouping (BR-FEED-7): the feed picks one share per video (`DISTINCT ON (video_id)`, preferring an unwatched one, then the earliest delivered), and lists the other senders.
+- The feed has two sections, matching BR-FEED-1: unwatched shares by `delivered_at` ascending, then watched shares by `watched_at` descending. The keyset cursor is `(section, timestamp, id)`.
 - Watching one share stamps all unwatched shares of that video for the viewer in one UPDATE.
 
 **Storage accounting.** `users.storage_bytes` is updated in the same transaction as `videos.media_bytes` changes (ready, purge). It is never computed lazily (lesson: legacy drift).
@@ -236,7 +245,7 @@ LIMIT :n + 1;
 
 | Method & path | Auth | Request → response (summary) | Notable errors | FR |
 |---|---|---|---|---|
-| `GET /instance` | P | → `{name, version, api_version, signup_mode, setup_complete}` | – | PAIR-01 |
+| `GET /instance` | P | → `{name, version, api_version, signup_mode, setup_complete, retention_days}` | – | PAIR-01 |
 | `POST /setup` | P | `{setup_token, instance_name, username, password}` → `{user}` + session | `setup_invalid`, 404 if complete | AUTH-01 |
 | `GET /invites/{code}/preview` | P | → `{inviter_display_name, expires_at}` | `invite_invalid` | PAIR-04 |
 | `POST /auth/register` | P | `{username, password, display_name?, invite_code?, client}` → `{user, token?}` | `invite_invalid`, `username_taken`, `validation_failed` | AUTH-02/03 |
@@ -244,12 +253,13 @@ LIMIT :n + 1;
 | `POST /auth/logout` | M | `{all?: bool}` → 204 | – | AUTH-04 |
 | `GET /me` | M | → `{user, settings_summary}` | – | – |
 | `PATCH /me` | M | `{display_name?}` → `{user}` | – | ACCT-01 |
-| `PUT /me/avatar` | M | presigned flow like uploads → `{user}` | `too_large` | ACCT-01 |
+| `POST /me/avatar/upload`, `PUT /me/avatar`, `DELETE /me/avatar` | M | `{bytes, content_type}` → `{upload_id, put_url, expires_at}` (presigned PUT to `tmp/avatars/<user>/<upload_id>`, ≤ 2 MB); then `{upload_id}` → `{user}` after re-encoding to a 256×256 WebP; delete → `{user}` | `too_large`, `upload_incomplete`, `validation_failed` (`not_an_image`) | ACCT-01 |
+| `GET /users/{user_id}/avatar` | M | → 302 to a signed URL (≤ 15 min). 404 when the viewer is blocked by, or blocking, the user | 404 | ACCT-01 |
 | `POST /me/password` | M | `{current_password, new_password}` → 204 | `invalid_credentials` | ACCT-02 |
 | `DELETE /me` | M | `{password}` → 202 | `last_admin`, `invalid_credentials` | ACCT-03 |
 | `GET /me/sessions`, `DELETE /me/sessions/{id}` | M | list / revoke | – | ACCT-04 |
 | `POST /invites`, `GET /invites`, `DELETE /invites/{id}` | M/A | `{max_uses?, expires_in_days?, auto_friend?}` → `{invite, code, join_url}` (code returned once) | `forbidden` if members cannot invite | INV-01..03 |
-| `GET /users?q=` | M | → `{items:[{id, username, display_name, avatar_url, relationship}]}` | `query_too_short` | FRND-01 |
+| `GET /users?q=` | M | → `{items:[{user:{id, username, display_name, avatar_url}, state, since}]}`; `state` ∈ `none`, `friends`, `request_sent`, `request_received`, `blocked` | `query_too_short` | FRND-01 |
 | `GET /friends`, `GET /friends/requests?direction=in\|out`, `GET /blocks` | M | lists | – | FRND-05 |
 | `POST /friends/requests` | M | `{user_id}` → `{relationship}` | `cooldown`, `blocked` (as 404), `already_friends`, `rate_limited` | FRND-02,04 |
 | `POST /friends/requests/{user_id}/accept` / `…/decline` / `DELETE /friends/requests/{user_id}` (cancel) | M | → `{relationship}` / 204 | `not_found` | FRND-02 |
@@ -259,11 +269,12 @@ LIMIT :n + 1;
 | `POST /uploads` | M | `{bytes, content_type}` → `{upload_id, put_url \| multipart:{part_urls, …}, expires_at}` | `too_large`, `quota_exceeded`, `storage_full` | VID-03 |
 | `POST /uploads/{id}/complete` | M | `{title?, parts?}` → `{video}` | `upload_incomplete` | VID-03 |
 | `GET /videos/{id}` | M | → `{video}` (visibility per BR-SHR-6) | 404 | VID-05 |
+| `GET /videos/{id}/media` | M (adder or participant) | → `{media_url?, thumb_url?, expires_at}` for a video the viewer can see; used before a share exists (send preview) | 404, `not_playable` | VID-05 |
 | `POST /shares` | M | `{video_id, recipient_ids[], note?, idempotency_key}` → `{results:[{recipient_id, status, share_id?}]}` | `video_not_found` | SHR-01,02 |
 | `DELETE /shares/{id}` | M (sender) | → 204 | `already_watched` | SHR-04 |
 | `GET /shares/{id}` | M (participant) | → `{share, video, sender, recipient, reaction, reply_count}` | 404 | – |
 | `GET /shares/{id}/media` | M (participant) | → `{media_url?, thumb_url?, expires_at}` | 404, `not_playable` | VID-05 |
-| `POST /shares/{id}/progress` | M (recipient) | `{position_ms, duration_ms}` → `{watched_at?}` | – | FEED-03 |
+| `POST /shares/{id}/progress` | M (recipient) | `{position_ms, duration_ms?, opened_original?}` → `{watched_at, progress_ms}`. `opened_original` records the link-only "Open original" action (BR-SHR-3). The server's known duration wins over the client's. | – | FEED-03 |
 | `PATCH /shares/{id}` | M (recipient) | `{saved?, hidden?}` → `{share}` | – | FEED-04 |
 | `PUT /shares/{id}/reaction`, `DELETE …/reaction` | M (recipient) | `{emoji}` → `{share}` | `invalid_reaction` | ENG-01 |
 | `GET /shares/{id}/replies`, `POST …/replies`, `DELETE /replies/{id}` | M (participant / author) | `{body}` → `{reply}` | `rate_limited` | ENG-02 |
@@ -322,7 +333,7 @@ Ops endpoints live outside `/api/v1`: `GET /healthz`, `GET /readyz`, and `GET :9
   - Compared by database lookup of the hash, which has no timing side channel on the secret.
 - **Setup token:** 32 bytes, kept in memory only, printed once per boot while unclaimed (FR-AUTH-01).
 - **CSRF:**
-  - On login, the server sets a non-HttpOnly `vf_csrf` cookie containing a random value.
+  - On login, the server sets a non-HttpOnly `vf_csrf` cookie whose value is `HMAC-SHA256(APP_SECRET, "csrf:" ‖ session token hash)`, so the token is bound to the session (signed double-submit).
   - Unsafe requests authenticated by cookie must send `X-CSRF-Token` equal to that cookie, **and** have an `Origin` header matching `PUBLIC_URL`.
   - Bearer-authenticated requests are exempt.
 - **CSP:** `default-src 'self'; img-src 'self' blob: data: {media origin}; media-src 'self' blob: {media origin}; connect-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'`.

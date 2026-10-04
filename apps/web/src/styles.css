@@ -1,0 +1,82 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* shadcn/ui-style design tokens; light and dark themes (TDD §4). */
+:root {
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.2 0.02 270);
+  --muted: oklch(0.96 0.005 270);
+  --muted-foreground: oklch(0.48 0.02 270);
+  --card: oklch(1 0 0);
+  --border: oklch(0.9 0.01 270);
+  --input: oklch(0.86 0.01 270);
+  --primary: oklch(0.5 0.22 293);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.95 0.01 270);
+  --secondary-foreground: oklch(0.25 0.02 270);
+  --destructive: oklch(0.55 0.2 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.55 0.2 293);
+  --radius: 0.75rem;
+}
+.dark {
+  --background: oklch(0.17 0.02 270);
+  --foreground: oklch(0.96 0.005 270);
+  --muted: oklch(0.24 0.02 270);
+  --muted-foreground: oklch(0.75 0.02 270);
+  --card: oklch(0.21 0.02 270);
+  --border: oklch(0.32 0.02 270);
+  --input: oklch(0.4 0.02 270);
+  --primary: oklch(0.72 0.16 293);
+  --primary-foreground: oklch(0.15 0.02 270);
+  --secondary: oklch(0.28 0.02 270);
+  --secondary-foreground: oklch(0.95 0.005 270);
+  --destructive: oklch(0.68 0.19 25);
+  --destructive-foreground: oklch(0.15 0.02 270);
+  --ring: oklch(0.72 0.16 293);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-ring: var(--ring);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 4px);
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+* {
+  border-color: var(--border);
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

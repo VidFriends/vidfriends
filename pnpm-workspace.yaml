@@ -1,0 +1,13 @@
+packages:
+  - apps/*
+  - packages/*
+  - e2e
+onlyBuiltDependencies:
+  - '@node-rs/argon2'
+  - esbuild
+  - sharp
+  - unrs-resolver
+overrides:
+  # drizzle-kit's loader pins esbuild 0.18 (GHSA-67mh-4wv8-2f99, dev-only); the current esbuild
+  # transform API is compatible (M5-T7 dependency audit).
+  '@esbuild-kit/core-utils>esbuild': 0.28.2
