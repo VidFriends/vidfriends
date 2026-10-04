@@ -294,13 +294,13 @@ Each item needs a PRD update and, where architectural, an ADR before work starts
 | M7-T15 Push titles in the member's language | `users.language` (migration `0007_user_language`), `PATCH /me {language}` and `SelfUser.language`; web and app report the language in use; Web Push, Expo, ntfy and Gotify titles (and the private-previews and test titles) in English or Spanish | NFR-I18N-01, owner answer 2026-10-04 | `apps/server/test/push-servers.test.ts` (Spanish titles through ntfy); Playwright `language.spec.ts` checks the account records Spanish |
 | M7-T16 Groups of friends (group sends) | `friend_groups` and `friend_group_members` (migration `0008_friend_groups`), CRUD API (owner-only, authz matrix), Friends → Groups card on the web, group buttons on Send (web and app) that select the members; one share per recipient as before (ADR-0010) | FR-FRND-06, BR-GRP-1..3, owner answer 2026-10-04 | `apps/server/test/groups.test.ts`; authz matrix `updateFriendGroup`/`deleteFriendGroup`; Playwright `e2e/tests/groups.spec.ts` |
 | M7-T17 Collections | `collections` and `collection_items` (migration `0009_collections`); owner-only API (`/collections`, items by share id, authz matrix); adding a share saves it, unsaving takes it out of every collection; web: Saved → Collections card, collection page (rename, delete, remove), "Add to collection" on a received share; app: More → Collections, collection screen, picker from the share screen; collections and groups in the data export | FR-FEED-07, BR-COL-1..3, CAP-14, owner answer 2026-10-04 | `apps/server/test/collections.test.ts`; authz matrix `getCollection`/`updateCollection`/`deleteCollection`/`addToCollection`/`removeFromCollection`; `apps/server/test/exports.test.ts` (`collections.json`, `groups.json`); Playwright `e2e/tests/collections.spec.ts` |
+| M7-T18 Perceptual dedup | ADR-0022: pHash of 8 frames per processed video (`video_fingerprints`, migration `0010_perceptual_dedup`); a new video showing the same clip as an earlier ready one (same duration and aspect ratio, earlier file at least as sharp) reuses its stored file and is not charged (`videos.media_reused`); retention and account deletion keep a file while any video uses it; nothing else is merged (L-19); operator switch `MEDIA_DEDUP` | BR-MED-4..6, FR-VID-10, owner answer 2026-10-04 | `apps/server/src/infra/media/fingerprint.test.ts` (hash maths, flat frames never match); `apps/server/test/dedup.test.ts` (re-encoded clip reuses the file, nobody charged twice, file outlives the first video, different and sharper clips keep their own) |
 
-Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7..T9, offline downloads to M7-T13, collections to M7-T17):
+Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7..T9, offline downloads to M7-T13, collections to M7-T17, perceptual dedup to M7-T18):
 
 | Item | Source |
 |---|---|
 | UnifiedPush channel (needs a native connector in the app; ADR-0020) | ADR-0011 |
-| Perceptual dedup | 2026 backend, redesigned per L-19 |
 | More languages | NFR-I18N-01 |
 | Optional egress proxy for a hardened worker | TDD §5 residual risk |
 
@@ -320,7 +320,7 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7
 ## 7. Next actionable milestone
 
 **M7: post-v1 backlog.** Data export and passkey-only sign-in are done; realtime updates (M7-T7..T9) are next, chosen by the owner on 2026-10-04.
-- **Now (agents):** M7-T17 collections (owner's choice, 2026-10-04; M7-T14..T16 are done); then the next backlog item the owner schedules.
+- **Now (agents):** M7-T18 perceptual dedup (owner's choice, 2026-10-04; M7-T14..T17 are done); then the next backlog item the owner schedules.
 - **Owner:** check passkey sign-in on a real Android phone and iPhone against an HTTPS instance (M7-T6); enable branch protection on `main` (M1-T2); Apple and Google developer accounts for store builds (M6-T7). The alpha (M5-T9) is postponed by the owner.
 - **Verification:** each item's completion check in §5, with the CI run or record linked in the task row.
 
@@ -328,6 +328,8 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7
 
 | Date | Change |
 |---|---|
+| 2026-10-04 | Owner answer (multiple choice): next, **perceptual dedup** (M7-T18, ADR-0022, FR-VID-10): the same clip from another link reuses the stored file; only bytes are shared (L-19). |
+| 2026-10-04 | M7-T17 collections ✅, merged in [PR #127](https://github.com/VidFriends/vidfriends/pull/127) with CI green, including Playwright `collections.spec.ts` and the Android Maestro suite. |
 | 2026-10-04 | M7-T16 groups of friends ✅, merged in [PR #126](https://github.com/VidFriends/vidfriends/pull/126) with CI green, including Playwright `groups.spec.ts` and the Android Maestro suite. |
 | 2026-10-04 | Owner answer (multiple choice): next, **collections** (M7-T17, CAP-14, FR-FEED-07, BR-COL-1..3): named lists of received videos; adding one also saves it. Assumption: limits of 50 collections of 500 videos each, and the data export gains `collections.json` and `groups.json` (groups were missing from it). |
 | 2026-10-04 | M7-T14 Spanish and M7-T15 push titles in the member's language ✅, merged in [PR #125](https://github.com/VidFriends/vidfriends/pull/125) with CI green, including Playwright `language.spec.ts` and the Android Maestro suite. |

@@ -71,6 +71,13 @@
       "when": 1791145887384,
       "tag": "0009_collections",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791154133525,
+      "tag": "0010_perceptual_dedup",
+      "breakpoints": true
     }
   ]
 }

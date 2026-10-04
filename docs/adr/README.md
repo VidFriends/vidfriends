@@ -29,5 +29,6 @@ These records follow the rules in [ADR-0001](0001-record-architecture-decisions.
 | [0019](0019-realtime-invalidation-over-sse.md) | Realtime updates: server-sent invalidation hints over Postgres LISTEN/NOTIFY | Accepted | Owner (+ Claude for the mechanism) |
 | [0020](0020-ntfy-and-gotify-push-channels.md) | ntfy and Gotify push channels; UnifiedPush deferred | Accepted | Owner (+ Claude for the mechanism) |
 | [0021](0021-cloudflare-test-instance.md) | Cloudflare test instance: one container behind a Worker, backed up to R2 | Accepted | Owner (+ Claude for the mechanism) |
+| [0022](0022-perceptual-dedup-shares-files-only.md) | Perceptual dedup shares stored files only | Accepted | Owner (+ Claude for the mechanism) |
 
 **Template for new ADRs:** use the header fields Status, Date, Decided by and Supersedes, then the sections Context, Decision, Alternatives considered, Consequences, and Revisit when.

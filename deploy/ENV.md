@@ -41,3 +41,4 @@ Product policy (signup mode, quotas, retention, session lifetimes and so on) is 
 | `FFPROBE_PATH` | `ffprobe` | ffprobe executable. |
 | `FETCH_TIMEOUT_SECONDS` | `600` | Wall-clock limit for one yt-dlp run (BR-MED-2). |
 | `PROCESS_TIMEOUT_SECONDS` | `900` | Wall-clock limit for one ffmpeg run. |
+| `MEDIA_DEDUP` | `perceptual` | How the worker avoids storing the same clip twice (BR-MED-4, ADR-0022). `perceptual` also lets a video reuse the stored file of an earlier, visually identical one added from a different link; `exact` matches only the same link or identical bytes. |

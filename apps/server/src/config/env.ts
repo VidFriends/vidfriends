@@ -167,6 +167,11 @@ export const ENV_SPEC = {
     schema: int(10, 7200).default(900),
     description: 'Wall-clock limit for one ffmpeg run.',
   },
+  MEDIA_DEDUP: {
+    schema: z.enum(['perceptual', 'exact']).default('perceptual'),
+    description:
+      'How the worker avoids storing the same clip twice (BR-MED-4, ADR-0022). `perceptual` also lets a video reuse the stored file of an earlier, visually identical one added from a different link; `exact` matches only the same link or identical bytes.',
+  },
 } satisfies Record<string, EnvEntry>;
 
 type Spec = typeof ENV_SPEC;

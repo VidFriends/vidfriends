@@ -17,11 +17,14 @@ import {
   UnplayableMediaError,
   type FfmpegOptions,
 } from '../infra/media/ffmpeg.js';
+import { fingerprint } from '../infra/media/fingerprint.js';
 import { download, probeMetadata } from '../infra/media/ytdlp.js';
+import type { DbOrTx } from '../infra/db.js';
 import type { Deps } from '../http/deps.js';
 import { getSettings } from '../modules/settings/service.js';
 import { emitBecamePlayable } from '../modules/videos/events.js';
 import type { VideoRow } from '../modules/videos/serialize.js';
+import { findReusable, lockReusable, saveFingerprint } from '../modules/videos/dedup.js';
 import { JOB_FETCH, JOB_PROCESS, remainingQuota } from '../modules/videos/service.js';
 import { assertPublicHost, checkUrl, UrlRejected } from '../modules/videos/url.js';
 
@@ -222,6 +225,15 @@ async function hashFile(file: string): Promise<Buffer> {
   return hash.digest();
 }
 
+/** Exact-hash dedup only applies to uploads (BR-MED-4); a link whose bytes match keeps its own row. */
+async function uniqueSha(tx: DbOrTx, id: string, sha256: Buffer): Promise<Buffer | null> {
+  const [taken] = await tx
+    .select({ id: videos.id })
+    .from(videos)
+    .where(sql`${videos.sha256} = ${sha256} and ${videos.id} <> ${id}`);
+  return taken ? null : sha256;
+}
+
 export async function handleProcess(deps: Deps, job: Job<ProcessJob>): Promise<void> {
   const { video_id: id, source_key: sourceKey } = job.data;
   const video = await loadVideo(deps, id);
@@ -258,46 +270,87 @@ export async function handleProcess(deps: Deps, job: Job<ProcessJob>): Promise<v
         return await processFailed(deps, video, sourceKey, 'unplayable');
       throw err;
     }
-    const bytes = (await stat(out)).size;
-    const mediaKey = keys.media(id);
-    await deps.storage!.putObject(mediaKey, createReadStream(out), 'video/mp4', bytes);
+    const durationMs =
+      info.durationSeconds !== null ? Math.round(info.durationSeconds * 1000) : null;
+    const clip = { durationMs: durationMs ?? 0, width: info.width, height: info.height };
+    // Perceptual dedup (BR-MED-4, ADR-0022): reuse an earlier video's file for the same clip.
+    const fp =
+      deps.env.MEDIA_DEDUP === 'perceptual' && durationMs
+        ? await fingerprint(out, dir, info.durationSeconds, opts).catch(() => null)
+        : null;
+    const candidate = fp ? await findReusable(deps.db, id, fp, clip) : null;
     const thumbKey = await storeThumbnail(deps, id, thumbFile);
+    const now = deps.clock.now();
+    const common = {
+      state: 'ready' as const,
+      thumbKey,
+      readyAt: now,
+      updatedAt: now,
+    };
 
-    await deps.db.transaction(async (tx) => {
-      const [taken] = await tx
-        .select({ id: videos.id })
-        .from(videos)
-        .where(sql`${videos.sha256} = ${sha256} and ${videos.id} <> ${id}`);
-      const [updated] = await tx
-        .update(videos)
-        .set({
-          state: 'ready',
-          mediaKey,
-          thumbKey,
-          mediaBytes: bytes,
-          durationMs:
-            info.durationSeconds !== null ? Math.round(info.durationSeconds * 1000) : null,
-          width: info.width,
-          height: info.height,
-          // Exact-hash dedup only applies to uploads (BR-MED-4); a link whose bytes match keeps its own media.
-          sha256: taken ? null : sha256,
-          readyAt: deps.clock.now(),
-          updatedAt: deps.clock.now(),
-        })
-        .where(sql`${videos.id} = ${id} and ${videos.state} = 'processing'`)
-        .returning({ addedBy: videos.addedBy });
-      if (!updated) return;
-      // Storage accounting in the same transaction (LLD §2, BR-MED-6).
-      if (updated.addedBy) {
-        await tx
-          .update(users)
-          .set({ storageBytes: sql`${users.storageBytes} + ${bytes}` })
-          .where(eq(users.id, updated.addedBy));
+    let bytes = 0;
+    let reusedFrom: string | null = null;
+    if (candidate) {
+      const reused = await deps.db.transaction(async (tx) => {
+        if (!(await lockReusable(tx, candidate))) return false;
+        const [updated] = await tx
+          .update(videos)
+          .set({
+            ...common,
+            mediaKey: candidate.mediaKey,
+            mediaReused: true,
+            mediaBytes: candidate.mediaBytes,
+            // The file is the earlier video's, so its properties describe what plays.
+            durationMs: candidate.durationMs,
+            width: candidate.width,
+            height: candidate.height,
+            sha256: await uniqueSha(tx, id, sha256),
+          })
+          .where(sql`${videos.id} = ${id} and ${videos.state} = 'processing'`)
+          .returning({ id: videos.id });
+        if (!updated) return true;
+        // Nothing new is stored, so nobody is charged (BR-MED-6).
+        await saveFingerprint(tx, id, fp!, clip, now);
+        await emitBecamePlayable(deps, tx, id);
+        return true;
+      });
+      if (reused) {
+        bytes = candidate.mediaBytes;
+        reusedFrom = candidate.id;
       }
-      await emitBecamePlayable(deps, tx, id);
-    });
+    }
+    if (!reusedFrom) {
+      bytes = (await stat(out)).size;
+      const mediaKey = keys.media(id);
+      await deps.storage!.putObject(mediaKey, createReadStream(out), 'video/mp4', bytes);
+      await deps.db.transaction(async (tx) => {
+        const [updated] = await tx
+          .update(videos)
+          .set({
+            ...common,
+            mediaKey,
+            mediaBytes: bytes,
+            durationMs,
+            width: info.width,
+            height: info.height,
+            sha256: await uniqueSha(tx, id, sha256),
+          })
+          .where(sql`${videos.id} = ${id} and ${videos.state} = 'processing'`)
+          .returning({ addedBy: videos.addedBy });
+        if (!updated) return;
+        // Storage accounting in the same transaction (LLD §2, BR-MED-6).
+        if (updated.addedBy) {
+          await tx
+            .update(users)
+            .set({ storageBytes: sql`${users.storageBytes} + ${bytes}` })
+            .where(eq(users.id, updated.addedBy));
+        }
+        if (fp) await saveFingerprint(tx, id, fp, clip, now);
+        await emitBecamePlayable(deps, tx, id);
+      });
+    }
     await deps.storage!.deleteObjects([sourceKey]).catch(() => {});
-    deps.log.info({ video_id: id, bytes }, 'video ready');
+    deps.log.info({ video_id: id, bytes, reused_from: reusedFrom }, 'video ready');
   } catch (err) {
     if (job.retryCount >= PROCESS_RETRY_LIMIT) {
       deps.log.error({ video_id: id, err }, 'processing failed after retries');

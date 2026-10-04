@@ -107,7 +107,12 @@ erDiagram
 - `duration_ms` int NULL, `width` int NULL, `height` int NULL
 - `media_key` text NULL, `thumb_key` text NULL
 - `media_bytes` bigint NOT NULL DEFAULT 0
+- `media_reused` boolean NOT NULL DEFAULT false: the file was stored for another video and is reused (perceptual dedup, ADR-0022); such a video is never charged for it. Migration 0010.
 - `created_at`, `updated_at`, `ready_at` NULL, `expired_at` NULL
+
+**`video_fingerprints`** (BR-MED-4, ADR-0022, migration 0010)
+- `video_id` PK FK videos CASCADE, `duration_ms` int, `width`, `height`, `hashes` bytea (8 × 64-bit pHash), `mask` int (usable frames), `created_at`
+- INDEX (`duration_ms`) for candidate lookup
 
 **`video_additions`** (migration 0002)
 - `video_id` FK videos CASCADE, `user_id` FK users CASCADE, `created_at`; PK (`video_id`, `user_id`)
@@ -369,9 +374,9 @@ Ops endpoints live outside `/api/v1`: `GET /healthz`, `GET /readyz`, and `GET :9
 | `queued` → `link_only` | worker | downloads disabled | optional metadata-only probe (`yt-dlp --skip-download -J`) for title and thumbnail |
 | `fetching` → `processing` | worker | file downloaded within limits | stream to temp; compute sha256 |
 | `fetching` → `link_only` | worker | retries exhausted or limit exceeded | `failure_reason` set |
-| `processing` → `ready` | worker | probe ok; renditions uploaded | `users.storage_bytes += media_bytes`; finalize shares (deliver + notify) |
+| `processing` → `ready` | worker | probe ok; renditions uploaded, **or** (with `MEDIA_DEDUP=perceptual`) an earlier ready video shows the same clip (ADR-0022) | own file: `users.storage_bytes += media_bytes`; reused file: `media_key` = the earlier video's, `media_reused = true`, nobody charged (the earlier row is locked `FOR UPDATE` first); store the fingerprint; finalize shares (deliver + notify) |
 | `processing` → `failed` | worker | unplayable after transcode attempt | for uploads, notify the uploader; for links, fall back to `link_only` |
-| `ready` → `expired` | retention | BR-MED-5 eligibility | delete objects after commit; storage bytes decremented |
+| `ready` → `expired` | retention | BR-MED-5 eligibility | delete the file after commit unless another video still uses it (ADR-0022); storage bytes decremented unless `media_reused` |
 
 **Finalize shares** (inside the transaction that marks the video ready or link-only):
 1. `UPDATE shares SET delivered_at = now() WHERE video_id = :id AND delivered_at IS NULL RETURNING …`.
