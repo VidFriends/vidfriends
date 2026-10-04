@@ -86,6 +86,7 @@ async function finishLinkOnly(
       await assertPublicHost(new URL(video.normalizedUrl).hostname, deps.net.lookup);
       const meta = await probeMetadata(video.normalizedUrl, dir, {
         binary: deps.env.YTDLP_PATH,
+        proxy: deps.env.FETCH_PROXY_URL,
         timeoutMs: 60_000,
       });
       if (meta) {
@@ -151,6 +152,7 @@ export async function handleFetch(deps: Deps, job: Job<FetchJob>): Promise<void>
   try {
     const outcome = await download(check.url, dir, {
       binary: deps.env.YTDLP_PATH,
+      proxy: deps.env.FETCH_PROXY_URL,
       timeoutMs: deps.env.FETCH_TIMEOUT_SECONDS * 1000,
       maxBytes,
       maxDurationSeconds: settings.max_duration_seconds,

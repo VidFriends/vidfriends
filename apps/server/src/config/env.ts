@@ -131,6 +131,11 @@ export const ENV_SPEC = {
     description: 'Concurrent `video.process` (transcode) jobs per worker (NFR-PERF-03).',
   },
   YTDLP_PATH: { schema: z.string().default('yt-dlp'), description: 'yt-dlp executable.' },
+  FETCH_PROXY_URL: {
+    schema: z.url().optional(),
+    description:
+      'Optional HTTP(S) proxy for every yt-dlp request, including redirects. Point it at a filtering egress proxy that refuses private and link-local addresses to close the redirect residual risk (TDD §5).',
+  },
   FFMPEG_PATH: { schema: z.string().default('ffmpeg'), description: 'ffmpeg executable.' },
   FFPROBE_PATH: { schema: z.string().default('ffprobe'), description: 'ffprobe executable.' },
   FETCH_TIMEOUT_SECONDS: {

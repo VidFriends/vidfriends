@@ -34,7 +34,12 @@ beforeAll(async () => {
   process.env.FAKE_YTDLP_MEDIA = fixture('h264.mp4');
   process.env.FAKE_YTDLP_STATE = mkdtempSync(join(tmpdir(), 'vf-ytstate-'));
   server = await createTestServer(
-    { YTDLP_PATH: FAKE_YTDLP, WORK_DIR: workDir, FETCH_TIMEOUT_SECONDS: '10' },
+    {
+      YTDLP_PATH: FAKE_YTDLP,
+      WORK_DIR: workDir,
+      FETCH_TIMEOUT_SECONDS: '10',
+      FETCH_PROXY_URL: 'http://egress.invalid:3128',
+    },
     {
       net: {
         lookup: async () => [{ address: '142.250.1.1', family: 4 }],
@@ -105,7 +110,7 @@ describe.skipIf(!hasS3)('video.fetch (FR-VID-02, fake yt-dlp)', () => {
     expect(row!.mediaBytes).toBeGreaterThan(0);
   });
 
-  it('passes the URL only after `--` and cleans up its temp directory', async () => {
+  it('passes the URL only after `--`, uses the egress proxy, and cleans up', async () => {
     const { video } = await member.client.ok(addVideo, { body: { url: link('ok') } });
     await settle(member.client, video.id);
     const calls = readFileSync(argLog, 'utf8')
@@ -115,6 +120,7 @@ describe.skipIf(!hasS3)('video.fetch (FR-VID-02, fake yt-dlp)', () => {
     for (const argv of calls) {
       expect(argv.at(-2)).toBe('--');
       expect(argv.at(-1)).toMatch(/^https:\/\/youtube\.com\//);
+      expect(argv[argv.indexOf('--proxy') + 1]).toBe('http://egress.invalid:3128');
     }
     expect(readdirSync(workDir)).toEqual([]);
   });

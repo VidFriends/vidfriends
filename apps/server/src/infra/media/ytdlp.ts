@@ -27,7 +27,11 @@ export interface YtDlpOptions {
   timeoutMs: number;
   maxBytes: number;
   maxDurationSeconds: number;
+  /** Optional egress proxy for every yt-dlp request, redirects included (TDD §5). */
+  proxy?: string | undefined;
 }
+
+const proxyArgs = (proxy: string | undefined) => (proxy ? ['--proxy', proxy] : []);
 
 const COMMON = [
   '--no-playlist',
@@ -56,6 +60,7 @@ function info(json: Record<string, unknown>) {
 export async function download(url: string, dir: string, o: YtDlpOptions): Promise<FetchOutcome> {
   const args = [
     ...COMMON,
+    ...proxyArgs(o.proxy),
     '-f',
     FORMAT_SELECTOR,
     '--merge-output-format',
@@ -110,7 +115,7 @@ export async function download(url: string, dir: string, o: YtDlpOptions): Promi
 export async function probeMetadata(
   url: string,
   dir: string,
-  o: Pick<YtDlpOptions, 'binary' | 'timeoutMs'>,
+  o: Pick<YtDlpOptions, 'binary' | 'timeoutMs' | 'proxy'>,
 ): Promise<{
   title: string;
   authorHandle: string | null;
@@ -119,6 +124,7 @@ export async function probeMetadata(
 } | null> {
   const args = [
     ...COMMON,
+    ...proxyArgs(o.proxy),
     '--skip-download',
     '--write-thumbnail',
     '--convert-thumbnails',
