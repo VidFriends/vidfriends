@@ -1,6 +1,6 @@
 # ADR-0009: Media ingestion through durable jobs; private S3-compatible storage with signed URLs
 
-- **Status:** Accepted. The owner accepted the legal risk for private groups on 2026-10-03 (BRD OQ-1).
+- **Status:** Accepted. The owner accepted the legal risk for private groups on 2026-10-03 (BRD OQ-1). **Superseded in part by [ADR-0015](0015-bundled-object-store-seaweedfs.md)** (bundled store and `/media-store` routing).
 - **Date:** 2026-10-03
 - **Decided by:** Claude under delegation
 

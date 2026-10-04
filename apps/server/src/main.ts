@@ -33,6 +33,15 @@ async function main(): Promise<void> {
   const deps = buildDeps(env, log);
   const shutdownTasks: Array<() => Promise<void>> = [];
 
+  if (deps.storage) {
+    // Creates the bucket on first start (replaces a separate init container, ADR-0015).
+    await deps.storage.ensureBucket().catch((err: unknown) => {
+      log.error({ err }, 'object storage is not reachable; /readyz will report it');
+    });
+  } else if (env.NODE_ENV !== 'test') {
+    log.warn('S3 storage is not configured; media features are unavailable');
+  }
+
   if (env.ROLE === 'api' || env.ROLE === 'all') {
     await initSetupToken(deps);
     const app = createApp(deps, allHandlers());

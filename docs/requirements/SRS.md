@@ -209,7 +209,7 @@ Numbers marked † are **proposed targets** chosen under delegation for a small 
 | Web Push (VAPID, RFC 8030/8292) | Server → browser push services | [ADR-0011](../adr/0011-notifications.md) |
 | Expo Push API | Server → Expo → APNs/FCM | [ADR-0011](../adr/0011-notifications.md) (M6) |
 | yt-dlp CLI, ffmpeg/ffprobe | Worker → local processes → source platforms | [LLD §4](../design/LLD.md#4-media-pipeline) |
-| S3 API (MinIO, Cloudflare R2, AWS S3, Backblaze B2, …) | Server/worker → object storage | [ADR-0009](../adr/0009-media-ingestion-and-storage.md) |
+| S3 API (SeaweedFS bundled per ADR-0015; Cloudflare R2, AWS S3, Backblaze B2, …) | Server/worker → object storage | [ADR-0009](../adr/0009-media-ingestion-and-storage.md) |
 | PostgreSQL 16+ | Server/worker → database | [LLD §2](../design/LLD.md#2-data-model) |
 
 ## 4. Traceability summary

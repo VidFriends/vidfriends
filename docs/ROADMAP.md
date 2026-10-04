@@ -62,6 +62,7 @@ BC-1..BC-7 in the [BRD](requirements/BRD.md#5-business-constraints): no ads or t
 | Share-centric model; private conversations; no global feed | Claude (delegated) | [ADR-0010](adr/0010-share-centric-social-model.md) |
 | In-app + Web Push + Expo Push; polling, no realtime | Claude (delegated) | [ADR-0011](adr/0011-notifications.md) |
 | pnpm + Turborepo monorepo layout | Claude (delegated) | [ADR-0012](adr/0012-monorepo-and-tooling.md) |
+| Bundle SeaweedFS instead of MinIO (MinIO images no longer pullable); serve `/media-store/*` unrewritten | Claude (delegated), 2026-10-04 | [ADR-0015](adr/0015-bundled-object-store-seaweedfs.md) |
 | HTTPS join links; QR encodes the same URL | Claude (delegated); amended by ADR-0014 | [ADR-0013](adr/0013-instance-pairing-and-join-links.md) |
 | Self-host only: no public or default instance, no project domain; licence MIT; name VidFriends | **Owner** (2026-10-03) | [ADR-0014](adr/0014-self-host-only-no-public-instance.md), [BRD §7](requirements/BRD.md#7-open-questions-all-resolved-2026-10-03) |
 
@@ -105,7 +106,7 @@ The numbering is kept stable. A-1 (licence) and A-4 (default instance) were reso
 | [`docs/design/SDD.md`](design/SDD.md) | Software design | Draft v1 | Module structure, authorization model, job semantics, client architecture |
 | [`docs/design/TDD.md`](design/TDD.md) | Technical design | Draft v1 | Engineering choices, security engineering, deploy/ops, test strategy, migration |
 | [`docs/design/LLD.md`](design/LLD.md) | Low-level design | Draft v1 | Schema, API outline, pipeline states, security mechanism parameters |
-| [`docs/adr/`](adr/README.md) | Decision records 0001–0013 | Accepted | Architectural decisions |
+| [`docs/adr/`](adr/README.md) | Decision records 0001–0015 | Accepted | Architectural decisions |
 | [`docs/legacy/AUDIT.md`](legacy/AUDIT.md) | Legacy findings and lessons L-* | Final | History only (not requirements) |
 | [`docs/legacy/audits/`](legacy/audits/), [`docs/legacy/original-docs/`](legacy/original-docs/) | Raw audit evidence; verbatim legacy docs | Superseded / historical | Nothing (reference only) |
 
@@ -146,7 +147,7 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 | M0-T4 Archive the six superseded repos (`vidshare`, `vidfriends-backend`, `-web`, `-ios`, `-android`, `VidFriends-iOS-Android`); close the 35 obsolete Dependabot PRs; reduce this repo to the single branch `main` | ✅ | Done 2026-10-03 at the owner's request. `gh repo list VidFriends` shows all six `archived=true`; only `main` remains here. Human-authored PR vidfriends-android#2 was left open in the archive, and its work is tagged `legacy/vidfriends-android-2026/vid-503-fix`. | `gh repo view … --json isArchived` returns true for each |
 | M0-T5 Owner answers OQ-1..OQ-4 and reviews provisional decisions | ✅ | BRD §7 answers; ADR-0014; ADR-0005/0009/0013 status lines updated |
 
-### M1: Foundations and accounts ⬜ (next)
+### M1: Foundations and accounts 🟡 (in progress)
 
 **Goal:** a walking skeleton. An operator deploys the stack locally, claims the instance, creates an invite, and a friend registers through the join link, logs in and logs out. CI enforces the full quality gate.
 
@@ -161,11 +162,11 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 | Task | Objective | References | Depends on | Completion check |
 |---|---|---|---|---|
 | M1-T1 Monorepo scaffold | pnpm workspace + Turborepo; `apps/server`, `apps/web`, `packages/{contracts,api-client,config,test-utils}`; shared tsconfig, ESLint (jsx-a11y, import/no-cycle) and Prettier; MIT LICENSE (BRD OQ-2); root README dev instructions | ADR-0012, TDD §1 | – | `pnpm install && pnpm build && pnpm lint && pnpm typecheck` succeed locally and in CI |
-| M1-T2 CI pipeline | GitHub Actions on PR and `main`: static, unit, contract, API integration (Postgres + MinIO services), Playwright (Chromium), Docker build, Trivy (blocking on fixable criticals), migration-immutability check, Dependabot or Renovate config | NFR-MAINT-02, NFR-SEC-07, NFR-REL-03, TDD §7 | T1 | Workflow green on a PR; a deliberately failing test blocks merge |
+| M1-T2 CI pipeline | GitHub Actions on PR and `main`: static, unit, contract, API integration (Postgres + SeaweedFS S3 services, ADR-0015), Playwright (Chromium), Docker build, Trivy (blocking on fixable criticals), migration-immutability check, Dependabot or Renovate config | NFR-MAINT-02, NFR-SEC-07, NFR-REL-03, TDD §7 | T1 | Workflow green on a PR; a deliberately failing test blocks merge |
 | M1-T3 Contracts and OpenAPI | Error envelope, pagination schema, route-definition helper with `auth` level; `GET /instance`; OpenAPI generation script and CI drift check; typed client in `api-client` | ADR-0006, LLD §3, NFR-MAINT-01 | T1 | `pnpm --filter contracts gen` output is committed; CI fails when it is stale (verified by a test PR) |
 | M1-T4 Server skeleton | Env config schema with secret checks; Hono app with the middleware chain from SDD §2 (request id, pino with redaction, security headers and CSP, IP rate limit, error mapper); `/healthz`, `/readyz`; SPA static serving with fallback; `ROLE` entrypoint; graceful shutdown | SDD §1–2, TDD §3, LLD §5, NFR-SEC-03/04/06, NFR-OPS-02/03, NFR-REL-02, NFR-PRIV-02 | T3 | Unit tests: config rejects default and short secrets; log redaction; API test: security headers present, `/readyz` fails when the DB is down |
 | M1-T5 Database and migrations | Drizzle setup; migrate entrypoint; tables `users`, `sessions`, `invites`, `invite_redemptions`, `relationships` (for auto-friend), `instance_settings`, `audit_log`, `password_resets` | LLD §2, NFR-REL-03 | T4 | `migrate` applies to an empty DB in CI; migration checksum file present |
-| M1-T6 Containers and compose | Multi-target Dockerfile (`server`; `worker` stub); `deploy/compose.dev.yml`; `deploy/compose.yml` (caddy, migrate, server, postgres, minio, minio-init) and `.env.example` without working secrets | HLD §3, TDD §6 | T4, T5 | `docker compose -f deploy/compose.yml up` on a clean machine reaches `/readyz` = 200 behind Caddy (local TLS) |
+| M1-T6 Containers and compose | Multi-target Dockerfile (`server`; `worker` stub); `deploy/compose.dev.yml`; `deploy/compose.yml` (caddy, migrate, server, worker, postgres, seaweedfs per ADR-0015) and `.env.example` without working secrets | HLD §3, TDD §6 | T4, T5 | `docker compose -f deploy/compose.yml up` on a clean machine reaches `/readyz` = 200 behind Caddy (local TLS) |
 | M1-T7 Authentication and sessions | Setup bootstrap; register (invite, auto-friend); login and logout (all); session middleware (cookie and bearer, idle and absolute expiry, status and role from DB); CSRF; password change; auth rate limits; audit entries | FRD §2–3, ADR-0008, LLD §3/§5, FR-AUTH-*, FR-ACCT-02 | T5 | API tests per FR-AUTH-01..06 including suspended-user rejection and concurrent invite consumption; unit tests for validation and password denylist |
 | M1-T8 Invites | Create, list, revoke, preview; hashed codes; `members_can_invite` setting | FR-INV-01..03, BR-INV-* | T7 | API tests; code is returned only once; revoked or expired invites are rejected |
 | M1-T9 Authorization-matrix harness | `test-utils` fixture world and matrix runner; CI fails for any id-bearing route not in the matrix | SDD §3, NFR-SEC-01 | T7 | Harness covers all M1 routes; meta-test proves an unlisted route fails CI |
@@ -184,7 +185,7 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 |---|---|---|---|
 | M2-T1 Relationship service | State machine with auto-accept, decline cooldown, block and unblock, rate limit | FRD §4, LLD §2 `relationships` | Table-driven API test covering every transition and every forbidden transition |
 | M2-T2 Search and lists | `GET /users`, friends, requests (in and out), blocks | BR-FRND-8 | API tests, including block-aware exclusion; authz matrix updated |
-| M2-T3 Object storage foundation | S3 client, presigned PUT/GET helpers, key scheme, MinIO in the CI services | ADR-0009, LLD §4 | API test: presign round-trip against MinIO |
+| M2-T3 Object storage foundation | S3 client, presigned PUT/GET helpers, key scheme, SeaweedFS in the CI services | ADR-0009, ADR-0015, LLD §4 | API test: presign round-trip against SeaweedFS |
 | M2-T4 Profile and avatar | Display name edit; avatar upload (presigned, re-encoded to 256 px WebP by an inline server step or a simple job) | FR-ACCT-01, BR-ACCT-3, NFR-SEC-08 | API test rejects a non-image disguised as an image |
 | M2-T5 Friends UI | `/friends` (search, requests, friends, blocked) with optimistic actions and rollback | SDD §5, NFR-A11Y-01 | Playwright `friends.spec.ts`: request → accept → remove → block → unblock across two users |
 

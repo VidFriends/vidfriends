@@ -1,6 +1,7 @@
 // Shared ESLint flat config (ADR-0012): typescript-eslint, import-x (no-cycle), react-hooks, jsx-a11y, prettier.
 import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 import importX from 'eslint-plugin-import-x';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -29,7 +30,9 @@ export function config({ react = false, tsconfigRootDir }) {
         'no-console': ['error', { allow: ['warn', 'error'] }],
       },
       settings: {
-        'import-x/resolver': { node: true },
+        'import-x/resolver-next': [
+          createTypeScriptImportResolver({ project: `${tsconfigRootDir}/tsconfig.json` }),
+        ],
       },
     },
     ...(react

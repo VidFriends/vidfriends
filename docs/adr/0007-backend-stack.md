@@ -1,6 +1,6 @@
 # ADR-0007: Backend stack: Node.js + Hono + PostgreSQL + Drizzle + pg-boss, with a separate worker process
 
-- **Status:** Accepted
+- **Status:** Accepted. Note (2026-10-04): the bundled S3 store named under Testing is now SeaweedFS ([ADR-0015](0015-bundled-object-store-seaweedfs.md)).
 - **Date:** 2026-10-03
 - **Decided by:** Claude under delegation. The owner fixed the client stack ([ADR-0003](0003-web-client-stack.md), [ADR-0004](0004-mobile-expo.md)) but not the backend.
 

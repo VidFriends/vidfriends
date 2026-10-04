@@ -16,11 +16,12 @@ These records follow the rules in [ADR-0001](0001-record-architecture-decisions.
 | [0006](0006-api-contract-first.md) | Zod contracts → generated OpenAPI | Accepted | Claude (delegated) |
 | [0007](0007-backend-stack.md) | Node + Hono + Postgres + Drizzle + pg-boss | Accepted | Claude (delegated) |
 | [0008](0008-authentication-sessions.md) | Opaque DB sessions; cookie (web) / bearer (mobile) | Accepted | Claude (delegated) |
-| [0009](0009-media-ingestion-and-storage.md) | Media via durable jobs; private S3 + presigned URLs | Accepted (risk accepted by owner) | Claude (delegated) |
+| [0009](0009-media-ingestion-and-storage.md) | Media via durable jobs; private S3 + presigned URLs | Accepted (risk accepted by owner); superseded in part by 0015 | Claude (delegated) |
 | [0010](0010-share-centric-social-model.md) | Share-centric social model; no global feed | Accepted | Claude (delegated) |
 | [0011](0011-notifications.md) | In-app + Web Push + Expo Push; polling | Accepted | Claude (delegated) |
 | [0012](0012-monorepo-and-tooling.md) | pnpm/Turborepo monorepo layout and tooling | Accepted | Claude (delegated) |
 | [0013](0013-instance-pairing-and-join-links.md) | HTTPS join links; QR encodes the same URL | Accepted; amended by 0014 | Claude (delegated) |
 | [0014](0014-self-host-only-no-public-instance.md) | Self-host only; no public or default instance; no project domain | Accepted | Owner |
+| [0015](0015-bundled-object-store-seaweedfs.md) | Bundle SeaweedFS instead of MinIO; serve `/<bucket>/` unrewritten | Accepted; supersedes part of 0009 | Claude (delegated) |
 
 **Template for new ADRs:** use the header fields Status, Date, Decided by and Supersedes, then the sections Context, Decision, Alternatives considered, Consequences, and Revisit when.

@@ -25,10 +25,6 @@ export const ENV_SPEC = {
   },
   HOST: { schema: z.string().default('0.0.0.0'), description: 'HTTP bind address.' },
   PORT: { schema: int(1, 65535).default(8080), description: 'HTTP port.' },
-  METRICS_PORT: {
-    schema: int(0, 65535).default(9464),
-    description: 'Internal Prometheus `/metrics` port (0 disables). Never publish it.',
-  },
   PUBLIC_URL: {
     schema: z.url().transform((u) => u.replace(/\/+$/, '')),
     description:
@@ -94,11 +90,15 @@ export const ENV_SPEC = {
   S3_PUBLIC_ENDPOINT: {
     schema: z.url().optional(),
     description:
-      'Endpoint used in presigned URLs given to clients, e.g. `https://vf.example.org/media-store`. Defaults to `S3_ENDPOINT`.',
-    example: 'https://vf.example.org/media-store',
+      'Endpoint used in presigned URLs given to clients. With the bundled SeaweedFS this is `PUBLIC_URL` (the proxy routes `/<bucket>/*` to the store, ADR-0015). Defaults to `S3_ENDPOINT`.',
+    example: 'https://vf.example.org',
   },
   S3_REGION: { schema: z.string().default('us-east-1'), description: 'S3 region.' },
-  S3_BUCKET: { schema: z.string().default('vidfriends'), description: 'Private bucket name.' },
+  S3_BUCKET: {
+    schema: z.string().default('media-store'),
+    description:
+      'Private bucket name. With the bundled SeaweedFS the proxy serves it at `/<bucket>/` (ADR-0015).',
+  },
   S3_ACCESS_KEY_ID: {
     schema: z.string().default(''),
     description: 'S3 access key id.',
@@ -112,29 +112,6 @@ export const ENV_SPEC = {
   S3_FORCE_PATH_STYLE: {
     schema: bool.default(true),
     description: 'Use path-style S3 URLs (required for SeaweedFS and MinIO).',
-  },
-  WORK_DIR: {
-    schema: z.string().default('/tmp/vidfriends-work'),
-    description: 'Disk-backed directory for per-job temporary files (worker).',
-  },
-  WORKER_FETCH_CONCURRENCY: {
-    schema: int(1, 16).default(2),
-    description: 'Concurrent `video.fetch` jobs (NFR-PERF-03).',
-  },
-  WORKER_PROCESS_CONCURRENCY: {
-    schema: int(1, 8).default(1),
-    description: 'Concurrent `video.process` (transcode) jobs (NFR-PERF-03).',
-  },
-  YTDLP_PATH: { schema: z.string().default('yt-dlp'), description: 'yt-dlp executable.' },
-  FFMPEG_PATH: { schema: z.string().default('ffmpeg'), description: 'ffmpeg executable.' },
-  FFPROBE_PATH: { schema: z.string().default('ffprobe'), description: 'ffprobe executable.' },
-  FETCH_TIMEOUT_SECONDS: {
-    schema: int(10, 3600).default(600),
-    description: 'Wall-clock limit for one yt-dlp run.',
-  },
-  EXPO_PUSH_ENABLED: {
-    schema: bool.default(true),
-    description: 'Send mobile push through the Expo push service (ADR-0011). Set false to opt out.',
   },
 } satisfies Record<string, EnvEntry>;
 
