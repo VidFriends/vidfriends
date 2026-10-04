@@ -349,6 +349,9 @@ importers:
       '@vidfriends/contracts':
         specifier: workspace:*
         version: link:../packages/contracts
+      '@vidfriends/test-utils':
+        specifier: workspace:*
+        version: link:../packages/test-utils
       eslint:
         specifier: 9.39.5
         version: 9.39.5(jiti@2.7.0)

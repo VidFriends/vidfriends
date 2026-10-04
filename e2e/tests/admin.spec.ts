@@ -1,24 +1,18 @@
-// M5-T1 / FR-ADM-01..05: suspend → session rejected; last-admin protection; password-reset link.
-import { expect, test, type Page } from '@playwright/test';
+// M5-T1 / FR-ADM-01..05: suspend → session rejected; last-admin protection; recovery link
+// (FR-ADM-03, WF-ADM-4, ADR-0018).
+import { expect, test } from '@playwright/test';
 import { expectAccessible } from '../support/a11y';
-import { ADMIN, PASSWORD } from '../support/api';
-import { person } from '../support/people';
+import { ADMIN } from '../support/api';
+import { adminAuthenticator, authenticator, usePasskeys } from '../support/passkeys';
+import { loginPage, person } from '../support/people';
 
-async function loginAdmin(page: Page) {
-  await page.goto('/login');
-  await page.getByLabel('Username').fill(ADMIN.username);
-  await page.getByLabel('Password', { exact: true }).fill(ADMIN.password);
-  await page.getByRole('button', { name: 'Log in' }).click();
-  await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
-}
-
-test('admin suspends a member, cannot demote the last admin, and issues a reset link', async ({
+test('admin suspends a member, cannot demote the last admin, and issues a recovery link', async ({
   page,
   browser,
   baseURL,
 }) => {
   const bob = await person(baseURL as string, 'Bob');
-  await loginAdmin(page);
+  await loginPage(page, { auth: adminAuthenticator(baseURL as string) });
   await page.getByRole('link', { name: 'Admin' }).click();
   await expect(page.getByRole('heading', { name: 'Admin', level: 1 })).toBeVisible();
   await expect(page).toHaveURL(/\/admin\/users$/);
@@ -36,10 +30,9 @@ test('admin suspends a member, cannot demote the last admin, and issues a reset 
   await expect(row).toContainText('Suspended');
   await expect(bob.api.get('/me')).rejects.toThrow(/401/);
   const bobPage = await (await browser.newContext({ ignoreHTTPSErrors: true })).newPage();
+  await usePasskeys(bobPage, bob.auth);
   await bobPage.goto('/login');
-  await bobPage.getByLabel('Username').fill(bob.username);
-  await bobPage.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await bobPage.getByRole('button', { name: 'Log in' }).click();
+  await bobPage.getByRole('button', { name: 'Sign in with a passkey' }).click();
   await expect(bobPage.getByRole('alert')).toContainText('This account is suspended');
 
   await row.getByRole('button', { name: 'Unsuspend' }).click();
@@ -52,33 +45,29 @@ test('admin suspends a member, cannot demote the last admin, and issues a reset 
   await expect(page.getByText('This is the only admin. Promote someone else first.')).toBeVisible();
   await expect(self).toContainText('Admin');
 
-  // Password-reset link: single use, sets a new password (WF-ADM-4).
+  // Recovery link: single use; the new passkey replaces Bob's old one (WF-ADM-4).
   await page.getByLabel('Search by name').fill(bob.username);
-  await row.getByRole('button', { name: 'Password-reset link' }).click();
-  const resetUrl = await page.getByTestId('reset-url').inputValue();
-  expect(resetUrl).toMatch(/\/reset\/[\w-]+$/);
+  await row.getByRole('button', { name: 'Recovery link' }).click();
+  const recoveryUrl = await page.getByTestId('reset-url').inputValue();
+  expect(recoveryUrl).toMatch(/\/recover\/[\w-]+$/);
   await page.getByRole('dialog').getByRole('button', { name: 'Close' }).first().click();
 
-  const newPassword = 'marigold-lantern-77';
-  await bobPage.goto(new URL(resetUrl).pathname);
-  await expect(bobPage.getByRole('heading', { name: 'Choose a new password' })).toBeVisible();
-  await expectAccessible(bobPage, '/reset');
-  await bobPage.getByLabel('New password', { exact: true }).fill(newPassword);
-  await bobPage.getByLabel('Repeat new password').fill(newPassword);
-  await bobPage.getByRole('button', { name: 'Set password' }).click();
-  await expect(bobPage.getByText('Password changed.')).toBeVisible();
-  await bobPage.getByRole('link', { name: 'Go to login' }).click();
-  await bobPage.getByLabel('Username').fill(bob.username);
-  await bobPage.getByLabel('Password', { exact: true }).fill(newPassword);
-  await bobPage.getByRole('button', { name: 'Log in' }).click();
+  const newDevice = authenticator(baseURL as string);
+  await usePasskeys(bobPage, newDevice);
+  await bobPage.goto(new URL(recoveryUrl).pathname);
+  await expect(bobPage.getByRole('heading', { name: 'Recover your account' })).toBeVisible();
+  await expect(bobPage.getByText('For Bob')).toBeVisible();
+  await expectAccessible(bobPage, '/recover');
+  await bobPage.getByRole('button', { name: 'Create a new passkey' }).click();
   await expect(bobPage.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
+  expect(newDevice.credentials).toHaveLength(1);
+
+  // The old passkey no longer signs in.
+  await expect(bob.api.signIn(bob.auth)).rejects.toThrow(/401/);
 
   // The link works once.
-  await bobPage.goto(new URL(resetUrl).pathname);
-  await bobPage.getByLabel('New password', { exact: true }).fill(newPassword);
-  await bobPage.getByLabel('Repeat new password').fill(newPassword);
-  await bobPage.getByRole('button', { name: 'Set password' }).click();
-  await expect(bobPage.getByRole('alert')).toContainText('not valid');
+  await bobPage.goto(new URL(recoveryUrl).pathname);
+  await expect(bobPage.getByRole('alert')).toContainText('This recovery link is not valid');
 
   // Members cannot reach the console.
   await bobPage.goto('/admin/users');

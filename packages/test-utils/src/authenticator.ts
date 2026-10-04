@@ -1,7 +1,14 @@
 // A software WebAuthn authenticator for tests (ADR-0018): creates ES256 discoverable credentials
 // with user verification and answers assertions, producing the same JSON a browser would.
 // Test-only: private keys live in memory.
-import { createHash, generateKeyPairSync, randomBytes, sign, type KeyObject } from 'node:crypto';
+import {
+  createHash,
+  createPrivateKey,
+  generateKeyPairSync,
+  randomBytes,
+  sign,
+  type KeyObject,
+} from 'node:crypto';
 
 type Json = Record<string, unknown>;
 
@@ -52,10 +59,60 @@ const FLAG_UP = 0x01;
 const FLAG_UV = 0x04;
 const FLAG_AT = 0x40;
 
+/** A credential as plain JSON, to keep a test persona's passkey across processes. */
+export interface ExportedCredential {
+  id: string;
+  /** PKCS#8 DER, base64url. */
+  privateKey: string;
+  userHandle: string;
+  rpId: string;
+  counter: number;
+}
+
+export interface SoftAuthenticatorOptions {
+  /**
+   * Whether assertions carry an increasing signature counter. Synced passkeys report 0; E2E
+   * personas use that so one credential can sign in from several processes.
+   */
+  counter?: boolean;
+}
+
 export class SoftAuthenticator {
   readonly credentials: StoredCredential[] = [];
+  private readonly counts: boolean;
 
-  constructor(readonly origin: string) {}
+  constructor(
+    readonly origin: string,
+    options: SoftAuthenticatorOptions = {},
+  ) {
+    this.counts = options.counter ?? true;
+  }
+
+  /** The credentials as JSON (test fixtures only: contains private keys). */
+  export(): ExportedCredential[] {
+    return this.credentials.map((c) => ({
+      id: c.id,
+      privateKey: b64url(c.privateKey.export({ format: 'der', type: 'pkcs8' })),
+      userHandle: c.userHandle,
+      rpId: c.rpId,
+      counter: c.counter,
+    }));
+  }
+
+  /** Adds credentials from `export()`. */
+  import(credentials: ExportedCredential[]): this {
+    for (const c of credentials) {
+      this.credentials.push({
+        ...c,
+        privateKey: createPrivateKey({
+          key: Buffer.from(c.privateKey, 'base64url'),
+          format: 'der',
+          type: 'pkcs8',
+        }),
+      });
+    }
+    return this;
+  }
 
   /** Answers `navigator.credentials.create()` for creation options JSON from the server. */
   create(options: Json): Json {
@@ -117,7 +174,7 @@ export class SoftAuthenticator {
         ? this.credentials.find((c) => allow.includes(c.id))
         : this.credentials[this.credentials.length - 1]);
     if (!cred) throw new Error('no matching credential');
-    cred.counter += 1;
+    if (this.counts) cred.counter += 1;
     const counter = Buffer.alloc(4);
     counter.writeUInt32BE(cred.counter);
     const authData = Buffer.concat([

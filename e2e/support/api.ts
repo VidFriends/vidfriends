@@ -2,9 +2,16 @@
 import type { APIRequestContext } from '@playwright/test';
 import { request } from '@playwright/test';
 import { API_PREFIX } from '@vidfriends/contracts';
+import type { SoftAuthenticator } from '@vidfriends/test-utils/authenticator';
+import { adminAuthenticator } from './passkeys';
 
-export const ADMIN = { username: 'alex', password: 'correct-horse-battery-9' } as const;
-export const PASSWORD = 'tangerine-orbit-42';
+export const ADMIN = { username: 'alex' } as const;
+
+type Json = Record<string, unknown>;
+interface Ceremony {
+  ceremony_id: string;
+  options: Json;
+}
 
 export class Api {
   private csrf = '';
@@ -41,26 +48,36 @@ export class Api {
     return (await res.json()) as T;
   }
 
-  async login(username: string, password: string) {
-    return this.post<{ user: { id: string } }>('/auth/login', {
-      username,
-      password,
-      client: 'web',
+  /** Signs in with a passkey from `auth` (FR-AUTH-04). */
+  async signIn(auth: SoftAuthenticator) {
+    const { ceremony_id, options } = await this.post<Ceremony>('/auth/signin/options');
+    return this.post<{ user: { id: string } }>('/auth/signin', {
+      ceremony_id,
+      credential: auth.get(options),
     });
+  }
+
+  /** An API context signed in as the admin claimed by the setup test. */
+  static async admin(baseURL: string): Promise<Api> {
+    const api = await Api.create(baseURL);
+    await api.signIn(adminAuthenticator(baseURL));
+    return api;
   }
 
   async createInvite(body: { max_uses?: number; auto_friend?: boolean } = {}) {
     return this.post<{ code: string; join_url: string; invite: { id: string } }>('/invites', body);
   }
 
-  /** Registers a new member through an invite and logs this context in as them. */
-  async register(code: string, username: string, displayName: string) {
-    return this.post<{ user: { id: string; username: string } }>('/auth/register', {
+  /** Joins through an invite with a new passkey in `auth` and signs this context in (FR-AUTH-02). */
+  async register(code: string, username: string, displayName: string, auth: SoftAuthenticator) {
+    const { ceremony_id, options } = await this.post<Ceremony>('/auth/register/options', {
       username,
-      password: PASSWORD,
       display_name: displayName,
       invite_code: code,
-      client: 'web',
+    });
+    return this.post<{ user: { id: string; username: string } }>('/auth/register', {
+      ceremony_id,
+      credential: auth.create(options),
     });
   }
 

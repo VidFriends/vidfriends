@@ -77,7 +77,7 @@ jobs:
           node-version: '24'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @vidfriends/contracts build
+      - run: pnpm --filter @vidfriends/contracts --filter @vidfriends/test-utils build
       - run: pnpm --filter @vidfriends/e2e stack:up
       - run: pnpm --filter @vidfriends/e2e exec playwright install --with-deps chromium chrome firefox webkit
       - run: pnpm --filter @vidfriends/e2e e2e
