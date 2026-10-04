@@ -1,5 +1,5 @@
 import { API_VERSION } from '@vidfriends/contracts';
-import { isPrivateAddress, parseInstanceInput, verifyInstance } from './instance';
+import { isLoopback, parseInstanceInput, verifyInstance } from './instance';
 
 describe('parseInstanceInput (WF-PAIR-1/3)', () => {
   it.each([
@@ -12,8 +12,8 @@ describe('parseInstanceInput (WF-PAIR-1/3)', () => {
       'AbCdEf123456',
     ],
     ['  https://vids.example.org/join/AbCdEf123456/  ', 'https://vids.example.org', 'AbCdEf123456'],
-    ['http://192.168.1.20:8080', 'http://192.168.1.20:8080', null],
-    ['http://10.0.2.2:8880/join/code_123-xyz', 'http://10.0.2.2:8880', 'code_123-xyz'],
+    ['http://localhost:8880/join/code_123-xyz', 'http://localhost:8880', 'code_123-xyz'],
+    ['http://127.0.0.1:8080', 'http://127.0.0.1:8080', null],
   ])('accepts %s', (input, baseUrl, code) => {
     expect(parseInstanceInput(input)).toMatchObject({ baseUrl, inviteCode: code });
   });
@@ -22,33 +22,24 @@ describe('parseInstanceInput (WF-PAIR-1/3)', () => {
     ['', 'empty'],
     ['ftp://example.org', 'invalid'],
     ['https://user:pw@example.org', 'invalid'],
-    ['http://vids.example.org', 'insecure_public'],
-    ['http://8.8.8.8', 'insecure_public'],
-    ['http://printer.local', 'insecure_public'],
+    ['http://vids.example.org', 'insecure'],
+    ['http://8.8.8.8', 'insecure'],
+    ['http://printer.local', 'insecure'],
+    // Passkeys need https: private addresses no longer qualify (ADR-0018).
+    ['http://192.168.1.20:8080', 'insecure'],
+    ['http://10.0.2.2:8880/join/code_123-xyz', 'insecure'],
   ])('rejects %j as %s', (input, reason) => {
     expect(parseInstanceInput(input)).toBe(reason);
   });
-
-  it('flags plain http on a private address as insecure', () => {
-    expect(parseInstanceInput('http://172.20.0.5')).toMatchObject({ insecure: true });
-  });
 });
 
-describe('isPrivateAddress', () => {
-  it.each([
-    '10.1.2.3',
-    '172.16.0.1',
-    '172.31.255.255',
-    '192.168.0.1',
-    '127.0.0.1',
-    '169.254.1.1',
-    '::1',
-    'fd12:3456::1',
-    'fe80::1',
-  ])('%s is private', (h) => expect(isPrivateAddress(h)).toBe(true));
-  it.each(['172.32.0.1', '8.8.8.8', '192.169.0.1', '300.1.1.1', 'example.org', '2001:db8::1'])(
-    '%s is not private',
-    (h) => expect(isPrivateAddress(h)).toBe(false),
+describe('isLoopback', () => {
+  it.each(['localhost', '127.0.0.1', '127.1.2.3', '::1', '[::1]'])('%s is loopback', (h) =>
+    expect(isLoopback(h)).toBe(true),
+  );
+  it.each(['10.0.2.2', '192.168.0.1', 'fd12:3456::1', 'localhost.example.org', 'example.org'])(
+    '%s is not loopback',
+    (h) => expect(isLoopback(h)).toBe(false),
   );
 });
 

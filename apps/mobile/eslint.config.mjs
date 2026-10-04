@@ -10,4 +10,19 @@ export default [
       globals: { jest: 'readonly', describe: 'readonly', it: 'readonly', expect: 'readonly' },
     },
   },
+  {
+    // Maestro scripts run in its GraalJS host with these globals and the flow's env.
+    files: ['e2e/scripts/*.js'],
+    languageOptions: {
+      sourceType: 'script',
+      globals: {
+        http: 'readonly',
+        json: 'readonly',
+        output: 'writable',
+        SERVER_URL: 'readonly',
+        TOKEN: 'readonly',
+        HANDOFF_CHALLENGE: 'readonly',
+      },
+    },
+  },
 ];

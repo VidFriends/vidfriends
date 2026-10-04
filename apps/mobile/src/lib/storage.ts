@@ -7,7 +7,6 @@ const KEYS = { instance: 'vf.instance', token: 'vf.token' } as const;
 export interface PairedInstance {
   baseUrl: string;
   name: string;
-  insecure: boolean;
 }
 
 export async function loadInstance(): Promise<PairedInstance | null> {

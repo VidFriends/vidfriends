@@ -54,7 +54,7 @@ function AppAuthPage() {
   const me = useQuery({ queryKey: ['app-auth-me'], queryFn: () => currentUser(queryClient) });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState(false);
+  const [returnUrl, setReturnUrl] = useState<string | null>(null);
 
   if (!state || !challenge) {
     return (
@@ -68,8 +68,9 @@ function AppAuthPage() {
     const { code } = await api.call(createMobileCode, { body: { code_challenge: challenge! } });
     if (createdHere) await api.call(logout, { body: { all: false } }).catch(() => {});
     queryClient.clear();
-    setDone(true);
-    window.location.href = `${CALLBACK}?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state!)}`;
+    const url = `${CALLBACK}?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state!)}`;
+    setReturnUrl(url);
+    window.location.href = url;
   }
 
   async function run(action: () => Promise<void>) {
@@ -84,10 +85,15 @@ function AppAuthPage() {
     }
   }
 
-  if (done) {
+  if (returnUrl) {
     return (
       <AuthShell title={t('appAuth.title')}>
-        <p>{t('appAuth.done')}</p>
+        <div className="grid gap-4">
+          <p>{t('appAuth.done')}</p>
+          <a href={returnUrl} className="text-sm underline">
+            {t('appAuth.return')}
+          </a>
+        </div>
       </AuthShell>
     );
   }

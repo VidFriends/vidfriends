@@ -7,7 +7,7 @@
     "invite_invalid": "This invite link is not valid. It may have expired, been used up or been revoked. Ask your friend for a new one.",
     "setup_invalid": "That setup token is not correct. Copy it again from the server log.",
     "unauthorized": "Please log in.",
-    "invalid_credentials": "Wrong username or password.",
+    "invalid_credentials": "That passkey is not registered on this server.",
     "account_suspended": "This account is suspended. Contact your server admin.",
     "forbidden": "You are not allowed to do that.",
     "csrf_failed": "Your session needs refreshing. Reload the page and try again.",
@@ -30,17 +30,10 @@
     "video_not_found": "That video isn't available.",
     "invalid_reaction": "Pick one of the reactions.",
     "last_admin": "This is the only admin. Promote someone else first.",
-    "reset_invalid": "This password-reset link is not valid. It may have expired or already been used. Ask your admin for a new one.",
     "generic": "Something went wrong. Please try again.",
-    "required": "Fill in both fields.",
-    "username": "3–30 characters: lowercase letters, numbers, dots and underscores.",
-    "displayName": "Up to 50 characters.",
-    "password": "Choose a password of 10 to 128 characters.",
-    "password_too_short": "Use at least 10 characters.",
-    "password_too_long": "Use at most 128 characters.",
     "unsupported_type": "That file type isn't supported. Use MP4, MOV or WebM.",
-    "password_common": "That password is too common. Pick something less guessable.",
-    "export_in_progress": "Your data is already being prepared."
+    "export_in_progress": "Your data is already being prepared.",
+    "code_invalid": "The sign-in expired or was already used. Please try again."
   },
   "nav": {
     "home": "Home",
@@ -63,32 +56,31 @@
     "noDefault": "There is no public VidFriends server. Ask the friend who invited you for their link.",
     "cameraNeeded": "VidFriends needs the camera to scan the QR code.",
     "allowCamera": "Allow camera",
-    "insecureWarning": "This connection is not encrypted. Use it only on your home network.",
     "errors": {
       "empty": "Paste a link or address first.",
       "invalid": "That doesn't look like a link.",
-      "insecure_public": "Plain http:// is only allowed for addresses on your local network. Use https://.",
       "unreachable": "Couldn't reach that server. Check the address and your connection.",
       "not_vidfriends": "That server isn't a VidFriends server.",
-      "incompatible": "This server runs a version the app doesn't support. Update the app or ask the operator to upgrade."
+      "incompatible": "This server runs a version the app doesn't support. Update the app or ask the operator to upgrade.",
+      "insecure": "This address uses plain http://. VidFriends servers need https://, because passkeys only work over a secure connection."
     }
   },
   "login": {
-    "title": "Log in",
+    "title": "Sign in",
     "server": "Server: {{name}}",
-    "username": "Username",
-    "password": "Password",
-    "submit": "Log in",
+    "passkeyHelp": "You sign in with the passkey you created when you joined. Your browser opens this server's sign-in page and brings you back to the app.",
+    "submit": "Sign in with a passkey",
     "noAccount": "No account yet? Open an invite link from a friend.",
-    "otherServer": "Use a different server"
+    "lostPasskey": "Lost your passkey? Ask your server admin for a recovery link.",
+    "otherServer": "Use a different server",
+    "handoffInvalid": "This sign-in didn't come from the app or has expired.",
+    "tryAgain": "Start again from the sign-in screen."
   },
   "join": {
     "title": "Join {{name}}",
     "invitedBy": "{{name}} invited you.",
-    "username": "Username",
-    "displayName": "Display name (optional)",
-    "password": "Password",
-    "submit": "Create account",
+    "passkeyHelp": "Your browser opens this server's join page. Choose a username there and create a passkey (fingerprint, face or screen lock); then you come back to the app, signed in.",
+    "submit": "Continue to create your account",
     "haveAccount": "I already have an account"
   },
   "feed": {

@@ -660,7 +660,8 @@
     "continueAs": "Continue as {{name}}",
     "otherAccount": "Use a different passkey",
     "note": "After signing in you return to the app. Only continue if you opened this from the VidFriends app.",
-    "done": "Signed in. You can return to the app.",
-    "invalid": "This sign-in link is incomplete. Start again from the app."
+    "done": "Signed in. The app should open now.",
+    "invalid": "This sign-in link is incomplete. Start again from the app.",
+    "return": "Return to the app"
   }
 }

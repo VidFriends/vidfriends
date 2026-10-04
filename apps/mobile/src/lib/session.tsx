@@ -2,6 +2,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createApiClient, type ApiClient } from '@vidfriends/api-client';
 import { ApiProvider } from '@vidfriends/api-client/react';
+import { exchangeMobileCode } from '@vidfriends/contracts';
+import * as Crypto from 'expo-crypto';
+import * as WebBrowser from 'expo-web-browser';
 import {
   createContext,
   useCallback,
@@ -12,7 +15,25 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import {
+  CALLBACK_URL,
+  challengeFromDigest,
+  handoffUrl,
+  parseCallback,
+  randomToken,
+  type HandoffRequest,
+} from './handoff';
 import * as storage from './storage';
+
+/**
+ * E2E builds only (set at bundle time, never in releases): a fixed PKCE verifier for the `state`
+ * `e2e`, so Maestro can hand the app a code minted by the seed script, because an emulator
+ * browser cannot run a passkey ceremony. Release bundles have no value here.
+ */
+const E2E_VERIFIER = process.env.EXPO_PUBLIC_E2E_HANDOFF_VERIFIER;
+export const E2E_STATE = 'e2e';
+
+export type HandoffOutcome = 'signed_in' | 'cancelled';
 
 interface SessionState {
   ready: boolean;
@@ -26,6 +47,10 @@ interface SessionApi extends SessionState {
   api: ApiClient;
   pair(instance: storage.PairedInstance, inviteCode: string | null): Promise<void>;
   signIn(token: string): Promise<void>;
+  /** WF-AUTH-5: sign in or join with a passkey in the browser, then return to the app. */
+  startHandoff(mode: HandoffRequest['mode'], invite?: string | null): Promise<HandoffOutcome>;
+  /** Finishes a hand-off from its `vidfriends://auth` callback (once per code). */
+  completeHandoff(url: string): Promise<void>;
   /** Signs out; the server can be changed only after signing out (WF-PAIR-2). */
   signOut(options?: { forgetServer?: boolean }): Promise<void>;
   consumeInvite(): string | null;
@@ -42,6 +67,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     pendingInvite: null,
   });
   const token = useRef<string | null>(null);
+  const pending = useRef<{ state: string; verifier: string } | null>(null);
+  const exchanges = useRef(new Map<string, Promise<void>>());
   const queryClient = useMemo(
     () =>
       new QueryClient({
@@ -86,6 +113,38 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [state.instance?.baseUrl, signOut],
   );
 
+  const signIn = async (newToken: string) => {
+    token.current = newToken;
+    await storage.saveToken(newToken);
+    queryClient.clear();
+    setState((s) => ({ ...s, signedIn: true, pendingInvite: null }));
+  };
+
+  const completeHandoff = (url: string): Promise<void> => {
+    const query = new URLSearchParams(url.split('?')[1] ?? '');
+    // The browser result and the deep link can both deliver the same callback.
+    const running = exchanges.current.get(query.get('code') ?? '');
+    if (running) return running;
+    const state = query.get('state') ?? '';
+    const verifier =
+      pending.current?.state === state
+        ? pending.current.verifier
+        : E2E_VERIFIER && state === E2E_STATE
+          ? E2E_VERIFIER
+          : null;
+    const code = verifier ? parseCallback(url, state) : null;
+    if (!verifier || !code) return Promise.reject(new Error('handoff_invalid'));
+    pending.current = null;
+    const run = (async () => {
+      const res = await api.call(exchangeMobileCode, {
+        body: { code, code_verifier: verifier },
+      });
+      await signIn(res.token);
+    })();
+    exchanges.current.set(code, run);
+    return run;
+  };
+
   const value: SessionApi = {
     ...state,
     api,
@@ -94,12 +153,29 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       await storage.saveInstance(instance);
       setState((s) => ({ ...s, instance, pendingInvite: inviteCode }));
     },
-    async signIn(newToken) {
-      token.current = newToken;
-      await storage.saveToken(newToken);
-      queryClient.clear();
-      setState((s) => ({ ...s, signedIn: true, pendingInvite: null }));
+    signIn,
+    async startHandoff(mode, invite) {
+      if (!state.instance) throw new Error('not paired');
+      const verifier = randomToken(Crypto.getRandomBytes(32));
+      const handoffState = randomToken(Crypto.getRandomBytes(16));
+      const digest = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, verifier, {
+        encoding: Crypto.CryptoEncoding.BASE64,
+      });
+      pending.current = { state: handoffState, verifier };
+      const result = await WebBrowser.openAuthSessionAsync(
+        handoffUrl(state.instance.baseUrl, {
+          mode,
+          state: handoffState,
+          codeChallenge: challengeFromDigest(digest),
+          invite,
+        }),
+        CALLBACK_URL,
+      );
+      if (result.type !== 'success') return 'cancelled';
+      await completeHandoff(result.url);
+      return 'signed_in';
     },
+    completeHandoff,
     signOut,
     consumeInvite() {
       return state.pendingInvite;

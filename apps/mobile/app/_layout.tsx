@@ -35,6 +35,7 @@ function Screens() {
       <Stack.Screen name="scan" options={{ title: t('pair.scanTitle') }} />
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="join" options={{ headerShown: false }} />
+      <Stack.Screen name="auth" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="share/[id]" options={{ title: t('share.title') }} />
       <Stack.Screen name="saved" options={{ title: t('lists.saved') }} />
