@@ -1,6 +1,6 @@
 # ADR-0008: Opaque server-side sessions (cookie for web, bearer for mobile), not JWTs
 
-- **Status:** Accepted
+- **Status:** Accepted; password parts superseded by [ADR-0018](0018-passkey-only-sign-in.md)
 - **Date:** 2026-10-03
 - **Decided by:** Claude under delegation
 

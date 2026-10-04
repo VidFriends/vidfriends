@@ -30,7 +30,7 @@ MoSCoW priority applies to v1. "v1" means milestones M1–M6 in the [roadmap](..
 | ID | Capability | Priority | BO | SRS group | Milestone |
 |---|---|---|---|---|---|
 | CAP-01 | Instance onboarding: connect to a server by URL or QR, see server name, health-checked | Must | BO-4 | FR-PAIR | M1 (web implicit), M6 (mobile) |
-| CAP-02 | Accounts: register with invite, log in/out, sessions, profile (display name, avatar), change password, delete account | Must | BO-5 | FR-AUTH, FR-ACCT | M1 |
+| CAP-02 | Accounts: register with invite, sign in with a passkey, log out, sessions, profile (display name, avatar), manage passkeys, delete account | Must | BO-5 | FR-AUTH, FR-ACCT | M1 |
 | CAP-03 | Friends: search by username, request, accept, decline, cancel, remove, block and unblock | Must | BO-1 | FR-FRND | M2 |
 | CAP-04 | Add a video by **link** (server fetches metadata and media) or **upload** a file | Must | BO-1 | FR-VID | M3 |
 | CAP-05 | **Send** a video to one or more friends with an optional note | Must | BO-1 | FR-SHR | M4 |
@@ -44,7 +44,7 @@ MoSCoW priority applies to v1. "v1" means milestones M1–M6 in the [roadmap](..
 | CAP-13 | Duplicate awareness: "Sam already sent you this" (same normalised URL or identical file) | Could | BO-2 | FR-VID-08 | M4 |
 | CAP-14 | Collections / playlists of saved videos | Won't (v1) | – | – | Backlog |
 | CAP-15 | Offline downloads on mobile | Could | – | – | Backlog |
-| CAP-16 | Passkey sign-in | Should (post-v1) | BO-5 | – | Backlog |
+| CAP-16 | Passkey-only sign-in (no passwords), passkey management, admin recovery link, mobile sign-in by browser hand-off | Must (scheduled by the owner 2026-10-04) | BO-5 | FR-AUTH-01..04, FR-ACCT-02/03, FR-ADM-03 | M7 |
 | CAP-17 | Import from YouTube or other playlists via OAuth | Won't | – | – | Not planned |
 | CAP-18 | Self-service data export | Should (post-v1; scheduled by the owner 2026-10-04) | BO-5 | FR-ACCT-05 | M7 |
 | CAP-19 | Realtime updates (push-to-open-tab) | Could. Polling is acceptable in v1. | – | – | Backlog |
@@ -59,7 +59,7 @@ MoSCoW priority applies to v1. "v1" means milestones M1–M6 in the [roadmap](..
 **J-2 Friend joins (CAP-01, CAP-02, CAP-03)**
 1. Sam opens the invite link, or scans the QR in the mobile app (M6).
 2. The app shows the instance name and the inviter.
-3. Sam picks a username and password and lands in the app.
+3. Sam picks a username, creates a passkey with their phone's screen lock, and lands in the app.
 4. If the invite carries an inviter, Sam and the inviter become friends automatically. This is consent by both: the inviter by creating the invite, Sam by accepting it.
 
 **J-3 Send a video (CAP-04, CAP-05)**
@@ -86,7 +86,7 @@ MoSCoW priority applies to v1. "v1" means milestones M1–M6 in the [roadmap](..
 2. Alex suspends a member, which ends their sessions immediately.
 
 **J-8 Leave (CAP-02)**
-1. Sam deletes their account after re-entering the password.
+1. Sam deletes their account after confirming with their passkey.
 2. Sam's uploads, shares and engagement are erased per the deletion rules (FRD WF-ACCT-3).
 
 ## 5. Non-goals
@@ -97,7 +97,8 @@ MoSCoW priority applies to v1. "v1" means milestones M1–M6 in the [roadmap](..
 - Group chats or DMs without a video.
 - Editing or transcoding tools beyond server-side normalisation to a playable format.
 - Multi-community hosting in one deployment, and federation.
-- Email delivery infrastructure in v1. Password recovery is admin-assisted.
+- Email delivery infrastructure in v1. Recovery after losing every passkey is admin-assisted.
+- Passwords: sign-in is passkey-only ([ADR-0018](../adr/0018-passkey-only-sign-in.md)).
 
 ## 6. Product-level acceptance (v1)
 

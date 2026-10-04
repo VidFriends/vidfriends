@@ -25,22 +25,22 @@
 |---|---|---|---|---|---|---|
 | FR-PAIR-01 | `GET /api/v1/instance` returns, without authentication, the instance name, signup mode, server version, API major version, and whether setup is complete. | M | CAP-01, WF-PAIR-1 | LLD §3 | M1 | API |
 | FR-PAIR-02 | The web client is served by the instance at `/`, and calls the API on the same origin. | M | WF-PAIR-4 | HLD §3 | M1 | E2E |
-| FR-PAIR-03 | The mobile app connects to an instance via QR scan or a pasted join or instance URL (no default instance, ADR-0014). It validates the instance with FR-PAIR-01 before saving it, and reapplies the saved URL on every launch. | M | WF-PAIR-1..3, L-16 | ADR-0013 | M6 | E2E (mobile) |
+| FR-PAIR-03 | The mobile app connects to an instance via QR scan or a pasted join or instance URL (no default instance, ADR-0014). It accepts only `https://` URLs (ADR-0018), validates the instance with FR-PAIR-01 before saving it, and reapplies the saved URL on every launch. | M | WF-PAIR-1..3, L-16 | ADR-0013, ADR-0018 | M6; https-only M7 | Unit, E2E (mobile) |
 | FR-PAIR-04 | Join URLs `https://<host>/join/<code>` open the web registration screen with the code prefilled. The mobile app accepts the same URL via in-app scan or paste. There are no Universal or App Links (ADR-0014). | M | BR-INV-4 | ADR-0013, ADR-0014 | M1 (web), M6 (in-app) | E2E |
 
 ### 1.2 Authentication and accounts (FR-AUTH, FR-ACCT)
 
 | ID | Requirement | Pri | Source | Design | MS | Verification |
 |---|---|---|---|---|---|---|
-| FR-AUTH-01 | When no admin exists, the server generates and logs a one-time setup token, and `/setup` lets its holder create the first admin and name the instance. | M | WF-AUTH-1 | LLD §5 | M1 | API, E2E |
-| FR-AUTH-02 | Registration requires a valid invite in `invite_only` mode, consumes invites atomically, and applies `auto_friend`. | M | WF-AUTH-2, BR-INV-1..2 | LLD §2 | M1 | API (incl. concurrent-consume test) |
-| FR-AUTH-03 | Username and password validation follows BR-ACCT-1..2, including a common-password denylist. | M | BR-ACCT-1..2 | LLD §5 | M1 | Unit, API |
-| FR-AUTH-04 | Login creates a server-side session: an httpOnly cookie for web, a bearer token for mobile. Logout revokes the session. "Log out everywhere" revokes all of the user's sessions. | M | WF-AUTH-3 | ADR-0008 | M1 | API, E2E |
+| FR-AUTH-01 | When no admin exists, the server generates and logs a one-time setup token, and `/setup` lets its holder create the first admin, with a passkey, and name the instance. | M | WF-AUTH-1 | ADR-0018, LLD §5 | M1; passkey M7 | API, E2E |
+| FR-AUTH-02 | Registration requires a valid invite in `invite_only` mode, consumes invites atomically, applies `auto_friend`, and creates the account with a passkey. | M | WF-AUTH-2, BR-INV-1..2 | ADR-0018, LLD §2 | M1; passkey M7 | API (incl. concurrent-consume test), E2E |
+| FR-AUTH-03 | Accounts authenticate only with passkeys (WebAuthn discoverable credentials, user verification required; relying party = the `PUBLIC_URL` host). There are no passwords. Usernames follow BR-ACCT-1. A member can hold several named passkeys and cannot remove the last one. | M | BR-ACCT-1, BR-ACCT-2 | ADR-0018 | M7 | Unit, API, E2E |
+| FR-AUTH-04 | Signing in with a passkey creates a server-side session: an httpOnly cookie for web, a bearer token for mobile (obtained through the browser hand-off of ADR-0018 with a single-use, PKCE-bound code). Logout revokes the session. "Log out everywhere" revokes all of the user's sessions. | M | WF-AUTH-3 | ADR-0008, ADR-0018 | M1; passkey M7 | API, E2E |
 | FR-AUTH-05 | Sessions follow the lifetimes in BR-SES-1, are revoked per BR-SES-2, and each request re-validates the session and account status (BR-SES-3). | M | BR-SES-1..3 | ADR-0008 | M1 | API |
 | FR-AUTH-06 | Suspended accounts cannot authenticate, and any existing session is rejected on its next request. | M | BR-ADM-2 | ADR-0008 | M1 (enforcement), M5 (UI) | API |
 | FR-ACCT-01 | Members can edit their display name and avatar (BR-ACCT-3). | M | WF-ACCT-1 | LLD §3 | M2 | API, E2E |
-| FR-ACCT-02 | Members can change their password, which revokes their other sessions. | M | WF-ACCT-2 | LLD §3 | M1 | API |
-| FR-ACCT-03 | Members can delete their account with password re-entry, with the effects of WF-ACCT-3, including media garbage-collection eligibility. | M | WF-ACCT-3 | LLD §2 | M5 | API, E2E |
+| FR-ACCT-02 | Members can add, rename and remove passkeys. Removing one needs a fresh passkey confirmation, revokes the sessions it created, and is refused for the last passkey. | M | WF-ACCT-2 | ADR-0018, LLD §3 | M7 | API, E2E |
+| FR-ACCT-03 | Members can delete their account after a fresh passkey confirmation, with the effects of WF-ACCT-3, including media garbage-collection eligibility. | M | WF-ACCT-3 | LLD §2 | M5; passkey confirmation M7 | API, E2E |
 | FR-ACCT-04 | Members can list their active sessions and revoke one. | S | BR-SES-2 | LLD §3 | M5 | API |
 | FR-ACCT-05 | Members can request an export of their own data as a ZIP (WF-ACCT-4): profile, friends, requests and blocks, shares sent and received with notes, reactions and conversations, videos they added, their security log and avatar, and optionally the media files of videos they added. The archive is downloadable for 7 days. | S | WF-ACCT-4, BO-5, CAP-18 | LLD §2–3 | M7 | API, E2E |
 
@@ -120,7 +120,7 @@
 |---|---|---|---|---|---|---|
 | FR-ADM-01 | User management per WF-ADM-1, including last-admin protection. | M | WF-ADM-1 | LLD §3 | M5 | API, E2E |
 | FR-ADM-02 | Instance settings per WF-ADM-3, validated and audited. | M | WF-ADM-3 | LLD §2 | M5 (UI); M3 (media settings via config/API) | API |
-| FR-ADM-03 | Admin password-reset links per WF-ADM-4. | M | WF-ADM-4 | LLD §5 | M5 | API, E2E |
+| FR-ADM-03 | Recovery links per WF-ADM-4: an admin creates a single-use 24 h link that lets a member register a new passkey, which removes their other passkeys and sessions. The operator can print one for any member, including an admin, with the server's `recovery-link` command. | M | WF-ADM-4 | ADR-0018, LLD §5 | M5; passkeys M7 | API, E2E |
 | FR-ADM-04 | Storage overview and manual retention run per WF-ADM-5. | M | WF-ADM-5 | LLD §3 | M5 | API |
 | FR-ADM-05 | Audit log per WF-ADM-6. Admin APIs never expose conversation content or notes (BR-ADM-1). | M | WF-ADM-6, BR-ADM-1 | LLD §2 | M1 (writes), M5 (UI) | API |
 
@@ -143,7 +143,7 @@ Numbers marked † are **proposed targets** chosen under delegation for a small 
 | ID | Requirement | Pri | MS | Verification |
 |---|---|---|---|---|
 | NFR-SEC-01 | **Object-level authorization:** every endpoint that takes a resource id enforces the visibility rules (BR-GEN-3, BR-SHR-6, BR-ENG-1). An automated authorization-matrix test exercises every route against owner, other-participant, friend-not-participant, stranger, blocked user, suspended user and anonymous callers. | M | M1 (harness), each MS | API |
-| NFR-SEC-02 | Passwords use argon2id with OWASP-recommended parameters. Session tokens, invite codes and reset tokens are stored only as SHA-256 hashes. | M | M1 | Unit, Audit |
+| NFR-SEC-02 | No passwords are stored (ADR-0018). Passkey public keys and counters are stored per credential; WebAuthn challenges are single-use and expire within 5 minutes. Session tokens, invite codes, recovery tokens and mobile hand-off codes are stored only as SHA-256 hashes. In production the server requires an `https://` `PUBLIC_URL` with a domain name (`localhost` excepted). | M | M1; passkeys M7 | Unit, API, Audit |
 | NFR-SEC-03 | The server refuses to start in production mode if any required secret is missing, matches a known default, or is too short ([L-06](../legacy/AUDIT.md#4-lessons-referenced-by-id-from-the-design-docs)). | M | M1 | Unit |
 | NFR-SEC-04 | Web: session cookie is `HttpOnly; Secure; SameSite=Lax`. CSRF protection uses Origin checks plus a double-submit token on unsafe methods. Strict CSP (no inline script). Standard security headers. | M | M1 | API, Audit |
 | NFR-SEC-05 | Outbound fetches (yt-dlp, metadata, web push) go only to allowlisted or public addresses. Private and reserved IP ranges are blocked after DNS resolution, user input is never passed as CLI options (`--` separator), and processes run with a timeout and an output size cap. | M | M3 | Unit, API |
@@ -152,7 +152,7 @@ Numbers marked † are **proposed targets** chosen under delegation for a small 
 | NFR-SEC-08 | Uploaded media and avatars are content-sniffed and re-encoded or remuxed before they are served. User-supplied filenames are never used in storage keys. | M | M3 | API |
 | NFR-PRIV-01 | No third-party analytics, trackers, fonts or CDNs in clients. All assets are self-served. | M | M1 | Audit |
 | NFR-PRIV-02 | Logs never contain passwords, tokens, invite codes, push endpoints, notes or replies. Usernames are logged only as user ids. | M | M1 | Unit (log redaction test), Audit |
-| NFR-PRIV-03 | Personal data collected is limited to username, display name, avatar, password hash and activity data needed for features. No email or phone number in v1. | M | M1 | Audit |
+| NFR-PRIV-03 | Personal data collected is limited to username, display name, avatar, passkey public keys with their names, and activity data needed for features. No email, phone number or password in v1. | M | M1 | Audit |
 
 ### Reliability and data (NFR-REL, NFR-DATA)
 
@@ -225,5 +225,6 @@ The tables above are the trace matrix: each row links a requirement to its PRD c
 | M4 | FR-SHR-01..03,05; FR-FEED-01..06; FR-ENG-01..02; FR-NOTIF-01,04,05; NFR-A11Y-01; NFR-COMPAT-01 |
 | M5 | FR-ACCT-03; FR-VID-06; FR-ADM-01..05 (UI); NFR-REL-04,05; NFR-DATA-01; NFR-OPS-01,03(metrics),04 |
 | M6 | FR-PAIR-03,04(in-app); FR-NOTIF-03; FR-MOB-01..03; NFR-A11Y-02; NFR-COMPAT-02 |
+| M7 | Passkey-only sign-in (ADR-0018): FR-AUTH-01..04, FR-ACCT-02,03, FR-ADM-03, FR-PAIR-03 (https-only), NFR-SEC-02 change their mechanism; FR-ACCT-05 (S) data export |
 
-Every Must requirement appears in exactly one delivery milestone (or is split explicitly by layer). NFR-MAINT-03 applies to every milestone.
+Every Must requirement appears in exactly one delivery milestone (or is split explicitly by layer); the M7 row lists requirements whose mechanism M7 replaced. NFR-MAINT-03 applies to every milestone.
