@@ -1,0 +1,19 @@
+# Reverse proxy (C-PROXY, TDD §6). Automatic HTTPS for {$DOMAIN}; `localhost` uses Caddy's local CA.
+# No access log: request paths carry invite codes and signed media URLs (NFR-PRIV-02).
+{
+	admin off
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Private media through presigned URLs. The path is NOT rewritten and Host is preserved, so
+	# SigV4 signatures made for the public origin validate at the store (ADR-0015).
+	handle /media-store/* {
+		reverse_proxy seaweedfs:8333
+	}
+
+	handle {
+		reverse_proxy server:8080
+	}
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "agentGuidance": false,
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "gen": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["^build"]
+    }
+  },
+  "globalPassThroughEnv": [
+    "TEST_*",
+    "E2E_*",
+    "PW_*",
+    "CI",
+    "NO_PROXY",
+    "no_proxy",
+    "HTTPS_PROXY",
+    "NODE_EXTRA_CA_CERTS"
+  ]
+}

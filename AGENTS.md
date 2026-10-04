@@ -47,7 +47,8 @@ VidFriends is a private "For You" feed made only of videos your friends sent you
    - Never edit a merged migration.
    - Never pass user input as CLI options.
    - Keep logs free of tokens and content.
-10. **Git:** the default branch is `main`, which is protected. Work on branches and open PRs; do not push directly to `main` once CI exists.
+10. **Git:** the default branch is `main`, which is protected. Work on branches and open PRs; do not push directly to `main` once CI exists. The owner has delegated merging (2026-10-04): an agent may merge its own PR into `main` once every CI check on the latest commit is green and no review thread is open. Then it starts the next piece of work on a fresh branch from `main`.
+11. **Blockers go to the owner as multiple-choice questions.** When work needs an owner-only decision or fact, ask with the built-in multiple-choice question tool (in Claude Code: `AskUserQuestion`) rather than burying the question in prose. Ask up to four questions at once, each with 2–4 concrete options. Put the recommended option first and mark it "(Recommended)". Each option's description says what you will do if it is chosen. Record the answers in the roadmap or BRD §7, then keep working on anything that isn't blocked while you wait.
 
 ## Repository layout
 

@@ -1,0 +1,112 @@
+# Release images (M5-T4, TDD §6): a `vX.Y.Z` tag builds the server and worker images for
+# linux/amd64 and linux/arm64, pushes them to GHCR with SBOM and provenance attestations, and
+# publishes a GitHub release with SPDX SBOMs attached. Pull requests that touch the release path
+# build both architectures without pushing, so a broken release is caught before tagging.
+name: Release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+', 'v[0-9]+.[0-9]+.[0-9]+-*']
+  pull_request:
+    paths:
+      - .github/workflows/release.yml
+      - Dockerfile
+      - deploy/docker/**
+      - deploy/worker/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  images:
+    name: Images (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [server, worker]
+    env:
+      PUSH: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Image name
+        id: name
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/vidfriends-${{ matrix.target }}" >> "$GITHUB_OUTPUT"
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ steps.name.outputs.image }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=pr
+          labels: |
+            org.opencontainers.image.title=vidfriends-${{ matrix.target }}
+      - uses: docker/login-action@v3
+        if: env.PUSH == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build (pushed only for tags)
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: ${{ matrix.target }}
+          platforms: linux/amd64,linux/arm64
+          push: ${{ env.PUSH == 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: VIDFRIENDS_VERSION=${{ steps.meta.outputs.version }}
+          sbom: true
+          provenance: mode=max
+          cache-from: type=gha,scope=release-${{ matrix.target }}
+          cache-to: type=gha,mode=max,scope=release-${{ matrix.target }}
+      - name: SPDX SBOM
+        if: env.PUSH == 'true'
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ steps.name.outputs.image }}@${{ steps.build.outputs.digest }}
+          format: spdx-json
+          output-file: vidfriends-${{ matrix.target }}.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+      - uses: actions/upload-artifact@v4
+        if: env.PUSH == 'true'
+        with:
+          name: sbom-${{ matrix.target }}
+          path: vidfriends-${{ matrix.target }}.spdx.json
+
+  release:
+    name: GitHub release
+    needs: images
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: sbom-*
+          merge-multiple: true
+      - name: Create the release with SBOMs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          prerelease=""
+          case "$TAG" in *-*) prerelease="--prerelease" ;; esac
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes \
+            $prerelease vidfriends-server.spdx.json vidfriends-worker.spdx.json

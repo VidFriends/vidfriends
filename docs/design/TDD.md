@@ -100,8 +100,8 @@
 | Elevation of privilege | Stale role, suspended user | Role and status read from the DB on every request; sessions revoked on change [FR-AUTH-05/06] |
 | SSRF | Link to internal services | Allowlist + private-IP block + `--` [NFR-SEC-05] |
 
-**Residual risks (accepted, revisit at M5):**
-- yt-dlp redirect-following can reach hosts outside the allowlist. Mitigation: the optional egress proxy.
+**Residual risks (accepted in [ADR-0016](../adr/0016-accepted-residual-security-risks-v0-1.md) after the M5 review):**
+- yt-dlp redirect-following can reach hosts outside the allowlist. Mitigation: SeaweedFS's unauthenticated master/volume/filer APIs bind to loopback (only the authenticated S3 gateway is on the network), and the optional egress proxy `FETCH_PROXY_URL`.
 - The operator can read all data. Mitigation: disclosed to users.
 
 **Secrets:**
@@ -117,7 +117,7 @@
 
 **Supply chain:**
 - Lockfiles committed. `pnpm audit` and Trivy (blocking on fixable criticals) in CI.
-- Images pinned by digest in the release compose file.
+- Third-party images (and the Node base image) pinned by digest in `deploy/compose*.yml` and the `Dockerfile`; Dependabot proposes updates. npm, corepack and pip are removed from the runtime images.
 - SBOMs generated (NFR-SEC-07, NFR-OPS-04).
 
 ## 6. Deployment and operations
@@ -126,17 +126,17 @@
 
 | Env | Purpose | How |
 |---|---|---|
-| dev | Local development | `pnpm dev` (Vite + tsx watch) against `deploy/compose.dev.yml` (Postgres, MinIO) |
+| dev | Local development | `pnpm dev` (Vite + tsx watch) against `deploy/compose.dev.yml` (Postgres, SeaweedFS) |
 | ci | Automated tests | Same compose services in GitHub Actions. Playwright runs against the built server image. |
 | staging (proposed) | Pre-release smoke | The owner's VM, deployed from `main` |
 | production | Self-hosted private instances (no public instance, ADR-0014) | `deploy/compose.yml` + `.env` |
 
 **Production compose:**
-- Services: `caddy`, `migrate` (one-shot), `server` (ROLE=api), `worker`, `postgres`, `minio`, `minio-init` (bucket + policy, one-shot).
-- Volumes: `pgdata`, `miniodata`, `work`, `caddy_data`.
+- Services: `caddy`, `migrate` (one-shot), `server` (ROLE=api), `worker`, `postgres`, `seaweedfs` ([ADR-0015](../adr/0015-bundled-object-store-seaweedfs.md)). The server creates the bucket on first start, so no init container is needed.
+- Volumes: `pgdata`, `s3data`, `work`, `caddy_data`, `caddy_config`.
 - Caddy routes:
   - `{$DOMAIN}` → `server:8080`
-  - `{$DOMAIN}/media-store/*` → `minio:9000`, with the prefix stripped and `S3_PUBLIC_ENDPOINT=https://{$DOMAIN}/media-store`
+  - `{$DOMAIN}/media-store/*` → `seaweedfs:8333`, **without** rewriting the path and with `Host` preserved. The bucket is named `media-store` and `S3_PUBLIC_ENDPOINT=PUBLIC_URL`, so path-style presigned URLs validate (SigV4 signs the path; ADR-0015).
 - Health checks gate startup order.
 
 **Observability:**
@@ -147,7 +147,7 @@
 
 **Backup and restore (NFR-REL-04):**
 - Nightly `pg_dump -Fc`, retaining 14 daily and 8 weekly copies.
-- MinIO data via `mc mirror` to a second disk or remote S3.
+- Object storage via an S3 sync tool (for example `rclone sync` or `aws s3 sync`) to a second disk or remote S3.
 - A documented restore drill executed at M5.
 - Proposed targets: RPO 24 h, RTO 2 h.
 
@@ -163,7 +163,7 @@
 | Static | `tsc`, ESLint (incl. jsx-a11y, import/no-cycle), Prettier | All packages | PR |
 | Unit | Vitest | Services (BR-* rules with a fake clock), URL validator table, config validation, log redaction | PR |
 | Contract | Vitest | Generated OpenAPI up to date; every route registered; responses validate | PR |
-| API integration | Vitest + real Postgres and MinIO (compose services) | Every FR via HTTP against the full Hono app; state-machine tables; **authz matrix**; job idempotency with kill/restart | PR |
+| API integration | Vitest + real Postgres and SeaweedFS S3 (compose or CI services) | Every FR via HTTP against the full Hono app; state-machine tables; **authz matrix**; job idempotency with kill/restart | PR |
 | Media | Vitest with fixture files and a fake `yt-dlp` script (deterministic) | Fetch, process and link_only paths, limits | PR. A live opt-in yt-dlp smoke test runs nightly (non-blocking, alerts). |
 | E2E web | Playwright (Chromium, Firefox, WebKit) + axe | Journeys J-1..J-8; seeded by API helpers; served by the production image | PR (Chromium), nightly (all) |
 | E2E mobile | Maestro on EAS or emulator builds | J-2..J-5 (M6) | Pre-release |
@@ -201,6 +201,6 @@
 |---|---|---|
 | DB session lookup per request vs stateless JWT | DB lookup | ~1 indexed query per request |
 | Polling vs realtime | Polling + push | Up to 60 s staleness in open tabs |
-| Presigned URLs vs proxied streaming | Presigned | MinIO must be reachable via the public proxy path |
+| Presigned URLs vs proxied streaming | Presigned | The bundled store must be reachable via the public proxy path (ADR-0015) |
 | One language (TS) vs Go performance | TS | Higher memory per process; acceptable at target scale |
 | Download and host vs embed | Download (switchable) | Legal exposure (BRD OQ-1), storage cost |
