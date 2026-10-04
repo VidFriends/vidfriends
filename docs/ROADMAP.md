@@ -319,7 +319,7 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7
 ## 7. Next actionable milestone
 
 **M7: post-v1 backlog.** Data export and passkey-only sign-in are done; realtime updates (M7-T7..T9) are next, chosen by the owner on 2026-10-04.
-- **Now (agents):** M7-T14/T15 Spanish and localised push titles, then M7-T16 groups of friends (owner's choices, 2026-10-04); then the next backlog item the owner schedules.
+- **Now (agents):** M7-T16 groups of friends (owner's choice, 2026-10-04; M7-T14/T15 are done); then the next backlog item the owner schedules.
 - **Owner:** check passkey sign-in on a real Android phone and iPhone against an HTTPS instance (M7-T6); enable branch protection on `main` (M1-T2); Apple and Google developer accounts for store builds (M6-T7). The alpha (M5-T9) is postponed by the owner.
 - **Verification:** each item's completion check in §5, with the CI run or record linked in the task row.
 
@@ -327,6 +327,7 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7
 
 | Date | Change |
 |---|---|
+| 2026-10-04 | M7-T14 Spanish and M7-T15 push titles in the member's language ✅, merged in [PR #125](https://github.com/VidFriends/vidfriends/pull/125) with CI green, including Playwright `language.spec.ts` and the Android Maestro suite. |
 | 2026-10-04 | M7-T7..T9 realtime updates ✅, merged in [PR #122](https://github.com/VidFriends/vidfriends/pull/122) with CI green, including the Android Maestro suite. |
 | 2026-10-04 | Owner answer (multiple choice): next, **group sends**: named groups of friends picked on Send (M7-T16, FR-FRND-06, BR-GRP-1..3); still one share per recipient. |
 | 2026-10-04 | Owner answer (multiple choice): next, **push titles in the member's language** (M7-T15). |
