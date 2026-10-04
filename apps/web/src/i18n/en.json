@@ -33,8 +33,6 @@
     "loadMore": "Load more",
     "optional": "optional",
     "genericError": "Something went wrong. Please try again.",
-    "showPassword": "Show password",
-    "hidePassword": "Hide password",
     "theme": "Theme",
     "themeSystem": "System",
     "themeLight": "Light",
@@ -46,7 +44,7 @@
     "invite_invalid": "This invite link is not valid. It may have expired, been used up or been revoked. Ask your friend for a new one.",
     "setup_invalid": "That setup token is not correct. Copy it again from the server log.",
     "unauthorized": "Please log in.",
-    "invalid_credentials": "Wrong username or password.",
+    "invalid_credentials": "That passkey is not registered on this server.",
     "account_suspended": "This account is suspended. Contact your server admin.",
     "forbidden": "You are not allowed to do that.",
     "csrf_failed": "Your session needs refreshing. Reload the page and try again.",
@@ -69,17 +67,18 @@
     "video_not_found": "That video isn't available.",
     "invalid_reaction": "Pick one of the reactions.",
     "last_admin": "This is the only admin. Promote someone else first.",
-    "reset_invalid": "This password-reset link is not valid. It may have expired or already been used. Ask your admin for a new one.",
-    "export_in_progress": "Your data is already being prepared."
+    "export_in_progress": "Your data is already being prepared.",
+    "recovery_invalid": "This recovery link is not valid. Ask your admin for a new one.",
+    "ceremony_invalid": "That took too long. Please try again.",
+    "passkey_invalid": "The passkey could not be verified. Please try again.",
+    "code_invalid": "This sign-in code is not valid. Start again from the app.",
+    "reauth_required": "Confirm with your passkey first.",
+    "last_passkey": "You can't remove your last passkey. Add another one first.",
+    "too_many_passkeys": "You already have 10 passkeys. Remove one first."
   },
   "fieldErrors": {
     "required": "Required.",
     "username_format": "Use 3–30 characters: lowercase letters, digits, dots or underscores, starting with a letter or digit.",
-    "password_too_short": "Use at least 10 characters.",
-    "password_too_long": "Use at most 128 characters.",
-    "password_common": "This password is too common. Pick something less guessable.",
-    "password_equals_username": "Your password must not be your username.",
-    "password_mismatch": "The passwords do not match.",
     "too_long": "Too long.",
     "invalid": "Invalid value.",
     "username_taken": "That username is taken.",
@@ -94,19 +93,20 @@
     "instanceName": "Server name",
     "instanceNameHelp": "Shown to everyone who joins, for example “The Smiths”.",
     "username": "Admin username",
-    "password": "Admin password",
     "submit": "Claim server",
     "claimed": "This server has already been set up.",
-    "goLogin": "Go to log in"
+    "goLogin": "Go to sign in",
+    "displayName": "Your display name",
+    "passkeyHelp": "Next, your device creates a passkey for this server. You sign in with it instead of a password."
   },
   "login": {
-    "title": "Log in",
+    "title": "Sign in",
     "subtitle": "to {{name}}",
-    "username": "Username",
-    "password": "Password",
-    "submit": "Log in",
+    "passkeyHelp": "Use the passkey you created when you joined. Your device asks for your fingerprint, face or screen lock.",
+    "submit": "Sign in with a passkey",
     "noAccount": "No account? Ask a friend on this server for an invite link.",
-    "expired": "Your session ended. Please log in again."
+    "lostPasskey": "Lost your passkey? Ask your server admin for a recovery link.",
+    "expired": "Your session ended. Please sign in again."
   },
   "join": {
     "title": "Join {{name}}",
@@ -116,12 +116,11 @@
     "displayNameHelp": "What friends see. You can change it later.",
     "username": "Username",
     "usernameHelp": "3–30 characters: lowercase letters, digits, dots and underscores. It can't be changed.",
-    "password": "Password",
-    "passwordHelp": "At least 10 characters.",
     "submit": "Create account",
     "trust": "Your server admin can technically access stored data. Only join servers run by people you trust.",
     "appHint": "Using the VidFriends app? Open it and scan the same QR code from inside the app.",
-    "haveAccount": "Already have an account? Log in"
+    "haveAccount": "Already have an account? Sign in",
+    "passkeyHelp": "Your device creates a passkey for this server (fingerprint, face or screen lock). There is no password."
   },
   "home": {
     "title": "Home",
@@ -131,12 +130,6 @@
   },
   "settings": {
     "title": "Settings",
-    "passwordTitle": "Change password",
-    "currentPassword": "Current password",
-    "newPassword": "New password",
-    "confirmPassword": "Repeat new password",
-    "passwordSubmit": "Change password",
-    "passwordChanged": "Password changed. Your other sessions were logged out.",
     "sessionsTitle": "Sessions",
     "logoutEverywhere": "Log out everywhere",
     "logoutEverywhereHelp": "Ends every session on every device, including this one.",
@@ -179,7 +172,7 @@
     },
     "deleteTitle": "Delete account",
     "deleteHelp": "Permanently deletes your account, your friendships, the videos you sent and your conversations. This can't be undone.",
-    "deleteConfirm": "Enter your password to delete your account.",
+    "deleteConfirm": "Confirm with your passkey to delete your account.",
     "deleteSubmit": "Delete my account",
     "deleted": "Your account was deleted."
   },
@@ -422,13 +415,6 @@
       "share_watched": "When friends watch what I sent"
     }
   },
-  "reset": {
-    "title": "Choose a new password",
-    "subtitle": "Your admin gave you this link. It works once and expires after 24 hours.",
-    "submit": "Set password",
-    "done": "Password changed. Log in with your new password.",
-    "toLogin": "Go to login"
-  },
   "admin": {
     "title": "Admin",
     "nav": "Admin sections",
@@ -462,14 +448,14 @@
     "unsuspend": "Unsuspend",
     "promote": "Make admin",
     "demote": "Remove admin",
-    "resetLink": "Password-reset link",
+    "resetLink": "Recovery link",
     "delete": "Delete",
     "updated": "Member updated.",
     "suspendConfirm": "{{name}} will be logged out everywhere and can't log in. Their shares are hidden until you unsuspend them.",
     "deleteConfirm": "Delete {{name}}'s account and everything they sent? This can't be undone.",
     "deletedUser": "Member deleted.",
-    "resetTitle": "Password-reset link for {{name}}",
-    "resetHelp": "Give this link to {{name}} privately. It works once and expires {{when}}. Using it logs them out everywhere.",
+    "resetTitle": "Recovery link",
+    "resetHelp": "Give this link privately to the member. It works once within 24 hours and lets them create a new passkey; their old passkeys are removed and every device is signed out.",
     "quotaTitle": "Storage quota",
     "quotaLabel": "Quota override in MB (empty = server default)",
     "settingsSaved": "Settings saved.",
@@ -534,7 +520,7 @@
       {
         "title": "What is stored about you",
         "body": [
-          "Your username, display name, optional profile picture and a hash of your password (never the password itself). No email address or phone number is collected.",
+          "Your username, display name, optional profile picture and and the public keys of your passkeys (your device keeps the private part; the server never sees it). No email address or phone number is collected.",
           "The videos you add, who you send them to, your notes, reactions and replies, what you have watched, saved or hidden, your friend list and blocks, and your notification settings.",
           "Your active sessions (device type, browser or app name, last activity) and, if you enable push notifications, the push address your browser or phone gave us."
         ]
@@ -551,7 +537,7 @@
         "title": "Logs and the audit log",
         "body": [
           "The server keeps an audit log of security events (logins and failed logins, admin actions, account deletions, invite use, setting changes) with the network address they came from. It is kept for 365 days.",
-          "Server logs never contain passwords, session tokens, invite codes, notes or replies."
+          "Server logs never contain passkey data, session tokens, invite codes, notes or replies."
         ]
       },
       {
@@ -572,7 +558,7 @@
       {
         "title": "Your choices",
         "body": [
-          "Change your profile, password, notifications and sessions in Settings. You can log out of every device at once.",
+          "Change your profile, passkeys, notifications and sessions in Settings. You can log out of every device at once.",
           "Download a copy of your data in Settings: a ZIP file with your profile, friends, the videos you sent and received with their notes and conversations, and your sign-in history, optionally with the video files you added. Only you can download it, for 7 days.",
           "Delete your account in Settings. It removes your account, friendships, every share you sent or received with their conversations, and your notifications, immediately; video files nobody else needs are cleaned up shortly after. Backups the operator keeps may hold a copy until they expire."
         ]
@@ -633,10 +619,48 @@
       {
         "title": "Account help",
         "body": [
-          "Forgot your password? Ask an admin of this server for a password-reset link; it works once and expires after 24 hours.",
+          "Lost every device with your passkey? Ask an admin of this server for a recovery link; it works once, expires after 24 hours and replaces your old passkeys.",
           "You can delete your account in Settings. See Privacy for what that removes."
         ]
       }
     ]
+  },
+  "recover": {
+    "title": "Recover your account",
+    "for": "For {{name}}",
+    "intro": "Your admin gave you this link. It works once and expires after 24 hours.",
+    "effect": "Creating a new passkey here removes your old passkeys and signs out every device.",
+    "submit": "Create a new passkey",
+    "goLogin": "Go to sign in"
+  },
+  "passkeys": {
+    "title": "Passkeys",
+    "help": "You sign in with passkeys. Add one for each device or password manager you use, so losing one device doesn't lock you out.",
+    "current": "this session",
+    "created": "Added {{when}}",
+    "lastUsed": "Last used {{when}}",
+    "synced": "synced",
+    "add": "Add a passkey",
+    "added": "Passkey added.",
+    "addAnother": "Tip: add a second passkey, for example on another device.",
+    "rename": "Rename",
+    "renameHelp": "A name that tells you which device or password manager this is.",
+    "name": "Name",
+    "save": "Save",
+    "renamed": "Passkey renamed.",
+    "remove": "Remove",
+    "removed": "Passkey removed. Devices signed in with it were signed out.",
+    "cancelled": "The passkey request was cancelled or timed out.",
+    "alreadyRegistered": "This device already has a passkey for your account.",
+    "unsupported": "This browser can't use passkeys. Try an up-to-date browser on a device with a screen lock."
+  },
+  "appAuth": {
+    "title": "Sign in to the app",
+    "subtitle": "The VidFriends app is asking to sign in to {{name}}.",
+    "continueAs": "Continue as {{name}}",
+    "otherAccount": "Use a different passkey",
+    "note": "After signing in you return to the app. Only continue if you opened this from the VidFriends app.",
+    "done": "Signed in. You can return to the app.",
+    "invalid": "This sign-in link is incomplete. Start again from the app."
   }
 }

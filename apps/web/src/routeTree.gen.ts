@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppAuthRouteImport } from './routes/app-auth'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -26,7 +27,7 @@ import { Route as AppSendRouteImport } from './routes/_app/send'
 import { Route as AppSentRouteImport } from './routes/_app/sent'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as JoinCodeRouteImport } from './routes/join.$code'
-import { Route as ResetTokenRouteImport } from './routes/reset.$token'
+import { Route as RecoverTokenRouteImport } from './routes/recover.$token'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
 import { Route as AppAdminAuditRouteImport } from './routes/_app/admin/audit'
 import { Route as AppAdminInvitesRouteImport } from './routes/_app/admin/invites'
@@ -37,6 +38,11 @@ import { Route as AppSharesIdRouteImport } from './routes/_app/shares.$id'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppAuthRoute = AppAuthRouteImport.update({
+  id: '/app-auth',
+  path: '/app-auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRoute = HelpRouteImport.update({
@@ -119,9 +125,9 @@ const JoinCodeRoute = JoinCodeRouteImport.update({
   path: '/join/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResetTokenRoute = ResetTokenRouteImport.update({
-  id: '/reset/$token',
-  path: '/reset/$token',
+const RecoverTokenRoute = RecoverTokenRouteImport.update({
+  id: '/recover/$token',
+  path: '/recover/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
@@ -162,6 +168,7 @@ const AppSharesIdRoute = AppSharesIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/app-auth': typeof AppAuthRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
@@ -177,7 +184,7 @@ export interface FileRoutesByFullPath {
   '/sent': typeof AppSentRoute
   '/settings': typeof AppSettingsRoute
   '/join/$code': typeof JoinCodeRoute
-  '/reset/$token': typeof ResetTokenRoute
+  '/recover/$token': typeof RecoverTokenRoute
   '/admin/audit': typeof AppAdminAuditRoute
   '/admin/invites': typeof AppAdminInvitesRoute
   '/admin/settings': typeof AppAdminSettingsRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AppAdminIndexRoute
 }
 export interface FileRoutesByTo {
+  '/app-auth': typeof AppAuthRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
@@ -201,7 +209,7 @@ export interface FileRoutesByTo {
   '/sent': typeof AppSentRoute
   '/settings': typeof AppSettingsRoute
   '/join/$code': typeof JoinCodeRoute
-  '/reset/$token': typeof ResetTokenRoute
+  '/recover/$token': typeof RecoverTokenRoute
   '/': typeof AppIndexRoute
   '/admin/audit': typeof AppAdminAuditRoute
   '/admin/invites': typeof AppAdminInvitesRoute
@@ -214,6 +222,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/app-auth': typeof AppAuthRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
@@ -229,7 +238,7 @@ export interface FileRoutesById {
   '/_app/sent': typeof AppSentRoute
   '/_app/settings': typeof AppSettingsRoute
   '/join/$code': typeof JoinCodeRoute
-  '/reset/$token': typeof ResetTokenRoute
+  '/recover/$token': typeof RecoverTokenRoute
   '/_app/': typeof AppIndexRoute
   '/_app/admin/audit': typeof AppAdminAuditRoute
   '/_app/admin/invites': typeof AppAdminInvitesRoute
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/app-auth'
     | '/help'
     | '/login'
     | '/privacy'
@@ -258,7 +268,7 @@ export interface FileRouteTypes {
     | '/sent'
     | '/settings'
     | '/join/$code'
-    | '/reset/$token'
+    | '/recover/$token'
     | '/admin/audit'
     | '/admin/invites'
     | '/admin/settings'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/app-auth'
     | '/help'
     | '/login'
     | '/privacy'
@@ -282,7 +293,7 @@ export interface FileRouteTypes {
     | '/sent'
     | '/settings'
     | '/join/$code'
-    | '/reset/$token'
+    | '/recover/$token'
     | '/'
     | '/admin/audit'
     | '/admin/invites'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/app-auth'
     | '/help'
     | '/login'
     | '/privacy'
@@ -309,7 +321,7 @@ export interface FileRouteTypes {
     | '/_app/sent'
     | '/_app/settings'
     | '/join/$code'
-    | '/reset/$token'
+    | '/recover/$token'
     | '/_app/'
     | '/_app/admin/audit'
     | '/_app/admin/invites'
@@ -322,12 +334,13 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  AppAuthRoute: typeof AppAuthRoute
   HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
   SetupRoute: typeof SetupRoute
   JoinCodeRoute: typeof JoinCodeRoute
-  ResetTokenRoute: typeof ResetTokenRoute
+  RecoverTokenRoute: typeof RecoverTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -337,6 +350,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app-auth': {
+      id: '/app-auth'
+      path: '/app-auth'
+      fullPath: '/app-auth'
+      preLoaderRoute: typeof AppAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help': {
@@ -451,11 +471,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reset/$token': {
-      id: '/reset/$token'
-      path: '/reset/$token'
-      fullPath: '/reset/$token'
-      preLoaderRoute: typeof ResetTokenRouteImport
+    '/recover/$token': {
+      id: '/recover/$token'
+      path: '/recover/$token'
+      fullPath: '/recover/$token'
+      preLoaderRoute: typeof RecoverTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/admin/': {
@@ -566,12 +586,13 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  AppAuthRoute: AppAuthRoute,
   HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
   SetupRoute: SetupRoute,
   JoinCodeRoute: JoinCodeRoute,
-  ResetTokenRoute: ResetTokenRoute,
+  RecoverTokenRoute: RecoverTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

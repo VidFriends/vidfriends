@@ -27,7 +27,7 @@ declare module '@tanstack/react-router' {
   }
 }
 
-const PUBLIC_PATHS = ['/login', '/setup', '/join/', '/reset/'];
+const PUBLIC_PATHS = ['/login', '/setup', '/join/', '/recover/', '/app-auth'];
 
 // One global session-expired path (L-17): clear cached data and go to login.
 setSessionExpiredHandler(() => {

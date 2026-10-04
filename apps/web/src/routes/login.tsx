@@ -1,25 +1,14 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
-import { useApiMutation } from '@vidfriends/api-client/react';
-import { login } from '@vidfriends/contracts';
+import { signIn, signInOptions } from '@vidfriends/contracts';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { AuthShell } from '@/components/auth-shell';
-import { PasswordInput } from '@/components/password-input';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Field } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { errorMessage, fieldMessage } from '@/lib/errors';
+import { api } from '@/lib/api';
+import { assertPasskey, passkeyErrorMessage } from '@/lib/passkeys';
 import { instanceQuery } from '@/lib/session';
-
-const schema = z.object({
-  username: z.string().trim().min(1, 'required'),
-  password: z.string().min(1, 'required'),
-});
-type Values = z.infer<typeof schema>;
 
 const search = z.object({
   redirect: z.string().optional().catch(undefined),
@@ -36,10 +25,18 @@ export const Route = createFileRoute('/login')({
   component: LoginPage,
 });
 
-/** Only same-app relative paths are allowed as post-login targets (no open redirect). */
-function safeRedirect(target: string | undefined): string {
+/** Only same-app relative paths are allowed as post-sign-in targets (no open redirect). */
+export function safeRedirect(target: string | undefined): string {
   if (!target || !target.startsWith('/') || target.startsWith('//')) return '/';
   return target;
+}
+
+/** Sign-in with a passkey (WF-AUTH-3, ADR-0018): no username or password to type. */
+export async function signInWithPasskey() {
+  return assertPasskey(
+    () => api.call(signInOptions, { body: {} }),
+    (ceremony_id, credential) => api.call(signIn, { body: { ceremony_id, credential } }),
+  );
 }
 
 function LoginPage() {
@@ -48,44 +45,35 @@ function LoginPage() {
   const { redirect: target, expired } = Route.useSearch();
   const navigate = useNavigate();
   const queryClient = Route.useRouteContext().queryClient;
-  const [formError, setFormError] = useState<string | null>(null);
-  const form = useForm<Values>({ resolver: zodResolver(schema) });
-  const mutation = useApiMutation(login, {
-    onSuccess: async () => {
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function go() {
+    setError(null);
+    setBusy(true);
+    try {
+      await signInWithPasskey();
       queryClient.clear();
       await navigate({ to: safeRedirect(target) });
-    },
-    onError: (err) => setFormError(errorMessage(t, err)),
-  });
-  const err = form.formState.errors;
+    } catch (err) {
+      setError(passkeyErrorMessage(t, err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <AuthShell title={t('login.title')} subtitle={t('login.subtitle', { name: instance.name })}>
-      <form
-        className="grid gap-4"
-        noValidate
-        onSubmit={form.handleSubmit((v) => {
-          setFormError(null);
-          mutation.mutate({ body: { ...v, client: 'web' } });
-        })}
-      >
-        {expired && !formError && <Alert>{t('login.expired')}</Alert>}
-        {formError && <Alert variant="destructive">{formError}</Alert>}
-        <Field label={t('login.username')} error={fieldMessage(t, err.username?.message)}>
-          <Input
-            autoComplete="username"
-            autoCapitalize="none"
-            spellCheck={false}
-            {...form.register('username')}
-          />
-        </Field>
-        <Field label={t('login.password')} error={fieldMessage(t, err.password?.message)}>
-          <PasswordInput autoComplete="current-password" {...form.register('password')} />
-        </Field>
-        <Button type="submit" disabled={mutation.isPending}>
+      <div className="grid gap-4">
+        {expired && !error && <Alert>{t('login.expired')}</Alert>}
+        {error && <Alert variant="destructive">{error}</Alert>}
+        <p className="text-sm text-muted-foreground">{t('login.passkeyHelp')}</p>
+        <Button onClick={() => void go()} disabled={busy}>
           {t('login.submit')}
         </Button>
         <p className="text-sm text-muted-foreground">{t('login.noAccount')}</p>
-      </form>
+        <p className="text-sm text-muted-foreground">{t('login.lostPasskey')}</p>
+      </div>
     </AuthShell>
   );
 }
