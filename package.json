@@ -1,0 +1,27 @@
+{
+  "name": "vidfriends",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test --concurrency=1",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "gen": "turbo run gen",
+    "e2e": "pnpm --filter @vidfriends/e2e test",
+    "migrations:check": "node scripts/check-migrations.mjs"
+  },
+  "devDependencies": {
+    "prettier": "3.9.9",
+    "turbo": "2.11.7",
+    "typescript": "5.9.3"
+  }
+}

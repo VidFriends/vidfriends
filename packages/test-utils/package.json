@@ -1,0 +1,26 @@
+{
+  "name": "@vidfriends/test-utils",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@vidfriends/contracts": "workspace:*",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.1",
+    "@vidfriends/config": "workspace:*",
+    "eslint": "9.39.5"
+  }
+}

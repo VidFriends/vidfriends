@@ -1,0 +1,40 @@
+{
+  "name": "@vidfriends/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx watch --env-file-if-exists=../../.env src/main.ts",
+    "start": "node dist/main.js",
+    "migrate": "node dist/main.js migrate",
+    "db:generate": "drizzle-kit generate && node ../../scripts/check-migrations.mjs --update",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "env:docs": "tsx scripts/gen-env-docs.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.3",
+    "@hono/zod-openapi": "1.6.3",
+    "@node-rs/argon2": "2.2.1",
+    "@vidfriends/contracts": "workspace:*",
+    "drizzle-orm": "0.45.3",
+    "hono": "4.13.13",
+    "pg": "8.23.1",
+    "pino": "10.4.0",
+    "uuid": "14.0.2",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.1",
+    "@types/pg": "8.23.1",
+    "@vidfriends/config": "workspace:*",
+    "@vidfriends/test-utils": "workspace:*",
+    "drizzle-kit": "0.31.11",
+    "eslint": "9.39.5",
+    "tsx": "4.23.15",
+    "vitest": "5.0.3"
+  }
+}
