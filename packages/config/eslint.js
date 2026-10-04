@@ -8,8 +8,12 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-/** @param {{ react?: boolean, tsconfigRootDir: string }} options */
-export function config({ react = false, tsconfigRootDir }) {
+/**
+ * `react`: web (DOM) React with jsx-a11y; `native`: React Native, hooks rules only (jsx-a11y
+ * targets the DOM; RN accessibility props are reviewed in the M6 audit, NFR-A11Y-02).
+ * @param {{ react?: boolean, native?: boolean, tsconfigRootDir: string }} options
+ */
+export function config({ react = false, native = false, tsconfigRootDir }) {
   return tseslint.config(
     { ignores: ['dist/**', 'coverage/**', '**/*.gen.ts', 'drizzle/**', 'public/**'] },
     js.configs.recommended,
@@ -35,9 +39,9 @@ export function config({ react = false, tsconfigRootDir }) {
         ],
       },
     },
-    ...(react
+    ...(react || native
       ? [
-          jsxA11y.flatConfigs.recommended,
+          ...(react ? [jsxA11y.flatConfigs.recommended] : []),
           {
             plugins: { 'react-hooks': reactHooks },
             rules: {
