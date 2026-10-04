@@ -66,6 +66,11 @@ services:
     environment:
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?set S3_ACCESS_KEY_ID in .env}
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?set S3_SECRET_ACCESS_KEY in .env}
+      # Volume slots of 1 GB each (an upper bound, nothing is preallocated). Auto-sizing from free
+      # disk (-volume.max=0) left no slots on small disks, and a new collection now grows one
+      # volume at a time instead of seven (CI run 192).
+      SEAWEEDFS_MAX_VOLUMES: ${SEAWEEDFS_MAX_VOLUMES:-1000}
+      WEED_MASTER_VOLUME_GROWTH_COPY_1: '1'
     # The S3 identity file is written from the environment at start, so no secret is committed.
     # Only the S3 gateway (authenticated) listens on the network. The master, volume and filer APIs are
     # unauthenticated, so they bind to loopback: a redirect followed by yt-dlp cannot reach them.
@@ -75,7 +80,7 @@ services:
       - |
         umask 077
         printf '{"identities":[{"name":"vidfriends","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Admin","Read","Write","List","Tagging"]}]}' "$$S3_ACCESS_KEY_ID" "$$S3_SECRET_ACCESS_KEY" > /tmp/s3.json
-        exec weed server -dir=/data -ip=127.0.0.1 -ip.bind=127.0.0.1 -s3 -s3.ip.bind=0.0.0.0 -s3.port=8333 -s3.config=/tmp/s3.json -volume.max=0 -master.volumeSizeLimitMB=1024
+        exec weed server -dir=/data -ip=127.0.0.1 -ip.bind=127.0.0.1 -s3 -s3.ip.bind=0.0.0.0 -s3.port=8333 -s3.config=/tmp/s3.json -volume.max=$${SEAWEEDFS_MAX_VOLUMES} -master.volumeSizeLimitMB=1024
     volumes:
       - s3data:/data
     healthcheck:
