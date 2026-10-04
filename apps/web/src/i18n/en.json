@@ -11,7 +11,8 @@
     "settings": "Settings",
     "logout": "Log out",
     "account": "Signed in as {{name}}",
-    "friends": "Friends"
+    "friends": "Friends",
+    "send": "Send"
   },
   "common": {
     "loading": "Loading…",
@@ -50,7 +51,11 @@
     "already_friends": "You are already friends.",
     "query_too_short": "Type at least 2 characters.",
     "too_large": "That file is too large.",
-    "upload_incomplete": "The upload did not finish. Please try again."
+    "upload_incomplete": "The upload did not finish. Please try again.",
+    "url_not_allowed": "That link isn't from a supported site, or it isn't a public web address.",
+    "quota_exceeded": "You've used all your storage. Ask your server admin for more.",
+    "storage_full": "This server is out of storage space.",
+    "not_playable": "This video isn't ready yet."
   },
   "fieldErrors": {
     "required": "Required.",
@@ -63,7 +68,8 @@
     "too_long": "Too long.",
     "invalid": "Invalid value.",
     "username_taken": "That username is taken.",
-    "not_an_image": "That file is not an image we can use."
+    "not_an_image": "That file is not an image we can use.",
+    "not_a_video": "That file isn't a video we can use."
   },
   "setup": {
     "title": "Set up your VidFriends server",
@@ -210,5 +216,40 @@
       "block": "Blocked.",
       "unblock": "Unblocked."
     }
+  },
+  "send": {
+    "title": "Send a video",
+    "intro": "Paste a link from TikTok, YouTube, Instagram and more, or upload a video file.",
+    "linkTab": "Paste a link",
+    "uploadTab": "Upload a file",
+    "linkLabel": "Video link",
+    "linkPlaceholder": "https://…",
+    "linkSubmit": "Add video",
+    "fileLabel": "Video file",
+    "fileHelp": "Up to {{size}}.",
+    "uploadSubmit": "Upload",
+    "uploading": "Uploading… {{percent}}%",
+    "status": {
+      "queued": "Waiting to fetch the video…",
+      "fetching": "Fetching the video…",
+      "processing": "Preparing the video…",
+      "ready": "Ready to send.",
+      "link_only": "We couldn't download this one, so friends will get a link to the original.",
+      "failed": "This video couldn't be processed.",
+      "expired": "This video's file has expired."
+    },
+    "reasons": {
+      "too_large": "It's larger than this server allows.",
+      "too_long": "It's longer than this server allows.",
+      "unsupported": "That site or link isn't supported.",
+      "downloads_disabled": "This server doesn't download videos.",
+      "unplayable": "The file isn't a playable video.",
+      "fetch_failed": "The site didn't let us download it.",
+      "quota_exceeded": "You've used all your storage."
+    },
+    "preview": "Preview",
+    "openOriginal": "Open original",
+    "another": "Add another video",
+    "notAVideo": "That file isn't a video we can use."
   }
 }

@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from '@tanstack/react-router';
 import { useApiMutation } from '@vidfriends/api-client/react';
 import { logout } from '@vidfriends/contracts';
-import { Home, LogOut, Settings, UserPlus, Users } from 'lucide-react';
+import { Home, LogOut, Send, Settings, UserPlus, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { currentUser, meQuery } from '@/lib/session';
@@ -56,6 +56,10 @@ function AppLayout() {
             >
               <Home className="size-4" aria-hidden />
               <span>{t('nav.home')}</span>
+            </Link>
+            <Link to="/send" className={navLink} activeProps={activeLink}>
+              <Send className="size-4" aria-hidden />
+              <span>{t('nav.send')}</span>
             </Link>
             <Link to="/friends" className={navLink} activeProps={activeLink}>
               <Users className="size-4" aria-hidden />

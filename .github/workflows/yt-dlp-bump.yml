@@ -1,0 +1,40 @@
+# Keeps the worker's pinned yt-dlp current independently of server releases (NFR-OPS-05, R-2).
+name: yt-dlp bump
+
+on:
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Find the latest yt-dlp release on PyPI
+        id: latest
+        run: |
+          latest=$(curl -fsSL https://pypi.org/pypi/yt-dlp/json | python3 -c 'import json,sys; print(json.load(sys.stdin)["info"]["version"])')
+          current=$(sed -n 's/^yt-dlp==//p' deploy/worker/requirements.txt)
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "yt-dlp: current $current, latest $latest"
+      - name: Update the pin
+        if: steps.latest.outputs.latest != steps.latest.outputs.current
+        run: echo "yt-dlp==${{ steps.latest.outputs.latest }}" > deploy/worker/requirements.txt
+      - name: Open a pull request
+        if: steps.latest.outputs.latest != steps.latest.outputs.current
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: deps/yt-dlp-${{ steps.latest.outputs.latest }}
+          title: 'Bump yt-dlp to ${{ steps.latest.outputs.latest }}'
+          commit-message: 'Bump yt-dlp from ${{ steps.latest.outputs.current }} to ${{ steps.latest.outputs.latest }} (NFR-OPS-05)'
+          body: |
+            Automated bump of the worker's pinned yt-dlp (`deploy/worker/requirements.txt`), per NFR-OPS-05.
+            CI builds the worker image; the nightly live smoke test exercises the new version against real platforms.
+          labels: dependencies
+          delete-branch: true

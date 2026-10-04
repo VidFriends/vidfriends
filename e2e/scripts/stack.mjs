@@ -22,6 +22,8 @@ const compose = (...args) =>
       envFile,
       '-f',
       join(root, 'deploy/compose.yml'),
+      '-f',
+      join(root, 'e2e/compose.e2e.yml'),
       ...args,
     ],
     { stdio: 'inherit', cwd: root },

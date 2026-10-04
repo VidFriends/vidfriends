@@ -1,0 +1,82 @@
+# Nightly, non-blocking checks (TDD §7): a live yt-dlp smoke test against real platforms (R-2) and
+# the full browser matrix for E2E (NFR-COMPAT-01). Failures alert but never block merges.
+name: Nightly
+
+on:
+  schedule:
+    - cron: '41 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ytdlp-live-smoke:
+    name: yt-dlp live smoke (opt-in, non-blocking)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - name: Build worker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: worker
+          load: true
+          tags: vidfriends-worker:nightly
+          cache-from: type=gha,scope=worker
+      - name: Probe public, long-lived videos with the pinned yt-dlp
+        run: |
+          set -e
+          for url in \
+            'https://www.youtube.com/watch?v=jNQXAC9IVRw' \
+            'https://vimeo.com/76979871'; do
+            echo "== $url"
+            docker run --rm --entrypoint yt-dlp vidfriends-worker:nightly \
+              --skip-download --no-playlist --print '%(extractor_key)s %(duration)s %(title)s' -- "$url"
+          done
+
+  e2e-all-browsers:
+    name: E2E (Chromium, Firefox, WebKit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: server
+          load: true
+          tags: vidfriends-server:local
+          cache-from: type=gha,scope=server
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: worker
+          load: true
+          tags: vidfriends-worker:local
+          cache-from: type=gha,scope=worker
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @vidfriends/contracts build
+      - run: pnpm --filter @vidfriends/e2e stack:up
+      - run: pnpm --filter @vidfriends/e2e exec playwright install --with-deps chromium chrome firefox webkit
+      - run: pnpm --filter @vidfriends/e2e e2e
+        env:
+          E2E_ALL_BROWSERS: '1'
+          E2E_CHROME_CHANNEL: '1'
+      - if: failure()
+        run: node e2e/scripts/stack.mjs logs
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-all-browsers
+          path: e2e/playwright-report
+          retention-days: 7
+      - if: always()
+        run: node e2e/scripts/stack.mjs down
