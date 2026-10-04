@@ -39,3 +39,20 @@ export function formatRelative(iso: string, now = Date.now()): string {
   }
   return rtf().format(Math.round(diff / 1000), 'second');
 }
+
+/** Locale-aware byte size such as "1.5 GB". */
+export function formatBytes(bytes: number): string {
+  const units = ['byte', 'kilobyte', 'megabyte', 'gigabyte', 'terabyte'] as const;
+  let value = bytes;
+  let i = 0;
+  while (value >= 1024 && i < units.length - 1) {
+    value /= 1024;
+    i += 1;
+  }
+  return new Intl.NumberFormat(i18n.language, {
+    style: 'unit',
+    unit: units[i],
+    unitDisplay: 'short',
+    maximumFractionDigits: i === 0 ? 0 : 1,
+  }).format(value);
+}

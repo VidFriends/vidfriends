@@ -11,6 +11,7 @@ import {
   Send,
   SendHorizontal,
   Settings,
+  Shield,
   UserPlus,
   Users,
 } from 'lucide-react';
@@ -40,6 +41,7 @@ const NAV = [
   { to: '/notifications', label: 'nav.notifications', icon: Bell, iconOnlyOnSmall: true },
   { to: '/invites', label: 'nav.invites', icon: UserPlus, invite: true, iconOnlyOnSmall: true },
   { to: '/settings', label: 'nav.settings', icon: Settings, iconOnlyOnSmall: true },
+  { to: '/admin', label: 'nav.admin', icon: Shield, admin: true, iconOnlyOnSmall: true },
 ] as const;
 
 const navLink =
@@ -83,7 +85,8 @@ function AppLayout() {
             className="flex flex-1 items-center gap-1 overflow-x-auto"
           >
             {NAV.map((item) =>
-              'invite' in item && !me.data?.settings_summary.can_invite ? null : (
+              ('invite' in item && !me.data?.settings_summary.can_invite) ||
+              ('admin' in item && user?.role !== 'admin') ? null : (
                 <Link
                   key={item.to}
                   to={item.to}

@@ -157,11 +157,9 @@ describe('FR-ADM-03 password reset links', () => {
     expect((await m.client.call(getMe)).status).toBe(401);
     expect(
       (
-        await server
-          .client()
-          .call(login, {
-            body: { username: m.user.username, password: 'fresh-start-2026', client: 'web' },
-          })
+        await server.client().call(login, {
+          body: { username: m.user.username, password: 'fresh-start-2026', client: 'web' },
+        })
       ).status,
     ).toBe(200);
     const again = await server

@@ -19,7 +19,8 @@
     "sent": "Sent",
     "notifications": "Notifications",
     "notificationsCount": "Notifications ({{count}} unread)",
-    "more": "More"
+    "more": "More",
+    "admin": "Admin"
   },
   "common": {
     "loading": "Loading…",
@@ -65,7 +66,9 @@
     "not_playable": "This video isn't ready yet.",
     "already_watched": "Your friend already watched this, so it can't be unsent.",
     "video_not_found": "That video isn't available.",
-    "invalid_reaction": "Pick one of the reactions."
+    "invalid_reaction": "Pick one of the reactions.",
+    "last_admin": "This is the only admin. Promote someone else first.",
+    "reset_invalid": "This password-reset link is not valid. It may have expired or already been used. Ask your admin for a new one."
   },
   "fieldErrors": {
     "required": "Required.",
@@ -146,7 +149,19 @@
     "avatarChoose": "Choose a picture",
     "avatarRemove": "Remove picture",
     "avatarSaved": "Profile picture updated.",
-    "username": "Username: {{username}}"
+    "username": "Username: {{username}}",
+    "sessionsHelp": "Devices where you're logged in. Revoke any you don't recognise.",
+    "sessionCurrent": "This device",
+    "sessionWeb": "Web",
+    "sessionMobile": "Mobile app",
+    "sessionSeen": "Last active {{when}}",
+    "sessionRevoke": "Revoke",
+    "sessionRevoked": "Session revoked.",
+    "deleteTitle": "Delete account",
+    "deleteHelp": "Permanently deletes your account, your friendships, the videos you sent and your conversations. This can't be undone.",
+    "deleteConfirm": "Enter your password to delete your account.",
+    "deleteSubmit": "Delete my account",
+    "deleted": "Your account was deleted."
   },
   "invites": {
     "title": "Invites",
@@ -385,6 +400,99 @@
       "friend_request_received": "Friend requests",
       "friend_request_accepted": "Accepted requests",
       "share_watched": "When friends watch what I sent"
+    }
+  },
+  "reset": {
+    "title": "Choose a new password",
+    "subtitle": "Your admin gave you this link. It works once and expires after 24 hours.",
+    "submit": "Set password",
+    "done": "Password changed. Log in with your new password.",
+    "toLogin": "Go to login"
+  },
+  "admin": {
+    "title": "Admin",
+    "nav": "Admin sections",
+    "users": "Members",
+    "invites": "Invites",
+    "settings": "Settings",
+    "storage": "Storage",
+    "audit": "Audit log",
+    "invitesHelp": "Create, list and revoke invites for this server. Turn on “Show all invites” to see everyone's.",
+    "invitesLink": "Open invites",
+    "search": "Search by name",
+    "statusFilter": "Status",
+    "statusAll": "All",
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "role": {
+      "admin": "Admin",
+      "member": "Member"
+    },
+    "usersEmpty": "No members match.",
+    "joined": "Joined {{when}}",
+    "lastActive": "Last active {{when}}",
+    "neverActive": "Not active yet",
+    "storageUsed": "{{bytes}} stored",
+    "counts": "{{sent}} sent · {{received}} received",
+    "quotaOverride": "Quota override: {{bytes}}",
+    "you": "(you)",
+    "suspend": "Suspend",
+    "unsuspend": "Unsuspend",
+    "promote": "Make admin",
+    "demote": "Remove admin",
+    "resetLink": "Password-reset link",
+    "delete": "Delete",
+    "updated": "Member updated.",
+    "suspendConfirm": "{{name}} will be logged out everywhere and can't log in. Their shares are hidden until you unsuspend them.",
+    "deleteConfirm": "Delete {{name}}'s account and everything they sent? This can't be undone.",
+    "deletedUser": "Member deleted.",
+    "resetTitle": "Password-reset link for {{name}}",
+    "resetHelp": "Give this link to {{name}} privately. It works once and expires {{when}}. Using it logs them out everywhere.",
+    "quotaTitle": "Storage quota",
+    "quotaLabel": "Quota override in MB (empty = server default)",
+    "settingsSaved": "Settings saved.",
+    "fields": {
+      "instance_name": "Server name",
+      "signup_mode": "Who can join",
+      "signup_invite_only": "Invite only",
+      "signup_open": "Anyone with the link",
+      "members_can_invite": "Members can create invites",
+      "link_download_enabled": "Download videos from links",
+      "platform_allowlist": "Allowed sites (one per line)",
+      "max_media_bytes": "Largest video (MB)",
+      "max_duration_seconds": "Longest video (seconds)",
+      "per_user_quota_bytes": "Storage per member (MB, empty = unlimited)",
+      "instance_storage_cap_bytes": "Server storage cap (MB, empty = unlimited)",
+      "retention_days": "Keep watched videos for (days, 0 = forever)",
+      "session_idle_days": "Log out after inactivity (days)",
+      "session_absolute_days": "Maximum session length (days)"
+    },
+    "totalBytes": "Total stored: {{bytes}}",
+    "byState": "Videos by state",
+    "perUser": "Storage by member",
+    "retention": "Watched videos are kept for {{days}} days. Next retention run {{when}}.",
+    "retentionOff": "Retention is off: videos are kept until deleted. Next scheduled run {{when}}.",
+    "runRetention": "Run retention now",
+    "retentionQueued": "Retention run queued.",
+    "auditEmpty": "No audit entries match.",
+    "auditActor": "Actor",
+    "auditAction": "Action",
+    "auditBefore": "Before",
+    "auditSystem": "System",
+    "filter": "Filter",
+    "clear": "Clear",
+    "auditTarget": "Target",
+    "auditTime": "Time",
+    "videoState": {
+      "queued": "Queued",
+      "fetching": "Downloading",
+      "processing": "Processing",
+      "ready": "Ready",
+      "link_only": "Link only",
+      "failed": "Failed",
+      "expired": "Expired"
     }
   }
 }

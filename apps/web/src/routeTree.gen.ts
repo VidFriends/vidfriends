@@ -13,6 +13,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SetupRouteImport } from './routes/setup'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppFriendsRouteImport } from './routes/_app/friends'
 import { Route as AppHistoryRouteImport } from './routes/_app/history'
 import { Route as AppInboxRouteImport } from './routes/_app/inbox'
@@ -23,6 +24,13 @@ import { Route as AppSendRouteImport } from './routes/_app/send'
 import { Route as AppSentRouteImport } from './routes/_app/sent'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as JoinCodeRouteImport } from './routes/join.$code'
+import { Route as ResetTokenRouteImport } from './routes/reset.$token'
+import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
+import { Route as AppAdminAuditRouteImport } from './routes/_app/admin/audit'
+import { Route as AppAdminInvitesRouteImport } from './routes/_app/admin/invites'
+import { Route as AppAdminSettingsRouteImport } from './routes/_app/admin/settings'
+import { Route as AppAdminStorageRouteImport } from './routes/_app/admin/storage'
+import { Route as AppAdminUsersRouteImport } from './routes/_app/admin/users'
 import { Route as AppSharesIdRouteImport } from './routes/_app/shares.$id'
 
 const AppRoute = AppRouteImport.update({
@@ -42,6 +50,11 @@ const SetupRoute = SetupRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
 const AppFriendsRoute = AppFriendsRouteImport.update({
@@ -94,6 +107,41 @@ const JoinCodeRoute = JoinCodeRouteImport.update({
   path: '/join/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetTokenRoute = ResetTokenRouteImport.update({
+  id: '/reset/$token',
+  path: '/reset/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminAuditRoute = AppAdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminInvitesRoute = AppAdminInvitesRouteImport.update({
+  id: '/invites',
+  path: '/invites',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminSettingsRoute = AppAdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminStorageRoute = AppAdminStorageRouteImport.update({
+  id: '/storage',
+  path: '/storage',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppSharesIdRoute = AppSharesIdRouteImport.update({
   id: '/shares/$id',
   path: '/shares/$id',
@@ -104,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/setup': typeof SetupRoute
+  '/admin': typeof AppAdminRouteWithChildren
   '/friends': typeof AppFriendsRoute
   '/history': typeof AppHistoryRoute
   '/inbox': typeof AppInboxRoute
@@ -114,7 +163,14 @@ export interface FileRoutesByFullPath {
   '/sent': typeof AppSentRoute
   '/settings': typeof AppSettingsRoute
   '/join/$code': typeof JoinCodeRoute
+  '/reset/$token': typeof ResetTokenRoute
+  '/admin/audit': typeof AppAdminAuditRoute
+  '/admin/invites': typeof AppAdminInvitesRoute
+  '/admin/settings': typeof AppAdminSettingsRoute
+  '/admin/storage': typeof AppAdminStorageRoute
+  '/admin/users': typeof AppAdminUsersRoute
   '/shares/$id': typeof AppSharesIdRoute
+  '/admin/': typeof AppAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -129,14 +185,22 @@ export interface FileRoutesByTo {
   '/sent': typeof AppSentRoute
   '/settings': typeof AppSettingsRoute
   '/join/$code': typeof JoinCodeRoute
+  '/reset/$token': typeof ResetTokenRoute
   '/': typeof AppIndexRoute
+  '/admin/audit': typeof AppAdminAuditRoute
+  '/admin/invites': typeof AppAdminInvitesRoute
+  '/admin/settings': typeof AppAdminSettingsRoute
+  '/admin/storage': typeof AppAdminStorageRoute
+  '/admin/users': typeof AppAdminUsersRoute
   '/shares/$id': typeof AppSharesIdRoute
+  '/admin': typeof AppAdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/setup': typeof SetupRoute
+  '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/friends': typeof AppFriendsRoute
   '/_app/history': typeof AppHistoryRoute
   '/_app/inbox': typeof AppInboxRoute
@@ -147,8 +211,15 @@ export interface FileRoutesById {
   '/_app/sent': typeof AppSentRoute
   '/_app/settings': typeof AppSettingsRoute
   '/join/$code': typeof JoinCodeRoute
+  '/reset/$token': typeof ResetTokenRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/admin/audit': typeof AppAdminAuditRoute
+  '/_app/admin/invites': typeof AppAdminInvitesRoute
+  '/_app/admin/settings': typeof AppAdminSettingsRoute
+  '/_app/admin/storage': typeof AppAdminStorageRoute
+  '/_app/admin/users': typeof AppAdminUsersRoute
   '/_app/shares/$id': typeof AppSharesIdRoute
+  '/_app/admin/': typeof AppAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -156,6 +227,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/setup'
+    | '/admin'
     | '/friends'
     | '/history'
     | '/inbox'
@@ -166,7 +238,14 @@ export interface FileRouteTypes {
     | '/sent'
     | '/settings'
     | '/join/$code'
+    | '/reset/$token'
+    | '/admin/audit'
+    | '/admin/invites'
+    | '/admin/settings'
+    | '/admin/storage'
+    | '/admin/users'
     | '/shares/$id'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -181,13 +260,21 @@ export interface FileRouteTypes {
     | '/sent'
     | '/settings'
     | '/join/$code'
+    | '/reset/$token'
     | '/'
+    | '/admin/audit'
+    | '/admin/invites'
+    | '/admin/settings'
+    | '/admin/storage'
+    | '/admin/users'
     | '/shares/$id'
+    | '/admin'
   id:
     | '__root__'
     | '/_app'
     | '/login'
     | '/setup'
+    | '/_app/admin'
     | '/_app/friends'
     | '/_app/history'
     | '/_app/inbox'
@@ -198,8 +285,15 @@ export interface FileRouteTypes {
     | '/_app/sent'
     | '/_app/settings'
     | '/join/$code'
+    | '/reset/$token'
     | '/_app/'
+    | '/_app/admin/audit'
+    | '/_app/admin/invites'
+    | '/_app/admin/settings'
+    | '/_app/admin/storage'
+    | '/_app/admin/users'
     | '/_app/shares/$id'
+    | '/_app/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -207,6 +301,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SetupRoute: typeof SetupRoute
   JoinCodeRoute: typeof JoinCodeRoute
+  ResetTokenRoute: typeof ResetTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -237,6 +332,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/friends': {
@@ -309,6 +411,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset/$token': {
+      id: '/reset/$token'
+      path: '/reset/$token'
+      fullPath: '/reset/$token'
+      preLoaderRoute: typeof ResetTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/admin/': {
+      id: '/_app/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AppAdminIndexRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/_app/admin/audit': {
+      id: '/_app/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AppAdminAuditRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/_app/admin/invites': {
+      id: '/_app/admin/invites'
+      path: '/invites'
+      fullPath: '/admin/invites'
+      preLoaderRoute: typeof AppAdminInvitesRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/_app/admin/settings': {
+      id: '/_app/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AppAdminSettingsRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/_app/admin/storage': {
+      id: '/_app/admin/storage'
+      path: '/storage'
+      fullPath: '/admin/storage'
+      preLoaderRoute: typeof AppAdminStorageRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/_app/admin/users': {
+      id: '/_app/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AppAdminUsersRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/_app/shares/$id': {
       id: '/_app/shares/$id'
       path: '/shares/$id'
@@ -319,7 +470,30 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppAdminRouteChildren {
+  AppAdminAuditRoute: typeof AppAdminAuditRoute
+  AppAdminInvitesRoute: typeof AppAdminInvitesRoute
+  AppAdminSettingsRoute: typeof AppAdminSettingsRoute
+  AppAdminStorageRoute: typeof AppAdminStorageRoute
+  AppAdminUsersRoute: typeof AppAdminUsersRoute
+  AppAdminIndexRoute: typeof AppAdminIndexRoute
+}
+
+const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminAuditRoute: AppAdminAuditRoute,
+  AppAdminInvitesRoute: AppAdminInvitesRoute,
+  AppAdminSettingsRoute: AppAdminSettingsRoute,
+  AppAdminStorageRoute: AppAdminStorageRoute,
+  AppAdminUsersRoute: AppAdminUsersRoute,
+  AppAdminIndexRoute: AppAdminIndexRoute,
+}
+
+const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
+  AppAdminRouteChildren,
+)
+
 interface AppRouteChildren {
+  AppAdminRoute: typeof AppAdminRouteWithChildren
   AppFriendsRoute: typeof AppFriendsRoute
   AppHistoryRoute: typeof AppHistoryRoute
   AppInboxRoute: typeof AppInboxRoute
@@ -334,6 +508,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminRoute: AppAdminRouteWithChildren,
   AppFriendsRoute: AppFriendsRoute,
   AppHistoryRoute: AppHistoryRoute,
   AppInboxRoute: AppInboxRoute,
@@ -354,6 +529,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SetupRoute: SetupRoute,
   JoinCodeRoute: JoinCodeRoute,
+  ResetTokenRoute: ResetTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

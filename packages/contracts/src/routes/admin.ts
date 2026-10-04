@@ -145,6 +145,7 @@ export const AuditEntry = z.object({
   ip: z.string().nullable(),
   created_at: Timestamp,
 });
+export type AuditEntry = z.infer<typeof AuditEntry>;
 
 export const adminAudit = defineRoute({
   id: 'adminAudit',
@@ -197,6 +198,7 @@ export const Session = z.object({
   last_seen_at: Timestamp,
   current: z.boolean(),
 });
+export type Session = z.infer<typeof Session>;
 
 export const listSessions = defineRoute({
   id: 'listSessions',
