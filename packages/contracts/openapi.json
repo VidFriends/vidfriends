@@ -9516,6 +9516,12 @@
                         "has_thumbnail": {
                           "type": "boolean"
                         },
+                        "media_bytes": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ]
+                        },
                         "failure_reason": {
                           "type": [
                             "string",
@@ -9546,6 +9552,7 @@
                         "width",
                         "height",
                         "has_thumbnail",
+                        "media_bytes",
                         "failure_reason",
                         "created_at",
                         "ready_at"
@@ -9634,6 +9641,12 @@
                         "has_thumbnail": {
                           "type": "boolean"
                         },
+                        "media_bytes": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ]
+                        },
                         "failure_reason": {
                           "type": [
                             "string",
@@ -9664,6 +9677,7 @@
                         "width",
                         "height",
                         "has_thumbnail",
+                        "media_bytes",
                         "failure_reason",
                         "created_at",
                         "ready_at"
@@ -10251,6 +10265,12 @@
                         "has_thumbnail": {
                           "type": "boolean"
                         },
+                        "media_bytes": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ]
+                        },
                         "failure_reason": {
                           "type": [
                             "string",
@@ -10281,6 +10301,7 @@
                         "width",
                         "height",
                         "has_thumbnail",
+                        "media_bytes",
                         "failure_reason",
                         "created_at",
                         "ready_at"
@@ -10369,6 +10390,12 @@
                         "has_thumbnail": {
                           "type": "boolean"
                         },
+                        "media_bytes": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ]
+                        },
                         "failure_reason": {
                           "type": [
                             "string",
@@ -10399,6 +10426,7 @@
                         "width",
                         "height",
                         "has_thumbnail",
+                        "media_bytes",
                         "failure_reason",
                         "created_at",
                         "ready_at"
@@ -11485,6 +11513,12 @@
                         "has_thumbnail": {
                           "type": "boolean"
                         },
+                        "media_bytes": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ]
+                        },
                         "failure_reason": {
                           "type": [
                             "string",
@@ -11515,6 +11549,7 @@
                         "width",
                         "height",
                         "has_thumbnail",
+                        "media_bytes",
                         "failure_reason",
                         "created_at",
                         "ready_at"
@@ -12360,6 +12395,12 @@
                             "has_thumbnail": {
                               "type": "boolean"
                             },
+                            "media_bytes": {
+                              "type": [
+                                "integer",
+                                "null"
+                              ]
+                            },
                             "failure_reason": {
                               "type": [
                                 "string",
@@ -12390,6 +12431,7 @@
                             "width",
                             "height",
                             "has_thumbnail",
+                            "media_bytes",
                             "failure_reason",
                             "created_at",
                             "ready_at"
@@ -13028,6 +13070,12 @@
                             "has_thumbnail": {
                               "type": "boolean"
                             },
+                            "media_bytes": {
+                              "type": [
+                                "integer",
+                                "null"
+                              ]
+                            },
                             "failure_reason": {
                               "type": [
                                 "string",
@@ -13058,6 +13106,7 @@
                             "width",
                             "height",
                             "has_thumbnail",
+                            "media_bytes",
                             "failure_reason",
                             "created_at",
                             "ready_at"
@@ -14080,6 +14129,12 @@
                               "has_thumbnail": {
                                 "type": "boolean"
                               },
+                              "media_bytes": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
                               "failure_reason": {
                                 "type": [
                                   "string",
@@ -14110,6 +14165,7 @@
                               "width",
                               "height",
                               "has_thumbnail",
+                              "media_bytes",
                               "failure_reason",
                               "created_at",
                               "ready_at"
@@ -14618,6 +14674,12 @@
                               "has_thumbnail": {
                                 "type": "boolean"
                               },
+                              "media_bytes": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
                               "failure_reason": {
                                 "type": [
                                   "string",
@@ -14648,6 +14710,7 @@
                               "width",
                               "height",
                               "has_thumbnail",
+                              "media_bytes",
                               "failure_reason",
                               "created_at",
                               "ready_at"
@@ -15099,6 +15162,12 @@
                               "has_thumbnail": {
                                 "type": "boolean"
                               },
+                              "media_bytes": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
                               "failure_reason": {
                                 "type": [
                                   "string",
@@ -15129,6 +15198,7 @@
                               "width",
                               "height",
                               "has_thumbnail",
+                              "media_bytes",
                               "failure_reason",
                               "created_at",
                               "ready_at"
@@ -15580,6 +15650,12 @@
                               "has_thumbnail": {
                                 "type": "boolean"
                               },
+                              "media_bytes": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
                               "failure_reason": {
                                 "type": [
                                   "string",
@@ -15610,6 +15686,7 @@
                               "width",
                               "height",
                               "has_thumbnail",
+                              "media_bytes",
                               "failure_reason",
                               "created_at",
                               "ready_at"
@@ -16061,6 +16138,12 @@
                               "has_thumbnail": {
                                 "type": "boolean"
                               },
+                              "media_bytes": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
                               "failure_reason": {
                                 "type": [
                                   "string",
@@ -16091,6 +16174,7 @@
                               "width",
                               "height",
                               "has_thumbnail",
+                              "media_bytes",
                               "failure_reason",
                               "created_at",
                               "ready_at"
@@ -16556,6 +16640,12 @@
                             "has_thumbnail": {
                               "type": "boolean"
                             },
+                            "media_bytes": {
+                              "type": [
+                                "integer",
+                                "null"
+                              ]
+                            },
                             "failure_reason": {
                               "type": [
                                 "string",
@@ -16586,6 +16676,7 @@
                             "width",
                             "height",
                             "has_thumbnail",
+                            "media_bytes",
                             "failure_reason",
                             "created_at",
                             "ready_at"
@@ -17615,6 +17706,12 @@
                             "has_thumbnail": {
                               "type": "boolean"
                             },
+                            "media_bytes": {
+                              "type": [
+                                "integer",
+                                "null"
+                              ]
+                            },
                             "failure_reason": {
                               "type": [
                                 "string",
@@ -17645,6 +17742,7 @@
                             "width",
                             "height",
                             "has_thumbnail",
+                            "media_bytes",
                             "failure_reason",
                             "created_at",
                             "ready_at"

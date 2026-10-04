@@ -313,7 +313,7 @@ LIMIT :n + 1;
 | `POST /videos` | M | `{url}` → `{video:{id, state, title?…}}` (201 new, 200 reused) | `url_not_allowed`, `quota_exceeded` | VID-01,02,07 |
 | `POST /uploads` | M | `{bytes, content_type}` → `{upload_id, put_url \| multipart:{part_urls, …}, expires_at}` | `too_large`, `quota_exceeded`, `storage_full` | VID-03 |
 | `POST /uploads/{id}/complete` | M | `{title?, parts?}` → `{video}` | `upload_incomplete` | VID-03 |
-| `GET /videos/{id}` | M | → `{video}` (visibility per BR-SHR-6) | 404 | VID-05 |
+| `GET /videos/{id}` | M | → `{video}` (visibility per BR-SHR-6); `video.media_bytes` is the playable file size once ready (null before), for offline downloads | 404 | VID-05, MOB-04 |
 | `GET /videos/{id}/media` | M (adder or participant) | → `{media_url?, thumb_url?, expires_at}` for a video the viewer can see; used before a share exists (send preview) | 404, `not_playable` | VID-05 |
 | `POST /shares` | M | `{video_id, recipient_ids[], note?, idempotency_key}` → `{results:[{recipient_id, status, share_id?}]}` | `video_not_found` | SHR-01,02 |
 | `DELETE /shares/{id}` | M (sender) | → 204 | `already_watched` | SHR-04 |

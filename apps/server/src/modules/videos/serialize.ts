@@ -16,6 +16,7 @@ export function toVideo(v: VideoRow): Video {
     width: v.width,
     height: v.height,
     has_thumbnail: Boolean(v.thumbKey),
+    media_bytes: v.state === 'ready' && v.mediaBytes > 0 ? v.mediaBytes : null,
     failure_reason: v.failureReason,
     created_at: v.createdAt.toISOString(),
     ready_at: v.readyAt?.toISOString() ?? null,

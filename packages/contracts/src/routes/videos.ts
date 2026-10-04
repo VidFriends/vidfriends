@@ -27,6 +27,8 @@ export const Video = z.object({
   width: z.number().int().nullable(),
   height: z.number().int().nullable(),
   has_thumbnail: z.boolean(),
+  /** Size of the playable file once ready, for offline downloads (FR-MOB-04); null before. */
+  media_bytes: z.number().int().nullable(),
   failure_reason: z.string().nullable(),
   created_at: Timestamp,
   ready_at: Timestamp.nullable(),

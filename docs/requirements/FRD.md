@@ -277,3 +277,13 @@ The sender may delete a share while `watched_at` is null. The recipient's notifi
 | WF-PAIR-2 | The app persists the base URL and applies it on every launch ([L-16](../legacy/AUDIT.md#4-lessons-referenced-by-id-from-the-design-docs)). The user can switch servers only by signing out. |
 | WF-PAIR-3 | Only `https://` base URLs are accepted ([ADR-0018](../adr/0018-passkey-only-sign-in.md): passkeys need HTTPS on a domain name). A plain `http://` link is refused with a message that the server must use HTTPS. Exception: the device's own loopback address (`localhost`, `127.0.0.1`, `::1`), which browsers also treat as secure, for development and the emulator E2E. The Android build permits cleartext traffic only to loopback. |
 | WF-PAIR-4 | The web client is served by the instance itself, so it never asks for a server. |
+
+## 12. Offline downloads (mobile)
+
+| ID | Rule |
+|---|---|
+| BR-OFF-1 | A participant of a share can download its video for offline viewing in the app, once the video is `ready` and its size is known (`video.media_bytes`). The copy is fetched through the normal short-lived media URL and stored in the app's private storage only. |
+| BR-OFF-2 | Offline copies are limited by a per-device storage cap the member chooses (1, 2 or 5 GB; default 2 GB), and a download is refused when it would leave less than 500 MB free on the device. |
+| BR-OFF-3 | When the app is online and in the foreground, it removes copies whose share is no longer available to the member (unsent, deleted, removed by retention or blocked: the API answers 404). |
+| BR-OFF-4 | Signing out, or changing the server, removes every offline copy from the device. Watching an offline copy does not report progress (no watched marker is set while offline). |
+
