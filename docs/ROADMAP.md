@@ -247,7 +247,7 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 | M5-T8 Operator and user guides | Self-hosting guide, privacy disclosure, member help pages | Docs reviewed against the deployed alpha <br>**🟡** [Self-hosting guide](guides/self-hosting.md), in-app `/privacy` and `/help` (`e2e/tests/docs.spec.ts`), [runbook](../deploy/RUNBOOK.md). Reviewed against the E2E deployment; the review against the owner's alpha happens in M5-T9. |
 | M5-T9 Alpha release v0.1.0 | Owner's private self-hosted instance live; alpha group onboarded; BO metrics collection plan (manual, privacy-preserving) | Owner sign-off <br>**⏸** Postponed by the owner (multiple-choice answer, 2026-10-04). M4-T6, M5-T6 and M5-T8 checks that depend on it wait with it. |
 
-### M6: Mobile apps (Expo) 🟡 (T1–T4 and T6 done; T5 device checks wait for devices; T7 store builds blocked on accounts; T8 built, waits on signing secrets)
+### M6: Mobile apps (Expo) 🟡 (T1–T4 and T6 done; T5 device checks wait for devices; T7 store builds blocked on accounts; T8 deferred by the owner)
 
 **Goal:** iOS and Android apps with share-sheet intake and push.
 **Requirements:** FR-PAIR-03, 04 (app links); FR-NOTIF-03; FR-MOB-01..03; NFR-A11Y-02; NFR-COMPAT-02.
@@ -262,14 +262,14 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 | M6-T5 Share intent and push | `expo-share-intent` (iOS extension, Android `text/*` and `video/*`) opens Send; Expo push tokens registered as push targets; server Expo push channel with gone-token cleanup; taps open the share | FR-MOB-02, FR-NOTIF-03, ADR-0011, BR-NOT-3/6 | Server unit test `apps/server/test/push-expo.test.ts`; mobile `push-target.test.ts`; device runbook (share from TikTok/YouTube/Instagram, real push) during the alpha <br>**🟡** [PR #116](https://github.com/VidFriends/vidfriends/pull/116): server and mobile unit tests green. The device runbook (share sheet from TikTok/YouTube/Instagram, real push) waits for real devices (postponed alpha, M5-T9) |
 | M6-T6 Android E2E and accessibility | Release APK built from the Expo project in CI; stack in its emulator HTTP variant; Maestro flows J-2..J-5 on an Android 14 emulator; accessibility review (labels, roles, font scaling, reduced motion) | NFR-A11Y-02, NFR-COMPAT-02, TDD §7 | `mobile.yml` android-e2e job green; review notes in the PR <br>**✅** [PR #116](https://github.com/VidFriends/vidfriends/pull/116); `mobile.yml` android-e2e green ([Mobile run](https://github.com/VidFriends/vidfriends/actions/runs/37202568887)); accessibility review notes in `apps/mobile/README.md` |
 | M6-T7 Store builds | EAS project, signing, TestFlight and Play internal track; iOS build and Maestro on macOS runners | BC-7 | ⛔ Owner: Apple and Google developer accounts |
-| M6-T8 Sideloadable Android APK | Owner choice (2026-10-04) while store accounts are missing: the release workflow builds a universal release APK, re-signs it with the project's upload key from repository secrets (never committed), attaches it with its SHA-256 to the GitHub release; [sideload guide](guides/android-sideload.md) and the help page explain installing. iOS waits for M6-T7 | FR-MOB-01, BC-7 | `release.yml` `android` job builds and verifies the APK on the PR; a dispatched release has the `.apk` and `.sha256` assets. **Owner action:** add the four `ANDROID_*` signing secrets (guide); without them the APK is built but not attached <br>**🟡** [PR #117](https://github.com/VidFriends/vidfriends/pull/117): the `android` release job builds, signs-or-skips and verifies the APK (green on the PR). Attaching it to releases waits on the owner adding the signing secrets |
+| M6-T8 Sideloadable Android APK | Owner choice (2026-10-04) while store accounts are missing: the release workflow builds a universal release APK, re-signs it with the project's upload key from repository secrets (never committed), attaches it with its SHA-256 to the GitHub release; [sideload guide](guides/android-sideload.md) and the help page explain installing. iOS waits for M6-T7 | FR-MOB-01, BC-7 | `release.yml` `android` job builds and verifies the APK on the PR; a dispatched release has the `.apk` and `.sha256` assets. **Owner action:** add the four `ANDROID_*` signing secrets (guide); without them the APK is built but not attached <br>**⏸** Deferred by the owner (2026-10-04): releases stay images-only for now; the `android` job still builds and verifies the APK. For trying the app, `mobile.yml` run by hand with *test_apk* uploads a test-signed arm64 APK as a workflow artifact |
 
 **Exit:** Maestro suites green; TestFlight and Play internal builds installed by the alpha group; share-to-send works from TikTok, YouTube and Instagram on both platforms (runbook).
 
 ### v1.0
 M5 and M6 are complete, and every Must requirement in the SRS has passing verification (PRD §6).
 
-### M7: Post-v1 backlog 🟡 (data export done; the rest is unscheduled)
+### M7: Post-v1 backlog 🟡 (data export done; passkey-only sign-in scheduled by the owner, 2026-10-04)
 
 Each item needs a PRD update and, where architectural, an ADR before work starts. The owner chose data export as the first item (multiple-choice answer, 2026-10-04); PRD CAP-18 and SRS FR-ACCT-05 now describe it.
 
@@ -277,12 +277,15 @@ Each item needs a PRD update and, where architectural, an ADR before work starts
 |---|---|---|---|
 | M7-T1 Data export | A member requests a ZIP of their data (profile, friends, sent and received shares with notes, reactions and conversations, videos added, security log, avatar, optional media under 4 GiB); built by the `account.export` job; signed download for 7 days; one in progress, 3 per day; removed with the account; Settings card on the web | FR-ACCT-05, WF-ACCT-4, LLD §2 `exports`, §3 | `apps/server/test/exports.test.ts`; authz matrix `downloadExport`; Playwright `e2e/tests/export.spec.ts` <br>**✅** [PR #117](https://github.com/VidFriends/vidfriends/pull/117); CI green on the merged head (API tests, authz matrix, Playwright in "Images, Trivy and E2E") |
 | M7-T2 Data export on mobile | The same card in the app's Settings; the app fetches the signed link as data (`GET /me/exports/{id}/download-url`, bearer clients cannot follow the redirect) and opens it in the browser | FR-ACCT-05, FR-MOB-01 | Maestro `apps/mobile/e2e/flows/export.yaml` requests an export and sees it ready; authz matrix `getExportUrl` <br>**✅** [PR #117](https://github.com/VidFriends/vidfriends/pull/117); Android Maestro run including `export.yaml` green |
+| M7-T3 Passkey-only decision and specs | ADR-0018 (passkeys only, no passwords; supersedes the password parts of ADR-0008): HTTPS on a domain name required, admin recovery link plus a server command for locked-out admins, mobile sign-in by browser hand-off. PRD, SRS (FR-AUTH-01..04, FR-ACCT-02/03, FR-ADM reset link, NFR-SEC-02, FR-PAIR-03), FRD workflows and LLD schema updated | Owner answers 2026-10-04, ADR-0008, ADR-0013 | Docs merged; no requirement still mentions passwords |
+| M7-T4 Passkeys on the server | WebAuthn registration and sign-in (setup, invite registration, sign-in, add/remove passkeys), recovery links (admin route and `recovery-link` server command), password columns and routes removed in a new migration, plain-http `PUBLIC_URL` refused at start | M7-T3 | API tests with a software authenticator; authz matrix for the new id routes |
+| M7-T5 Passkeys on the web | Setup, join, sign-in, recovery and Settings → Passkeys screens | M7-T4 | Playwright with Chromium's virtual authenticator: setup, join, sign in, add a second passkey, recovery link |
+| M7-T6 Passkeys on mobile | Sign-in and join through the server's pages in a secure browser sheet that returns a one-time code exchanged for the app session (PKCE); plain-http pairing removed | M7-T4, M7-T5 | Unit tests for the hand-off; Maestro flow on the emulator stack served over HTTPS |
 
-Remaining backlog (not scheduled):
+Remaining backlog (not scheduled; passkeys moved to M7-T3..T6):
 
 | Item | Source |
 |---|---|
-| Passkeys (CAP-16) | Owner-era 2025 Worker |
 | Collections (CAP-14) | 2026 web/backend |
 | Offline downloads on mobile (CAP-15) | 2026 iOS/Android |
 | Realtime (SSE) (CAP-19) | 2026 backend |
@@ -307,15 +310,16 @@ Remaining backlog (not scheduled):
 
 ## 7. Next actionable milestone
 
-**Owner decisions.** Everything an agent can do in M5–M7 is merged; what remains needs the owner (below) or a newly scheduled M7 item.
-- **Now (agents):** nothing unblocked remains in M5–M7. M6 ([PR #116](https://github.com/VidFriends/vidfriends/pull/116)) and M7 data export ([PR #117](https://github.com/VidFriends/vidfriends/pull/117)) are merged and [v0.1.0-rc.1](https://github.com/VidFriends/vidfriends/releases/tag/v0.1.0-rc.1) is published. The next M7 item needs the owner to schedule it (each needs a PRD update first).
-- **Owner:** enable branch protection on `main` (M1-T2); add the Android signing secrets ([guide](guides/android-sideload.md)) so releases carry the APK (M6-T8); Apple and Google developer accounts for store builds (M6-T7). The alpha (M5-T9) is postponed by the owner.
+**M7: passkey-only sign-in** (owner's choice, 2026-10-04).
+- **Now (agents):** M7-T3 (ADR-0018 and specs for passkey-only sign-in), then M7-T4..T6.
+- **Owner:** enable branch protection on `main` (M1-T2); Apple and Google developer accounts for store builds (M6-T7). The alpha (M5-T9) is postponed by the owner.
 - **Verification:** each item's completion check in §5, with the CI run or record linked in the task row.
 
 ## 8. Change log
 
 | Date | Change |
 |---|---|
+| 2026-10-04 | Owner answers (multiple choice): next M7 item is **passkey-only sign-in, no passwords** (HTTPS on a domain required; recovery by admin link plus a server command; mobile sign-in by browser hand-off), tasks M7-T3..T6; releases stay without the APK for now (M6-T8 deferred), and the owner gets a test-signed phone APK instead (`mobile.yml` dispatch with *test_apk*). |
 | 2026-10-04 | [v0.1.0-rc.1](https://github.com/VidFriends/vidfriends/releases/tag/v0.1.0-rc.1) published (M5-T4 ✅). M7-T1/T2 data export and the M6-T8 sideload APK job merged in [PR #117](https://github.com/VidFriends/vidfriends/pull/117). |
 | 2026-10-04 | M6 merged ([PR #116](https://github.com/VidFriends/vidfriends/pull/116)) with the Android Maestro suite green; the emulator run found two app bugs (sign-in navigation race, Hermes `Intl.RelativeTimeFormat` crash) and the arm64 image build moved off QEMU for Node (SIGILL). `v0.1.0-rc.1` dispatched. |
 | 2026-10-04 | Owner answers (multiple choice): alpha (M5-T9) postponed; Android ships as a sideloadable APK until store accounts exist (M6-T8 added); M7 starts with data export (CAP-18 → FR-ACCT-05, WF-ACCT-4; M7-T1 web/API, M7-T2 mobile). BRD BO-5 corrected to match NFR-PRIV-03 (no email). |
