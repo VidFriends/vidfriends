@@ -271,6 +271,7 @@ LIMIT :n + 1;
 | `POST /me/exports` | M | `{include_media}` → 202 `{export}`; one in progress, 3 per 24 h | `export_in_progress`, `rate_limited` | ACCT-05 |
 | `GET /me/exports` | M | → `{items: Export[]}` newest first | – | ACCT-05 |
 | `GET /me/exports/{id}/download` | M | → 302 to a signed URL (≤ 15 min) while ready; owner only | 404 | ACCT-05 |
+| `GET /me/exports/{id}/download-url` | M | → `{url, expires_at}`: the same signed URL as data, for bearer clients (the mobile app opens it in the browser). Owner only | 404 | ACCT-05, MOB-01 |
 | `POST /invites`, `GET /invites`, `DELETE /invites/{id}` | M/A | `{max_uses?, expires_in_days?, auto_friend?}` → `{invite, code, join_url}` (code returned once) | `forbidden` if members cannot invite | INV-01..03 |
 | `GET /users?q=` | M | → `{items:[{user:{id, username, display_name, avatar_url}, state, since}]}`; `state` ∈ `none`, `friends`, `request_sent`, `request_received`, `blocked` | `query_too_short` | FRND-01 |
 | `GET /friends`, `GET /friends/requests?direction=in\|out`, `GET /blocks` | M | lists | – | FRND-05 |

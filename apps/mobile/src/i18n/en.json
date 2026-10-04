@@ -39,7 +39,8 @@
     "password_too_short": "Use at least 10 characters.",
     "password_too_long": "Use at most 128 characters.",
     "unsupported_type": "That file type isn't supported. Use MP4, MOV or WebM.",
-    "password_common": "That password is too common. Pick something less guessable."
+    "password_common": "That password is too common. Pick something less guessable.",
+    "export_in_progress": "Your data is already being prepared."
   },
   "nav": {
     "home": "Home",
@@ -238,7 +239,21 @@
     "privatePreviewsHelp": "Hide names on your lock screen. Change this before turning push on.",
     "signOut": "Sign out",
     "switchServer": "Sign out and use a different server",
-    "webOnly": "Profile, password, sessions and account deletion are managed in the web app on your server."
+    "webOnly": "Profile, password, sessions and account deletion are managed in the web app on your server.",
+    "exportTitle": "Download your data",
+    "exportHelp": "Get a ZIP file with your profile, friends, the videos you sent and received with their notes and conversations, and your sign-in history. It is prepared on your server and can be downloaded for 7 days.",
+    "exportIncludeMedia": "Include the video files I added",
+    "exportSubmit": "Prepare my data",
+    "exportRateLimited": "You can prepare your data 3 times a day. Try again tomorrow.",
+    "exportExpires": "expires {{when}}",
+    "exportDownload": "Download in browser",
+    "exportState": {
+      "queued": "Waiting to start",
+      "building": "Preparing…",
+      "ready": "Ready",
+      "failed": "Failed. Try again.",
+      "expired": "Expired"
+    }
   },
   "time": {
     "now": "just now",
