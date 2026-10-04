@@ -21,15 +21,23 @@ export function errorText(err: unknown): string {
   });
 }
 
+/**
+ * "5 minutes ago", "in 3 days". Hermes (the app's JS engine) has no Intl.RelativeTimeFormat, and
+ * calling it crashed the Android app, so the phrases come from the catalogue instead.
+ */
 export function relativeTime(iso: string, now = Date.now()): string {
   const diff = new Date(iso).getTime() - now;
-  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
-  const units: [Intl.RelativeTimeFormatUnit, number][] = [
+  const units: [string, number][] = [
     ['day', 86400e3],
     ['hour', 3600e3],
     ['minute', 60e3],
   ];
-  for (const [unit, ms] of units)
-    if (Math.abs(diff) >= ms) return rtf.format(Math.round(diff / ms), unit);
-  return rtf.format(Math.round(diff / 1000), 'second');
+  for (const [unit, ms] of units) {
+    if (Math.abs(diff) >= ms) {
+      const n = Math.round(Math.abs(diff) / ms);
+      const amount = i18n.t(`time.${unit}${n === 1 ? '' : 's'}`, { count: n });
+      return i18n.t(diff < 0 ? 'time.ago' : 'time.in', { amount });
+    }
+  }
+  return i18n.t('time.now');
 }

@@ -239,5 +239,16 @@
     "signOut": "Sign out",
     "switchServer": "Sign out and use a different server",
     "webOnly": "Profile, password, sessions and account deletion are managed in the web app on your server."
+  },
+  "time": {
+    "now": "just now",
+    "ago": "{{amount}} ago",
+    "in": "in {{amount}}",
+    "minute": "1 minute",
+    "minutes": "{{count}} minutes",
+    "hour": "1 hour",
+    "hours": "{{count}} hours",
+    "day": "1 day",
+    "days": "{{count}} days"
   }
 }
