@@ -1,0 +1,26 @@
+# J-2: pair by pasting the join link (no default server, ADR-0014), then register.
+appId: io.github.vidfriends.app
+---
+- assertVisible: 'Connect to your server'
+- tapOn:
+    id: pair-input
+- inputText: ${JOIN_URL}
+- tapOn:
+    id: pair-connect
+- assertVisible: 'Join Mobile E2E'
+- assertVisible: 'This connection is not encrypted. Use it only on your home network.'
+- tapOn:
+    id: join-username
+- inputText: mia
+- tapOn:
+    id: join-display-name
+- inputText: Mia
+- tapOn:
+    id: join-password
+- inputText: plum-lantern-2042
+- hideKeyboard
+- tapOn:
+    id: join-submit
+- extendedWaitUntil:
+    visible: 'Nothing here yet'
+    timeout: 20000

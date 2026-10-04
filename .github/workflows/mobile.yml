@@ -1,0 +1,128 @@
+# Mobile acceptance (M6-T6, FR-MOB-01, NFR-COMPAT-02): build the Android app from the Expo project,
+# start the production stack in its plain-HTTP emulator variant (http://10.0.2.2:8880, a private
+# address the app accepts with a warning, WF-PAIR-3), and run the Maestro flows in an emulator.
+# iOS builds need macOS runners and Apple signing; they run through EAS once accounts exist (M6-T7).
+name: Mobile
+
+on:
+  pull_request:
+    paths:
+      - apps/mobile/**
+      - packages/contracts/**
+      - packages/api-client/**
+      - pnpm-lock.yaml
+      - .github/workflows/mobile.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '24'
+  MAESTRO_VERSION: '2.11.0'
+
+jobs:
+  checks:
+    name: Lint, typecheck, unit tests, bundles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run build --filter=@vidfriends/mobile^...
+      - run: pnpm --filter @vidfriends/mobile lint
+      - run: pnpm --filter @vidfriends/mobile typecheck
+      - run: pnpm --filter @vidfriends/mobile test
+      - name: Metro bundles for Android and iOS
+        run: pnpm --filter @vidfriends/mobile bundle
+
+  android-e2e:
+    name: Android build and Maestro E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run build --filter=@vidfriends/mobile^...
+      - name: Generate the native Android project
+        run: pnpm --filter @vidfriends/mobile exec expo prebuild --platform android --no-install
+        env:
+          CI: '1'
+      - name: Build the release APK (x86_64 for the emulator)
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: server
+          load: true
+          tags: vidfriends-server:local
+          cache-from: type=gha,scope=server
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: worker
+          load: true
+          tags: vidfriends-worker:local
+          cache-from: type=gha,scope=worker
+      - name: Start the stack (emulator HTTP variant)
+        run: node e2e/scripts/stack.mjs up
+        env:
+          E2E_DOMAIN: http://10.0.2.2
+          E2E_PUBLIC_URL: http://10.0.2.2:8880
+          E2E_HTTP_PORT: '8880'
+      - name: Seed
+        run: node apps/mobile/e2e/seed.mjs >> "$GITHUB_ENV"
+      - name: Install Maestro
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | MAESTRO_VERSION="$MAESTRO_VERSION" bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Maestro flows on an Android 14 emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: |
+            adb install -r apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+            maestro test apps/mobile/e2e/main.yaml -e JOIN_URL="$JOIN_URL" -e ADMIN_USER="$ADMIN_USER" -e ADMIN_PASSWORD="$ADMIN_PASSWORD" -e VIDEO_URL="https://www.youtube.com/watch?v=ok&e2e=mobile" --format junit --output maestro-report.xml --debug-output maestro-debug
+      - name: Stack logs
+        if: failure()
+        run: node e2e/scripts/stack.mjs logs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: maestro
+          path: |
+            maestro-report.xml
+            maestro-debug/
+          if-no-files-found: ignore
+      - name: Stop the stack
+        if: always()
+        run: node e2e/scripts/stack.mjs down

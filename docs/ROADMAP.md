@@ -247,18 +247,21 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 | M5-T8 Operator and user guides | Self-hosting guide, privacy disclosure, member help pages | Docs reviewed against the deployed alpha <br>**🟡** [Self-hosting guide](guides/self-hosting.md), in-app `/privacy` and `/help` (`e2e/tests/docs.spec.ts`), [runbook](../deploy/RUNBOOK.md). Reviewed against the E2E deployment; the review against the owner's alpha happens in M5-T9. |
 | M5-T9 Alpha release v0.1.0 | Owner's private self-hosted instance live; alpha group onboarded; BO metrics collection plan (manual, privacy-preserving) | Owner sign-off <br>**⛔** Owner action: run the instance, onboard the alpha group, sign off. |
 
-### M6: Mobile apps (Expo) ⬜
+### M6: Mobile apps (Expo) 🟡 (in progress; store builds blocked on accounts)
 
 **Goal:** iOS and Android apps with share-sheet intake and push.
 **Requirements:** FR-PAIR-03, 04 (app links); FR-NOTIF-03; FR-MOB-01..03; NFR-A11Y-02; NFR-COMPAT-02.
-**Prerequisites:** M4 (stable API v1); the owner has Apple and Google developer accounts (BC-7). There is no default instance or domain ([ADR-0014](adr/0014-self-host-only-no-public-instance.md)). Detailed tasks are written when M4 closes. The high-level tasks are:
+**Prerequisites:** M4 (stable API v1). There is no default instance or domain ([ADR-0014](adr/0014-self-host-only-no-public-instance.md)). Store submission needs the owner's Apple and Google developer accounts (BC-7; owner answer 2026-10-04: none yet, so M6-T7 is ⛔).
 
-1. Expo app scaffold in the monorepo (Metro workspace config, shared `api-client`).
-2. Pairing (in-app QR scan, paste) and secure storage.
-3. Authentication, feed player (expo-video), lists, send, friends, conversation.
-4. Share intent (iOS extension, Android intents), push (expo-notifications). There are no Universal or App Links (ADR-0014).
-5. Maestro E2E for J-2..J-5; accessibility audit.
-6. EAS build, TestFlight and Play internal track.
+| Task | Objective | References | Completion check |
+|---|---|---|---|
+| M6-T1 Scaffold | `apps/mobile` on Expo SDK 57 (expo-router, TypeScript strict), shared `contracts` and `api-client`, one React version for the monorepo ([ADR-0017](adr/0017-single-react-version-pinned-by-expo.md)), i18n catalogue, lint/typecheck/Jest, Metro bundles in CI | ADR-0004, ADR-0012, TDD §4 | `mobile.yml` checks job green (lint, typecheck, unit tests, Android and iOS bundles) |
+| M6-T2 Pairing | Scan QR (expo-camera) or paste a join/instance link; verify `GET /instance` (API major) before saving; base URL and token in secure storage, applied on launch; plain http only to private IP literals with a warning | WF-PAIR-1..3, FR-PAIR-03, FR-MOB-03 | Unit tests `apps/mobile/src/lib/instance.test.ts`; Maestro `join.yaml` pairs by pasting a join link |
+| M6-T3 Auth | Log in, register through the invite (J-2), sign out, switch server only after sign-out, global 401 → sign-in | FR-AUTH-*, WF-PAIR-2, L-17 | Maestro `join.yaml`, `watch.yaml` (sign out, sign in) |
+| M6-T4 Core screens | Vertical feed (≤ 3 players, muted autoplay, reduced motion, progress beacons, link-only cards), inbox, saved, history, sent, send (link or video upload), friends, share conversation with reactions and replies, notifications with badge | FR-MOB-01, FRD §7–9 | Maestro `send.yaml` (J-3) and `watch.yaml` (J-4/5); unit tests for progress throttling and uploads |
+| M6-T5 Share intent and push | `expo-share-intent` (iOS extension, Android `text/*` and `video/*`) opens Send; Expo push tokens registered as push targets; server Expo push channel with gone-token cleanup; taps open the share | FR-MOB-02, FR-NOTIF-03, ADR-0011, BR-NOT-3/6 | Server unit test `apps/server/test/push-expo.test.ts`; mobile `push-target.test.ts`; device runbook (share from TikTok/YouTube/Instagram, real push) during the alpha |
+| M6-T6 Android E2E and accessibility | Release APK built from the Expo project in CI; stack in its emulator HTTP variant; Maestro flows J-2..J-5 on an Android 14 emulator; accessibility review (labels, roles, font scaling, reduced motion) | NFR-A11Y-02, NFR-COMPAT-02, TDD §7 | `mobile.yml` android-e2e job green; review notes in the PR |
+| M6-T7 Store builds | EAS project, signing, TestFlight and Play internal track; iOS build and Maestro on macOS runners | BC-7 | ⛔ Owner: Apple and Google developer accounts |
 
 **Exit:** Maestro suites green; TestFlight and Play internal builds installed by the alpha group; share-to-send works from TikTok, YouTube and Instagram on both platforms (runbook).
 

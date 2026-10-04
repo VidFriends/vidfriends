@@ -1,0 +1,33 @@
+# J-4/J-5: sign out, sign in as Alex on the same server, watch Mia's video, react and reply.
+appId: io.github.vidfriends.app
+---
+- tapOn: 'More'
+- tapOn: 'Settings'
+- scrollUntilVisible:
+    element:
+      id: settings-signout
+- tapOn:
+    id: settings-signout
+- assertVisible: 'Log in'
+- tapOn:
+    id: login-username
+- inputText: ${ADMIN_USER}
+- tapOn:
+    id: login-password
+- inputText: ${ADMIN_PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: login-submit
+- extendedWaitUntil:
+    visible: 'From Mia'
+    timeout: 30000
+- assertVisible: 'for you'
+- tapOn: 'React & reply'
+- tapOn: 'Fire'
+- tapOn:
+    id: reply-input
+- inputText: so good
+- hideKeyboard
+- tapOn:
+    id: reply-send
+- assertVisible: 'so good'
