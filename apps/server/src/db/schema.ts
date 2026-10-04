@@ -499,18 +499,25 @@ export const pushTargets = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    kind: text('kind', { enum: ['webpush', 'expo'] }).notNull(),
+    kind: text('kind', { enum: ['webpush', 'expo', 'ntfy', 'gotify'] }).notNull(),
     endpoint: text('endpoint').notNull(),
     p256dh: text('p256dh'),
     auth: text('auth'),
+    /** ntfy/Gotify token, encrypted with a key derived from APP_SECRET (ADR-0020). */
+    secret: bytea('secret'),
     privatePreviews: boolean('private_previews').notNull().default(false),
     createdAt: createdAt(),
     lastSuccessAt: tstz('last_success_at'),
   },
   (t) => [
-    uniqueIndex('push_targets_endpoint_key').on(t.endpoint),
+    uniqueIndex('push_targets_device_endpoint_key')
+      .on(t.endpoint)
+      .where(sql`${t.kind} in ('webpush','expo')`),
+    uniqueIndex('push_targets_user_endpoint_key')
+      .on(t.userId, t.endpoint)
+      .where(sql`${t.kind} in ('ntfy','gotify')`),
     index('push_targets_user_idx').on(t.userId),
-    check('push_targets_kind_check', sql`${t.kind} in ('webpush','expo')`),
+    check('push_targets_kind_check', sql`${t.kind} in ('webpush','expo','ntfy','gotify')`),
   ],
 );
 

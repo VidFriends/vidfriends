@@ -113,12 +113,22 @@ export const getVapidKey = defineRoute({
   response: z.object({ key: z.string() }),
 });
 
+export const PUSH_KINDS = ['webpush', 'expo', 'ntfy', 'gotify'] as const;
+export const PushKind = z.enum(PUSH_KINDS);
+
+/** BR-NOT-8: ntfy and Gotify targets per member. */
+export const MAX_SERVER_PUSH_TARGETS = 5;
+
 export const PushTarget = z.object({
   id: Id,
-  kind: z.enum(['webpush', 'expo']),
+  kind: PushKind,
+  /** Where pushes go, for the member to recognise it: host and topic for ntfy/Gotify. */
+  label: z.string(),
   private_previews: z.boolean(),
   created_at: Timestamp,
+  last_success_at: Timestamp.nullable(),
 });
+export type PushTarget = z.infer<typeof PushTarget>;
 
 export const createPushTarget = defineRoute({
   id: 'createPushTarget',
@@ -126,16 +136,44 @@ export const createPushTarget = defineRoute({
   path: '/push-targets',
   auth: 'member',
   tag: 'notifications',
-  summary: 'Register a Web Push subscription or Expo push token (FR-NOTIF-02/03)',
+  summary:
+    'Register a Web Push subscription, an Expo push token, or an ntfy/Gotify target (FR-NOTIF-02/03/07)',
   body: z.object({
-    kind: z.enum(['webpush', 'expo']),
-    endpoint: z.string().min(1).max(1000),
+    kind: PushKind,
+    endpoint: z.string().trim().min(1).max(1000),
     keys: z.object({ p256dh: z.string().max(200), auth: z.string().max(100) }).optional(),
+    /** ntfy access token (optional) or Gotify application token (required); stored encrypted. */
+    token: z.string().trim().min(1).max(200).optional(),
     private_previews: z.boolean().default(false),
   }),
   status: 201,
   response: z.object({ target: PushTarget }),
-  errors: ['validation_failed'],
+  errors: ['validation_failed', 'too_many_push_targets'],
+});
+
+export const listPushTargets = defineRoute({
+  id: 'listPushTargets',
+  method: 'get',
+  path: '/push-targets',
+  auth: 'member',
+  tag: 'notifications',
+  summary: 'My push targets (FR-NOTIF-07); tokens and device endpoints are never returned',
+  status: 200,
+  response: z.object({ items: z.array(PushTarget) }),
+});
+
+export const testPushTarget = defineRoute({
+  id: 'testPushTarget',
+  method: 'post',
+  path: '/push-targets/{id}/test',
+  auth: 'member',
+  tag: 'notifications',
+  summary: 'Send a test push to one of my targets; 5 per 10 minutes (FR-NOTIF-07)',
+  params: z.object({ id: Id }),
+  body: z.object({}),
+  status: 200,
+  response: z.object({ result: z.enum(['ok', 'error', 'gone']) }),
+  errors: ['not_found', 'rate_limited'],
 });
 
 export const deletePushTarget = defineRoute({

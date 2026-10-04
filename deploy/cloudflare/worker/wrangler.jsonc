@@ -1,0 +1,25 @@
+// Cloudflare test instance (ADR-0021). Deploy with deploy/cloudflare/deploy.sh, which builds and
+// pushes the container image and fills in the image tag below. Secrets (APP_SECRET, POSTGRES_PASSWORD,
+// S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, BACKUP_TOKEN) are set with `wrangler secret put` and are
+// never committed.
+{
+  "$schema": "../../../node_modules/wrangler/config-schema.json",
+  "name": "vidfriends-test",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "routes": [{ "pattern": "vidfriends.app", "custom_domain": true }],
+  "vars": { "PUBLIC_URL": "https://vidfriends.app" },
+  "observability": { "enabled": true },
+  "containers": [
+    {
+      "class_name": "VidFriends",
+      "image": "registry.cloudflare.com/ACCOUNT_ID/vidfriends-cf:TAG",
+      "max_instances": 1,
+      // 2 vCPU for transcoding; 20 GB disk holds Postgres, SeaweedFS and work files.
+      "instance_type": { "vcpu": 2, "memory_mib": 6144, "disk_mb": 20000 },
+    },
+  ],
+  "durable_objects": { "bindings": [{ "name": "VIDFRIENDS", "class_name": "VidFriends" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["VidFriends"] }],
+  "r2_buckets": [{ "binding": "BACKUPS", "bucket_name": "vidfriends-test-backups" }],
+}

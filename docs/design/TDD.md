@@ -92,6 +92,7 @@
 |---|---|---|
 | Spoofing | Session theft or token forgery | Opaque random tokens, hashed at rest; HttpOnly cookie; secure-store on mobile; no JWT secrets to leak [NFR-SEC-02, ADR-0008] |
 | Spoofing | Credential theft or phishing | Passkeys only (no passwords to steal or guess), bound to the `PUBLIC_URL` host; single-use 5-minute challenges; per-IP auth rate limits [NFR-SEC-02, NFR-SEC-06, ADR-0018] |
+| Tampering | SSRF through a member's ntfy/Gotify URL | https and public addresses only, address pinned per connection (no DNS rebinding), no redirects; private hosts only if the operator lists them in `PUSH_PRIVATE_HOSTS` [NFR-SEC-05, ADR-0020] |
 | Spoofing | Hand-off code interception (mobile) | Codes are single-use, expire in 60 s, are sent only to `vidfriends://auth` and are bound to the app's PKCE challenge [WF-AUTH-5] |
 | Tampering | CSRF on cookie auth | SameSite=Lax + Origin check + double-submit token [NFR-SEC-04] |
 | Tampering | Malicious media exploiting ffmpeg | Sandboxed worker, size and time caps, pinned ffmpeg, re-encode on doubt [NFR-SEC-08] |
