@@ -25,5 +25,15 @@
       "persistent": true,
       "dependsOn": ["^build"]
     }
-  }
+  },
+  "globalPassThroughEnv": [
+    "TEST_*",
+    "E2E_*",
+    "PW_*",
+    "CI",
+    "NO_PROXY",
+    "no_proxy",
+    "HTTPS_PROXY",
+    "NODE_EXTRA_CA_CERTS"
+  ]
 }
