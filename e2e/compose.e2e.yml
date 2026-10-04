@@ -1,8 +1,14 @@
 # E2E-only override: the worker uses the deterministic fake yt-dlp from the API tests, so no
-# test ever depends on a real platform (M3 exit criterion, TDD §7).
+# test ever depends on a real platform (M3 exit criterion, TDD §7). A fake ntfy server accepts
+# member push targets (M7-T11).
 services:
   worker:
     environment:
       YTDLP_PATH: /opt/e2e/fake-yt-dlp.mjs
     volumes:
       - ../apps/server/test/fixtures/fake-yt-dlp.mjs:/opt/e2e/fake-yt-dlp.mjs:ro
+  fake-ntfy:
+    image: node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1
+    command: ['node', '/opt/e2e/fake-ntfy.mjs']
+    volumes:
+      - ../e2e/fixtures/fake-ntfy.mjs:/opt/e2e/fake-ntfy.mjs:ro

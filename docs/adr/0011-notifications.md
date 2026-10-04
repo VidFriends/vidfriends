@@ -1,6 +1,6 @@
 # ADR-0011: Notifications: database-first in-app inbox, Web Push (VAPID), Expo Push; polling instead of realtime
 
-- **Status:** Accepted; "polling instead of realtime" superseded by [ADR-0019](0019-realtime-invalidation-over-sse.md) (polling stays as the fallback)
+- **Status:** Accepted; "polling instead of realtime" superseded by [ADR-0019](0019-realtime-invalidation-over-sse.md) (polling stays as the fallback); item 4 superseded for ntfy and Gotify by [ADR-0020](0020-ntfy-and-gotify-push-channels.md)
 - **Date:** 2026-10-03
 - **Decided by:** Claude under delegation
 

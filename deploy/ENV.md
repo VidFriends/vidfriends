@@ -34,6 +34,7 @@ Product policy (signup mode, quotas, retention, session lifetimes and so on) is 
 | `WORKER_FETCH_CONCURRENCY` | `2` | Concurrent `video.fetch` jobs per worker (NFR-PERF-03). |
 | `WORKER_PROCESS_CONCURRENCY` | `1` | Concurrent `video.process` (transcode) jobs per worker (NFR-PERF-03). |
 | `EXPO_ACCESS_TOKEN` | (unset) | Optional Expo access token, needed only if the Expo project behind your mobile app build enforces push security (FR-NOTIF-03). **Secret.** |
+| `PUSH_PRIVATE_HOSTS` | `` | Comma-separated host names of ntfy or Gotify servers on your own network. Only these may resolve to private addresses or use plain http:// for members' push targets (ADR-0020); all others must be public https. Example: `ntfy.home.lan,192.168.1.20`. |
 | `YTDLP_PATH` | `yt-dlp` | yt-dlp executable. |
 | `FETCH_PROXY_URL` | (unset) | Optional HTTP(S) proxy for every yt-dlp request, including redirects. Point it at a filtering egress proxy that refuses private and link-local addresses to close the redirect residual risk (TDD §5). |
 | `FFMPEG_PATH` | `ffmpeg` | ffmpeg executable. |

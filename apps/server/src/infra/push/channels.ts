@@ -1,7 +1,9 @@
-// Push channels (ADR-0011): Web Push for browsers, Expo Push for the mobile apps.
+// Push channels (ADR-0011, ADR-0020): Web Push for browsers, Expo Push for the mobile apps, and
+// member-configured ntfy and Gotify servers.
 import webpush from 'web-push';
 import type { Db } from '../db.js';
-import { getOrCreateSecret } from '../secrets.js';
+import { decryptSecret, getOrCreateSecret } from '../secrets.js';
+import type { PostFn } from './egress.js';
 
 export interface PushPayload {
   title: string;
@@ -10,13 +12,20 @@ export interface PushPayload {
   tag: string;
 }
 
+export type PushKind = 'webpush' | 'expo' | 'ntfy' | 'gotify';
+
 export interface PushTargetRow {
   id: string;
-  kind: 'webpush' | 'expo';
+  kind: PushKind;
   endpoint: string;
   p256dh: string | null;
   auth: string | null;
+  /** Encrypted ntfy/Gotify token (ADR-0020). */
+  secret?: Buffer | null;
 }
+
+/** HKDF info for push target tokens (ADR-0020). */
+export const PUSH_SECRET_NAME = 'push-target-token';
 
 export type PushResult = 'ok' | 'gone' | 'error';
 
@@ -128,6 +137,72 @@ export function createExpoPushSender(options: {
         if (json.data?.status === 'ok') return 'ok';
         if (json.data?.details?.error === 'DeviceNotRegistered') return 'gone';
         return 'error';
+      } catch {
+        return 'error';
+      }
+    },
+  };
+}
+
+interface HttpPushOptions {
+  publicUrl: string;
+  appSecret: string;
+  post: PostFn;
+}
+
+const token = (o: HttpPushOptions, target: PushTargetRow) =>
+  target.secret ? decryptSecret(o.appSecret, PUSH_SECRET_NAME, target.secret) : null;
+
+/** ntfy deliveries are gone when the topic or token stops being accepted (BR-NOT-6, ADR-0020). */
+function outcome(status: number): PushResult {
+  if (status >= 200 && status < 300) return 'ok';
+  if (status === 401 || status === 403 || status === 404) return 'gone';
+  return 'error';
+}
+
+/** ntfy: POST the title to the topic URL; `Click` opens the instance (BR-NOT-3). */
+export function createNtfySender(o: HttpPushOptions): PushSender {
+  return {
+    async send(target, payload) {
+      if (target.kind !== 'ntfy') return 'error';
+      const secret = token(o, target);
+      try {
+        const status = await o.post(target.endpoint, {
+          headers: {
+            'content-type': 'text/plain; charset=utf-8',
+            title: 'VidFriends',
+            click: o.publicUrl + payload.data.url,
+            tags: 'movie_camera',
+            ...(secret ? { authorization: `Bearer ${secret}` } : {}),
+          },
+          body: payload.title,
+        });
+        return outcome(status);
+      } catch {
+        return 'error';
+      }
+    },
+  };
+}
+
+/** Gotify: POST /message with the application token; the click URL opens the instance. */
+export function createGotifySender(o: HttpPushOptions): PushSender {
+  return {
+    async send(target, payload) {
+      if (target.kind !== 'gotify') return 'error';
+      const secret = token(o, target);
+      if (!secret) return 'gone';
+      try {
+        const status = await o.post(`${target.endpoint.replace(/\/+$/, '')}/message`, {
+          headers: { 'content-type': 'application/json', 'x-gotify-key': secret },
+          body: JSON.stringify({
+            title: 'VidFriends',
+            message: payload.title,
+            priority: 5,
+            extras: { 'client::notification': { click: { url: o.publicUrl + payload.data.url } } },
+          }),
+        });
+        return outcome(status);
       } catch {
         return 'error';
       }

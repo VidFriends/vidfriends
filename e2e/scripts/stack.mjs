@@ -52,6 +52,8 @@ if (cmd === 'up') {
         `S3_ACCESS_KEY_ID=e2e${hex(6)}`,
         // Every E2E request comes from one IP; the per-IP auth limit is covered by API tests.
         'RATE_LIMIT_AUTH_PER_MINUTE=1000',
+        // The fake ntfy server on the compose network (ADR-0020 operator allowlist).
+        'PUSH_PRIVATE_HOSTS=fake-ntfy',
         `S3_SECRET_ACCESS_KEY=${hex(20)}`,
         `VIDFRIENDS_SERVER_IMAGE=${process.env.VIDFRIENDS_SERVER_IMAGE ?? 'vidfriends-server:local'}`,
         `VIDFRIENDS_WORKER_IMAGE=${process.env.VIDFRIENDS_WORKER_IMAGE ?? 'vidfriends-worker:local'}`,

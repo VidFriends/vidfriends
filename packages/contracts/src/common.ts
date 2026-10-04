@@ -35,6 +35,7 @@ export const ERROR_STATUS = {
   last_admin: 409,
   last_passkey: 409,
   too_many_passkeys: 409,
+  too_many_push_targets: 409,
   export_in_progress: 409,
   cooldown: 409,
   conflict: 409,

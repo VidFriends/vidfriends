@@ -74,7 +74,8 @@
     "code_invalid": "This sign-in code is not valid. Start again from the app.",
     "reauth_required": "Confirm with your passkey first.",
     "last_passkey": "You can't remove your last passkey. Add another one first.",
-    "too_many_passkeys": "You already have 10 passkeys. Remove one first."
+    "too_many_passkeys": "You already have 10 passkeys. Remove one first.",
+    "too_many_push_targets": "You already have 5 ntfy or Gotify targets. Remove one first."
   },
   "fieldErrors": {
     "required": "Required.",
@@ -83,7 +84,9 @@
     "invalid": "Invalid value.",
     "username_taken": "That username is taken.",
     "not_an_image": "That file is not an image we can use.",
-    "not_a_video": "That file isn't a video we can use."
+    "not_a_video": "That file isn't a video we can use.",
+    "push_endpoint_not_allowed": "Use an https:// address on the internet. Servers on your home network work only if the server operator allows them.",
+    "invalid_url": "That isn't a valid web address."
   },
   "setup": {
     "title": "Set up your VidFriends server",
@@ -522,7 +525,7 @@
         "body": [
           "Your username, display name, optional profile picture and and the public keys of your passkeys (your device keeps the private part; the server never sees it). No email address or phone number is collected.",
           "The videos you add, who you send them to, your notes, reactions and replies, what you have watched, saved or hidden, your friend list and blocks, and your notification settings.",
-          "Your active sessions (device type, browser or app name, last activity) and, if you enable push notifications, the push address your browser or phone gave us."
+          "Your active sessions (device type, browser or app name, last activity) and, if you enable push notifications, the push address your browser or phone gave us, or the ntfy or Gotify address you entered (its token is stored encrypted)."
         ]
       },
       {
@@ -552,7 +555,7 @@
         "body": [
           "The apps load nothing from other companies: no analytics, trackers, ads, fonts or CDNs.",
           "When you add a link, this server downloads the video from that site, so the site sees a request from this server, not from you. Opening the original link takes you to that site.",
-          "Push notifications travel through your browser's or phone's push service (for example Google, Apple or Mozilla). They contain only a short generic text such as \"New video from Sam\", or no name at all with private previews on."
+          "Push notifications travel through your browser's or phone's push service (for example Google, Apple or Mozilla), or through the ntfy or Gotify server you chose. They contain only a short generic text such as \"New video from Sam\", or no name at all with private previews on."
         ]
       },
       {
@@ -663,5 +666,33 @@
     "done": "Signed in. The app should open now.",
     "invalid": "This sign-in link is incomplete. Start again from the app.",
     "return": "Return to the app"
+  },
+  "pushServers": {
+    "title": "ntfy and Gotify",
+    "help": "Get notifications through your own ntfy topic or Gotify server instead of browser or app push, for example on a phone without Google services. Messages show only the sender's name (or nothing with private previews), never the content. A public ntfy topic can be read by anyone who guesses it: use an access token or private previews.",
+    "kind": "Service",
+    "kinds": {
+      "ntfy": "ntfy",
+      "gotify": "Gotify"
+    },
+    "topicUrl": "Topic URL",
+    "topicHelp": "For example https://ntfy.sh/a-long-random-topic or your own ntfy server.",
+    "serverUrl": "Server URL",
+    "serverHelp": "The address of your Gotify server, for example https://gotify.example.org.",
+    "ntfyToken": "Access token (optional)",
+    "ntfyTokenHelp": "Needed if the topic is protected. Stored encrypted; it is never shown again.",
+    "gotifyToken": "Application token",
+    "gotifyTokenHelp": "Create an application in Gotify and paste its token. Stored encrypted; it is never shown again.",
+    "add": "Add",
+    "added": "Added. Send a test to check it works.",
+    "test": "Send test",
+    "testOk": "Test notification sent.",
+    "testFailed": "The server didn't accept the test. Check the address and try again later.",
+    "testGone": "The server refused the token or topic, so it was removed.",
+    "remove": "Remove",
+    "removed": "Removed.",
+    "lastSuccess": "Last delivered {{when}}",
+    "neverDelivered": "Nothing delivered yet",
+    "private": "private previews"
   }
 }
