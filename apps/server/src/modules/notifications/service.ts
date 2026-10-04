@@ -11,6 +11,7 @@ import { alias } from 'drizzle-orm/pg-core';
 import { notificationPrefs, notifications, pushTargets, users } from '../../db/schema.js';
 import type { DbOrTx } from '../../infra/db.js';
 import { newId } from '../../infra/ids.js';
+import { publish } from '../../infra/realtime.js';
 import { isAllowedWebPushEndpoint } from '../../infra/push/channels.js';
 import type { Viewer } from '../../http/context.js';
 import type { Deps } from '../../http/deps.js';
@@ -41,6 +42,12 @@ export async function notify(deps: Deps, tx: DbOrTx, n: NewNotification): Promis
     shareId: n.shareId ?? null,
     data: n.data ?? {},
     createdAt: deps.clock.now(),
+  });
+  // BR-NOT-7: open streams hear about it once the transaction commits.
+  await publish(tx, n.userId, {
+    type: 'notification',
+    notification_type: n.type,
+    share_id: n.shareId ?? null,
   });
   if (deps.queue) {
     if (n.type === 'share_received' && n.actorId) {
@@ -109,7 +116,7 @@ export async function unreadCount(deps: Deps, viewer: Viewer): Promise<number> {
 }
 
 export async function markRead(deps: Deps, viewer: Viewer, ids: string[] | 'all') {
-  await deps.db
+  const updated = await deps.db
     .update(notifications)
     .set({ readAt: deps.clock.now() })
     .where(
@@ -118,12 +125,15 @@ export async function markRead(deps: Deps, viewer: Viewer, ids: string[] | 'all'
         isNull(notifications.readAt),
         ids === 'all' ? undefined : inArray(notifications.id, ids),
       ),
-    );
+    )
+    .returning({ id: notifications.id });
+  // Other devices refresh their badge (BR-NOT-7).
+  if (updated.length) await publish(deps.db, viewer.id, { type: 'notifications_read' });
 }
 
 /** BR-NOT-5: reading the referenced item marks its notifications read. */
 export async function markShareRead(db: DbOrTx, userId: string, shareId: string, now: Date) {
-  await db
+  const updated = await db
     .update(notifications)
     .set({ readAt: now })
     .where(
@@ -132,7 +142,9 @@ export async function markShareRead(db: DbOrTx, userId: string, shareId: string,
         eq(notifications.shareId, shareId),
         isNull(notifications.readAt),
       ),
-    );
+    )
+    .returning({ id: notifications.id });
+  if (updated.length) await publish(db, userId, { type: 'notifications_read' });
 }
 
 export async function pushPrefs(

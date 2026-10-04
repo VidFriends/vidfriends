@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useTranslation } from 'react-i18next';
 import '@/i18n';
 import { PushRegistration } from '@/features/push';
+import { RealtimeUpdates } from '@/features/realtime';
 import { SessionProvider } from '@/lib/session';
 import { useTheme } from '@/ui/theme';
 
@@ -13,6 +14,7 @@ export default function RootLayout() {
       <SessionProvider>
         <StatusBar style="auto" />
         <PushRegistration />
+        <RealtimeUpdates />
         <Screens />
       </SessionProvider>
     </ShareIntentProvider>

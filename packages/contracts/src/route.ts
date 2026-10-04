@@ -37,6 +37,8 @@ export interface RouteDef<
   response: R;
   /** Domain errors this route can return in addition to the generic ones. */
   errors?: ErrorCode[];
+  /** A streamed response instead of JSON (the handler returns a `Response`). */
+  stream?: 'text/event-stream';
 }
 
 export function defineRoute<

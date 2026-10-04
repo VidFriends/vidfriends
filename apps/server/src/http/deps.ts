@@ -4,6 +4,7 @@ import type { Clock } from '../infra/clock.js';
 import type { Database, Db } from '../infra/db.js';
 import type { Logger } from '../infra/logger.js';
 import type { RateLimiter } from '../infra/rate-limit.js';
+import type { RealtimeHub } from '../infra/realtime.js';
 import type { JobQueue } from '../infra/queue.js';
 import type { PushSender } from '../infra/push/channels.js';
 import type { Storage } from '../infra/storage.js';
@@ -27,6 +28,8 @@ export interface Deps {
   setup: SetupState;
   /** Object storage; null only when S3 is not configured (tests and dev without storage). */
   storage: Storage | null;
+  /** Realtime fan-out to open event streams (ADR-0019); null outside the API role. */
+  realtime: RealtimeHub | null;
   /** Durable job queue (pg-boss); null until started, so enqueueing fails loudly. */
   queue: JobQueue | null;
   /** Push channels by target kind, resolved lazily (VAPID keys live in the database). */

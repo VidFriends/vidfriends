@@ -203,7 +203,7 @@
 | Trade-off | Chosen | Cost accepted |
 |---|---|---|
 | DB session lookup per request vs stateless JWT | DB lookup | ~1 indexed query per request |
-| Polling vs realtime | Polling + push | Up to 60 s staleness in open tabs |
+| Polling vs realtime | SSE invalidation hints over `LISTEN/NOTIFY`, polling kept as fallback (ADR-0019) | One long-lived connection per open tab or foreground app |
 | Presigned URLs vs proxied streaming | Presigned | The bundled store must be reachable via the public proxy path (ADR-0015) |
 | One language (TS) vs Go performance | TS | Higher memory per process; acceptable at target scale |
 | Download and host vs embed | Download (switchable) | Legal exposure (BRD OQ-1), storage cost |

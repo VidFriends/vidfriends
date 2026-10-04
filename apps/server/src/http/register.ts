@@ -39,7 +39,8 @@ export class Redirect {
 
 type ResponseIn<R extends RouteDef> = [ResS<R>] extends [z.ZodType] ? z.input<ResS<R>> : void;
 
-export type HandlerResult<R extends RouteDef> = ResponseIn<R> | Reply<ResponseIn<R>> | Redirect;
+export type HandlerResult<R extends RouteDef> =
+  ResponseIn<R> | Reply<ResponseIn<R>> | Redirect | Response;
 
 export interface RouteHandler<R extends RouteDef = RouteDef> {
   route: R;
@@ -123,6 +124,8 @@ export function registerRoutes(
         ip: c.get('clientIp'),
       });
       if (result instanceof Redirect) return c.redirect(result.location, 302);
+      // Streamed routes (`stream` in the contract) return their own response.
+      if (route.stream && result instanceof Response) return result;
       let status: number = route.status;
       let body: unknown = result;
       if (result instanceof Reply) {

@@ -4,7 +4,14 @@ import { OpenAPIRegistry, OpenApiGeneratorV31 } from '@asteasolutions/zod-to-ope
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { z } from 'zod';
-import { API_PREFIX, ERROR_STATUS, ErrorEnvelope, allRoutes, type RouteDef } from '../src/index.js';
+import {
+  API_PREFIX,
+  ERROR_STATUS,
+  ErrorEnvelope,
+  RealtimeEvent,
+  allRoutes,
+  type RouteDef,
+} from '../src/index.js';
 
 const registry = new OpenAPIRegistry();
 registry.registerComponent('securitySchemes', 'cookie', {
@@ -42,9 +49,14 @@ function errorResponses(route: RouteDef) {
 for (const route of allRoutes) {
   const success: Record<string, unknown> = {};
   for (const status of [route.status, ...(route.altStatus ?? [])]) {
-    success[String(status)] = route.response
-      ? { description: 'OK', content: { 'application/json': { schema: route.response } } }
-      : { description: status === 302 ? 'Redirect to a short-lived signed URL' : 'No content' };
+    success[String(status)] = route.stream
+      ? {
+          description: 'Server-sent events; each `data:` line is a RealtimeEvent',
+          content: { [route.stream]: { schema: RealtimeEvent } },
+        }
+      : route.response
+        ? { description: 'OK', content: { 'application/json': { schema: route.response } } }
+        : { description: status === 302 ? 'Redirect to a short-lived signed URL' : 'No content' };
   }
   registry.registerPath({
     operationId: route.id,
