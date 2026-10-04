@@ -79,7 +79,13 @@ services:
     volumes:
       - s3data:/data
     healthcheck:
-      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:8333/healthz || exit 1']
+      # Healthy only when the S3 gateway answers AND a volume server has registered with the master
+      # (otherwise uploads fail with "no writable volumes").
+      test:
+        - CMD-SHELL
+        - >-
+          wget -q -O /dev/null http://127.0.0.1:8333/healthz &&
+          wget -q -O - http://127.0.0.1:9333/dir/status | grep -q '"DataNodes":\[{'
       interval: 5s
       timeout: 3s
       retries: 30
