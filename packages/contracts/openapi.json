@@ -2338,6 +2338,448 @@
             }
           }
         }
+      },
+      "delete": {
+        "operationId": "deleteMe",
+        "summary": "Delete my account after re-entering the password (FR-ACCT-03, WF-ACCT-3)",
+        "tags": [
+          "me"
+        ],
+        "x-auth": "member",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "deleted"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: invalid_credentials, unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: csrf_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error: last_admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error: rate_limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/auth/login": {
@@ -22009,6 +22451,4561 @@
           },
           "401": {
             "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/audit": {
+      "get": {
+        "operationId": "adminAudit",
+        "summary": "Audit log, newest first, filterable by actor, action and date (FR-ADM-05, WF-ADM-6)",
+        "tags": [
+          "admin"
+        ],
+        "x-auth": "admin",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "actor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 60
+            },
+            "required": false,
+            "name": "action",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": false,
+            "name": "before",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "actor": {
+                            "type": [
+                              "object",
+                              "null"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "display_name": {
+                                "type": "string"
+                              },
+                              "avatar_url": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "username",
+                              "display_name",
+                              "avatar_url"
+                            ]
+                          },
+                          "actor_id": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "uuid"
+                          },
+                          "action": {
+                            "type": "string"
+                          },
+                          "target_type": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "target_id": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "metadata": {
+                            "type": "object",
+                            "additionalProperties": {}
+                          },
+                          "ip": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "actor",
+                          "actor_id",
+                          "action",
+                          "target_type",
+                          "target_id",
+                          "metadata",
+                          "ip",
+                          "created_at"
+                        ]
+                      }
+                    },
+                    "next_cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "next_cursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}": {
+      "delete": {
+        "operationId": "adminDeleteUser",
+        "summary": "Delete a member with WF-ACCT-3 semantics (FR-ADM-01)",
+        "tags": [
+          "admin"
+        ],
+        "x-auth": "admin",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "deleted"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: csrf_failed, forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error: not_found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error: last_admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "adminUpdateUser",
+        "summary": "Suspend/unsuspend, promote/demote, set a quota; never the last admin (FR-ADM-01)",
+        "tags": [
+          "admin"
+        ],
+        "x-auth": "admin",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "suspended"
+                    ]
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "member",
+                      "admin"
+                    ]
+                  },
+                  "quota_bytes_override": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "display_name": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "member",
+                            "admin"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "suspended"
+                          ]
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "last_active_at": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date-time"
+                        },
+                        "storage_bytes": {
+                          "type": "integer"
+                        },
+                        "quota_bytes_override": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "shares_sent": {
+                          "type": "integer"
+                        },
+                        "shares_received": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "username",
+                        "display_name",
+                        "role",
+                        "status",
+                        "created_at",
+                        "last_active_at",
+                        "storage_bytes",
+                        "quota_bytes_override",
+                        "shares_sent",
+                        "shares_received"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "user"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: csrf_failed, forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error: not_found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error: last_admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/settings": {
+      "get": {
+        "operationId": "adminGetSettings",
+        "summary": "Instance settings (FR-ADM-02)",
+        "tags": [
+          "admin"
+        ],
+        "x-auth": "admin",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "instance_name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 60,
+                      "default": "VidFriends"
+                    },
+                    "signup_mode": {
+                      "type": "string",
+                      "enum": [
+                        "invite_only",
+                        "open"
+                      ],
+                      "default": "invite_only"
+                    },
+                    "members_can_invite": {
+                      "type": "boolean",
+                      "default": true
+                    },
+                    "link_download_enabled": {
+                      "type": "boolean",
+                      "default": true
+                    },
+                    "platform_allowlist": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9.-]+\\.[a-z]{2,}$"
+                      },
+                      "maxItems": 100,
+                      "default": [
+                        "youtube.com",
+                        "youtu.be",
+                        "tiktok.com",
+                        "instagram.com",
+                        "facebook.com",
+                        "fb.watch",
+                        "x.com",
+                        "twitter.com",
+                        "reddit.com",
+                        "redd.it",
+                        "vimeo.com"
+                      ]
+                    },
+                    "max_media_bytes": {
+                      "type": "integer",
+                      "minimum": 1048576,
+                      "maximum": 10737418240,
+                      "default": 209715200
+                    },
+                    "max_duration_seconds": {
+                      "type": "integer",
+                      "minimum": 10,
+                      "maximum": 14400,
+                      "default": 600
+                    },
+                    "per_user_quota_bytes": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "minimum": 0,
+                      "default": 5368709120
+                    },
+                    "instance_storage_cap_bytes": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "minimum": 0,
+                      "default": null
+                    },
+                    "retention_days": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 3650,
+                      "default": 90
+                    },
+                    "session_idle_days": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 365,
+                      "default": 30
+                    },
+                    "session_absolute_days": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 3650,
+                      "default": 180
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "adminUpdateSettings",
+        "summary": "Change instance settings; validated and audited (FR-ADM-02, WF-ADM-3)",
+        "tags": [
+          "admin"
+        ],
+        "x-auth": "admin",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "instance_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "signup_mode": {
+                    "type": "string",
+                    "enum": [
+                      "invite_only",
+                      "open"
+                    ]
+                  },
+                  "members_can_invite": {
+                    "type": "boolean"
+                  },
+                  "link_download_enabled": {
+                    "type": "boolean"
+                  },
+                  "platform_allowlist": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9.-]+\\.[a-z]{2,}$"
+                    },
+                    "maxItems": 100
+                  },
+                  "max_media_bytes": {
+                    "type": "integer",
+                    "minimum": 1048576,
+                    "maximum": 10737418240
+                  },
+                  "max_duration_seconds": {
+                    "type": "integer",
+                    "minimum": 10,
+                    "maximum": 14400
+                  },
+                  "per_user_quota_bytes": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "instance_storage_cap_bytes": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "retention_days": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3650
+                  },
+                  "session_idle_days": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 365
+                  },
+                  "session_absolute_days": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 3650
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "instance_name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 60,
+                      "default": "VidFriends"
+                    },
+                    "signup_mode": {
+                      "type": "string",
+                      "enum": [
+                        "invite_only",
+                        "open"
+                      ],
+                      "default": "invite_only"
+                    },
+                    "members_can_invite": {
+                      "type": "boolean",
+                      "default": true
+                    },
+                    "link_download_enabled": {
+                      "type": "boolean",
+                      "default": true
+                    },
+                    "platform_allowlist": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9.-]+\\.[a-z]{2,}$"
+                      },
+                      "maxItems": 100,
+                      "default": [
+                        "youtube.com",
+                        "youtu.be",
+                        "tiktok.com",
+                        "instagram.com",
+                        "facebook.com",
+                        "fb.watch",
+                        "x.com",
+                        "twitter.com",
+                        "reddit.com",
+                        "redd.it",
+                        "vimeo.com"
+                      ]
+                    },
+                    "max_media_bytes": {
+                      "type": "integer",
+                      "minimum": 1048576,
+                      "maximum": 10737418240,
+                      "default": 209715200
+                    },
+                    "max_duration_seconds": {
+                      "type": "integer",
+                      "minimum": 10,
+                      "maximum": 14400,
+                      "default": 600
+                    },
+                    "per_user_quota_bytes": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "minimum": 0,
+                      "default": 5368709120
+                    },
+                    "instance_storage_cap_bytes": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "minimum": 0,
+                      "default": null
+                    },
+                    "retention_days": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 3650,
+                      "default": 90
+                    },
+                    "session_idle_days": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 365,
+                      "default": 30
+                    },
+                    "session_absolute_days": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 3650,
+                      "default": 180
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: csrf_failed, forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "operationId": "adminListUsers",
+        "summary": "List and search members (WF-ADM-1)",
+        "tags": [
+          "admin"
+        ],
+        "x-auth": "admin",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 50
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "suspended"
+              ]
+            },
+            "required": false,
+            "name": "status",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "member",
+                              "admin"
+                            ]
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "active",
+                              "suspended"
+                            ]
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "last_active_at": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date-time"
+                          },
+                          "storage_bytes": {
+                            "type": "integer"
+                          },
+                          "quota_bytes_override": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ]
+                          },
+                          "shares_sent": {
+                            "type": "integer"
+                          },
+                          "shares_received": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "username",
+                          "display_name",
+                          "role",
+                          "status",
+                          "created_at",
+                          "last_active_at",
+                          "storage_bytes",
+                          "quota_bytes_override",
+                          "shares_sent",
+                          "shares_received"
+                        ]
+                      }
+                    },
+                    "next_cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "next_cursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}/password-reset": {
+      "post": {
+        "operationId": "adminPasswordReset",
+        "summary": "Create a single-use password-reset link valid for 24 h (FR-ADM-03, WF-ADM-4)",
+        "tags": [
+          "admin"
+        ],
+        "x-auth": "admin",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reset_url": {
+                      "type": "string"
+                    },
+                    "expires_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "reset_url",
+                    "expires_at"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: csrf_failed, forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error: not_found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/retention/run": {
+      "post": {
+        "operationId": "adminRunRetention",
+        "summary": "Run retention now (FR-VID-06, WF-ADM-5)",
+        "tags": [
+          "admin"
+        ],
+        "x-auth": "admin",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "queued": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "queued"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: csrf_failed, forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/storage": {
+      "get": {
+        "operationId": "adminStorage",
+        "summary": "Storage overview and the next retention run (FR-ADM-04, WF-ADM-5)",
+        "tags": [
+          "admin"
+        ],
+        "x-auth": "admin",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total_bytes": {
+                      "type": "integer"
+                    },
+                    "per_user": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "user": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "display_name": {
+                                "type": "string"
+                              },
+                              "avatar_url": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "username",
+                              "display_name",
+                              "avatar_url"
+                            ]
+                          },
+                          "bytes": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "user",
+                          "bytes"
+                        ]
+                      }
+                    },
+                    "videos_by_state": {
+                      "type": "object",
+                      "properties": {
+                        "queued": {
+                          "type": "integer"
+                        },
+                        "fetching": {
+                          "type": "integer"
+                        },
+                        "processing": {
+                          "type": "integer"
+                        },
+                        "ready": {
+                          "type": "integer"
+                        },
+                        "link_only": {
+                          "type": "integer"
+                        },
+                        "failed": {
+                          "type": "integer"
+                        },
+                        "expired": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "retention_days": {
+                      "type": "integer"
+                    },
+                    "next_retention_run": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "total_bytes",
+                    "per_user",
+                    "videos_by_state",
+                    "retention_days",
+                    "next_retention_run"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/sessions": {
+      "get": {
+        "operationId": "listSessions",
+        "summary": "My active sessions (FR-ACCT-04)",
+        "tags": [
+          "me"
+        ],
+        "x-auth": "member",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "client": {
+                            "type": "string",
+                            "enum": [
+                              "web",
+                              "mobile"
+                            ]
+                          },
+                          "user_agent": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "last_seen_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "current": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "client",
+                          "user_agent",
+                          "created_at",
+                          "last_seen_at",
+                          "current"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/sessions/{id}": {
+      "delete": {
+        "operationId": "revokeSession",
+        "summary": "Revoke one of my sessions (FR-ACCT-04)",
+        "tags": [
+          "me"
+        ],
+        "x-auth": "member",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: csrf_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error: not_found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password-reset/{token}": {
+      "post": {
+        "operationId": "usePasswordReset",
+        "summary": "Set a new password with a reset link; revokes all sessions (FR-ADM-03)",
+        "tags": [
+          "auth"
+        ],
+        "x-auth": "public",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "token",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "new_password": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "new_password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "description": "Error: reset_invalid, validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error: rate_limited",
             "content": {
               "application/json": {
                 "schema": {

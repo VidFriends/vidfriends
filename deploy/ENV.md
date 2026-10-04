@@ -12,6 +12,7 @@ Product policy (signup mode, quotas, retention, session lifetimes and so on) is 
 | `ROLE` | `all` | Process role: `api` (HTTP + web app), `worker` (background jobs) or `all` (both, for small installs). `node dist/main.js migrate` applies migrations and exits. |
 | `HOST` | `0.0.0.0` | HTTP bind address. |
 | `PORT` | `8080` | HTTP port. |
+| `METRICS_PORT` | `9464` | Internal Prometheus `/metrics` port (0 disables). Never publish it. |
 | `PUBLIC_URL` | **required** | Public origin of the instance, e.g. `https://vf.example.org`. Used for join links, CSRF origin checks and cookie security. Example: `https://vf.example.org`. |
 | `DATABASE_URL` | **required** | PostgreSQL connection string. Example: `postgres://vidfriends:<password>@postgres:5432/vidfriends`. **Secret.** |
 | `APP_SECRET` | **required** | At least 32 random characters. Used for CSRF tokens and to encrypt instance secrets (VAPID key) at rest. Generate with `openssl rand -base64 48`. **Secret.** |

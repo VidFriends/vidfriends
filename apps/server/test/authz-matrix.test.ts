@@ -1,5 +1,12 @@
 // M1-T9 / NFR-SEC-01: object-level authorization for every id-bearing route.
 import {
+  adminDeleteUser,
+  adminPasswordReset,
+  adminUpdateUser,
+  listSessions,
+  login,
+  revokeSessionRoute,
+  usePasswordReset,
   clearReaction,
   createPushTarget,
   deletePushTarget,
@@ -36,11 +43,12 @@ import {
 import sharp from 'sharp';
 import { hasS3 } from './support/s3.js';
 import { setRelationship } from './support/world.js';
-import { idemKey, makeVideo } from './support/factories.js';
+import { idemKey, makeVideo, registerMember } from './support/factories.js';
 import { matrixCase, missingRoutes, runMatrix, type MatrixCase } from '@vidfriends/test-utils';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { createTestServer, type TestServer } from './support/app.js';
+import { PASSWORD } from './support/factories.js';
 import { buildWorld, type World } from './support/world.js';
 
 let server: TestServer;
@@ -116,7 +124,71 @@ function cases(): MatrixCase[] {
     return res.results[0]!.share_id!;
   };
   const both = (ok: number) => only(['owner', 'participant'], ok);
+  /** Admin-only routes: members get 403 at the route guard, no session gets 401. */
+  const adminOnly = (ok: number): Expect => ({
+    owner: 403,
+    participant: 403,
+    friend: 403,
+    stranger: 403,
+    blocked: 403,
+    suspended: 401,
+    admin: ok,
+    anonymous: 401,
+  });
+  const victim = async () =>
+    (await registerMember(server, world.members.admin, { autoFriend: false })).user.id;
   return [
+    matrixCase({
+      route: adminUpdateUser,
+      prepare: async () => ({ params: { id: await victim() }, body: { quota_bytes_override: 5 } }),
+      expect: adminOnly(200),
+    }),
+    matrixCase({
+      route: adminDeleteUser,
+      prepare: async () => ({ params: { id: await victim() } }),
+      expect: adminOnly(202),
+    }),
+    matrixCase({
+      route: adminPasswordReset,
+      prepare: async () => ({ params: { id: await victim() } }),
+      expect: adminOnly(201),
+    }),
+    matrixCase({
+      route: usePasswordReset,
+      // Public by design: the unguessable single-use token is the capability.
+      prepare: async () => {
+        const { reset_url } = await world.members.admin.client.ok(adminPasswordReset, {
+          params: { id: await victim() },
+        });
+        return {
+          params: { token: reset_url.split('/').pop()! },
+          body: { new_password: 'matrix-reset-2026' },
+        };
+      },
+      expect: {
+        owner: 204,
+        participant: 204,
+        friend: 204,
+        stranger: 204,
+        blocked: 204,
+        suspended: 204,
+        admin: 204,
+        anonymous: 204,
+      },
+    }),
+    matrixCase({
+      route: revokeSessionRoute,
+      // A second session of the owner: only the owner can revoke it.
+      prepare: async () => {
+        const extra = server.client();
+        await extra.ok(login, {
+          body: { username: 'owner', password: PASSWORD, client: 'mobile' },
+        });
+        const { items } = await world.members.owner.client.ok(listSessions);
+        return { params: { id: items.find((x) => !x.current)!.id } };
+      },
+      expect: only(['owner'], 204),
+    }),
     matrixCase({
       route: getShare,
       prepare: async () => ({ params: { id: await ownerShare() } }),
