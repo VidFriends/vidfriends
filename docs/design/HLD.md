@@ -128,6 +128,8 @@ sequenceDiagram
 ### DF-4 Notifications
 An event inserts a `notifications` row and enqueues `notify.dispatch`. The worker loads the user's preferences and push targets, then sends Web Push or Expo push. Gone targets are deleted (BR-NOT-6).
 
+In the same transaction the writer calls `pg_notify('vf_events', …)`. Each API process `LISTEN`s on that channel and forwards an invalidation hint to the member's open `GET /api/v1/events` streams (server-sent events); clients then refetch through the API ([ADR-0019](../adr/0019-realtime-invalidation-over-sse.md)).
+
 ## 6. Cross-cutting concerns (owners)
 
 | Concern | Owner document |

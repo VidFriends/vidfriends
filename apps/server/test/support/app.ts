@@ -11,6 +11,7 @@ import { FakeClock } from '../../src/infra/clock.js';
 import { createDatabase } from '../../src/infra/db.js';
 import { createLogger } from '../../src/infra/logger.js';
 import { createQueue } from '../../src/infra/queue.js';
+import { createRealtimeHub } from '../../src/infra/realtime.js';
 import { QUEUES, startWorker } from '../../src/jobs/worker.js';
 import { createTestDatabase } from './db.js';
 
@@ -81,6 +82,8 @@ export async function createTestServer(
     schedule: false,
   });
   const worker = options.worker ? await startWorker(deps) : null;
+  deps.realtime ??= createRealtimeHub(env.DATABASE_URL, log);
+  await deps.realtime.start();
   await initSetupToken(deps);
   const app = createApp(deps, allHandlers());
   const fetch = async (request: Request) => app.fetch(request);
@@ -92,6 +95,7 @@ export async function createTestServer(
     fetch,
     client: (options = {}) => new TestClient(fetch, { baseUrl: PUBLIC_URL, ...options }),
     async close() {
+      await deps.realtime?.stop();
       await worker?.stop();
       await deps.queue?.stop();
       if (deps.storage) {

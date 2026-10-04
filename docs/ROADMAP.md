@@ -270,7 +270,7 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 ### v1.0
 M5 and M6 are complete, and every Must requirement in the SRS has passing verification (PRD §6).
 
-### M7: Post-v1 backlog 🟡 (data export and passkey-only sign-in done; M7-T6 real-device check pending; remaining backlog unscheduled)
+### M7: Post-v1 backlog 🟡 (data export and passkey-only sign-in done; M7-T6 real-device check pending; realtime updates M7-T7..T9 scheduled by the owner)
 
 Each item needs a PRD update and, where architectural, an ADR before work starts. The owner chose data export as the first item (multiple-choice answer, 2026-10-04); PRD CAP-18 and SRS FR-ACCT-05 now describe it.
 
@@ -282,14 +282,16 @@ Each item needs a PRD update and, where architectural, an ADR before work starts
 | M7-T4 Passkeys on the server | WebAuthn registration and sign-in (setup, invite registration, sign-in, add/remove passkeys), recovery links (admin route and `recovery-link` server command), password columns and routes removed in a new migration, plain-http `PUBLIC_URL` refused at start | M7-T3 | API tests with a software authenticator; authz matrix for the new id routes <br>**✅** [PR #121](https://github.com/VidFriends/vidfriends/pull/121): `apps/server/test/auth.test.ts`, `admin.test.ts`, authz matrix; "Unit, contract and API tests" green |
 | M7-T5 Passkeys on the web | Setup, join, sign-in, recovery, Settings → Passkeys and the app hand-off page (`/app-auth`) | M7-T4 | Playwright: setup, join, sign in, add/rename/remove a passkey, recovery link, app hand-off (sign-in and join). Personas' passkeys are software authenticators answering the page's WebAuthn calls (`e2e/support/passkeys.ts`), so the nightly Firefox/WebKit runs work too <br>**✅** [PR #121](https://github.com/VidFriends/vidfriends/pull/121): `e2e/tests/{setup,join,admin,passkeys,app-auth}.spec.ts` green in "Images, Trivy and E2E" |
 | M7-T6 Passkeys on mobile | Sign-in and join through the server's pages in a secure browser sheet that returns a one-time code exchanged for the app session (PKCE); plain-http pairing removed except loopback; Android cleartext only to loopback | M7-T4, M7-T5 | Unit tests for the hand-off and pairing; Maestro suite green with the hand-off sign-in (A-7). **Manual:** sign in on a real Android phone and iPhone against an HTTPS instance <br>**🟡** [PR #121](https://github.com/VidFriends/vidfriends/pull/121): `apps/mobile/src/lib/handoff.test.ts`, `instance.test.ts`; Maestro suite green with the hand-off sign-in. The manual real-device check is pending |
+| M7-T7 Realtime on the server | ADR-0019: `GET /events` server-sent events with invalidation hints only (BR-NOT-7); `notify()` and the mark-read paths `pg_notify` in their transaction; one `LISTEN` connection per API process; 5 streams per member; session re-check every 25 s; 30-minute streams; `vidfriends_realtime_streams` gauge | FR-NOTIF-06, ADR-0019, owner answer 2026-10-04 | `apps/server/test/realtime.test.ts`: events for a new share, mark-read, per-member isolation, stream limit, revoked session and suspension end the stream |
+| M7-T8 Realtime on the web | One `EventSource` per signed-in tab; events invalidate the queries named by `routesFor()` (`@vidfriends/api-client/realtime`); polling stays as fallback | M7-T7 | Playwright `e2e/tests/realtime.spec.ts` through the production proxy: badge and inbox update within 5 s and clear when another device reads |
+| M7-T9 Realtime on mobile | `expo/fetch` stream while signed in and in the foreground, reconnect with backoff, same invalidation map | M7-T7 | Maestro `watch.yaml`: a reply sent from another device shows in the open conversation within 8 s (it does not poll) |
 
-Remaining backlog (not scheduled; passkeys moved to M7-T3..T6):
+Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7..T9):
 
 | Item | Source |
 |---|---|
 | Collections (CAP-14) | 2026 web/backend |
 | Offline downloads on mobile (CAP-15) | 2026 iOS/Android |
-| Realtime (SSE) (CAP-19) | 2026 backend |
 | Group sends | ADR-0010 alternative |
 | ntfy, Gotify, UnifiedPush channels | ADR-0011 |
 | Perceptual dedup | 2026 backend, redesigned per L-19 |
@@ -311,8 +313,8 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6):
 
 ## 7. Next actionable milestone
 
-**M7: post-v1 backlog.** Data export and passkey-only sign-in are done; the next item is the owner's choice.
-- **Now (agents):** the next backlog item the owner schedules (the remaining backlog is unscheduled).
+**M7: post-v1 backlog.** Data export and passkey-only sign-in are done; realtime updates (M7-T7..T9) are next, chosen by the owner on 2026-10-04.
+- **Now (agents):** M7-T7..T9 realtime updates (owner's choice, 2026-10-04); then the next backlog item the owner schedules.
 - **Owner:** check passkey sign-in on a real Android phone and iPhone against an HTTPS instance (M7-T6); enable branch protection on `main` (M1-T2); Apple and Google developer accounts for store builds (M6-T7). The alpha (M5-T9) is postponed by the owner.
 - **Verification:** each item's completion check in §5, with the CI run or record linked in the task row.
 
@@ -320,6 +322,7 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6):
 
 | Date | Change |
 |---|---|
+| 2026-10-04 | Owner answers (multiple choice): next is **realtime updates** (CAP-19 → M7-T7..T9, ADR-0019, FR-NOTIF-06); build a fresh passkey test APK. |
 | 2026-10-04 | M7-T3..T5 ✅ and M7-T6 🟡 (real-device check pending): merged in [PR #121](https://github.com/VidFriends/vidfriends/pull/121) with CI green, including the Android Maestro suite. |
 | 2026-10-04 | M7-T3..T6 passkey-only sign-in built: server (WebAuthn, recovery links and command, mobile hand-off codes, migration `0005_passkeys`), web screens, Playwright with software passkeys, mobile browser hand-off with https-only pairing. Mobile E2E moved to `http://localhost` via `adb reverse` (Assumption A-7). |
 | 2026-10-04 | Owner answers (multiple choice): next M7 item is **passkey-only sign-in, no passwords** (HTTPS on a domain required; recovery by admin link plus a server command; mobile sign-in by browser hand-off), tasks M7-T3..T6; releases stay without the APK for now (M6-T8 deferred), and the owner gets a test-signed phone APK instead (`mobile.yml` dispatch with *test_apk*). |

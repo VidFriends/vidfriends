@@ -1,6 +1,7 @@
 import {
   createPushTarget,
   deletePushTarget,
+  events,
   getNotificationPrefs,
   getVapidKey,
   listNotifications,
@@ -10,9 +11,11 @@ import {
 } from '@vidfriends/contracts';
 import { handler } from '../../http/register.js';
 import { vapidKeys } from '../../infra/push/channels.js';
+import { eventStream } from './events.js';
 import * as svc from './service.js';
 
 export const notificationHandlers = [
+  handler(events, async ({ c, deps, viewer }) => eventStream(c, deps, viewer)),
   handler(listNotifications, async ({ deps, viewer, query }) =>
     svc.list(deps, viewer, query.cursor, query.limit),
   ),

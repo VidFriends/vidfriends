@@ -42,6 +42,7 @@ export function buildDeps(
     setup: { token: null },
     storage,
     queue: null,
+    realtime: null,
     net: {
       lookup: (host) => lookup(host, { all: true, verbatim: true }),
       fetch: (url, init) => fetch(url, init),

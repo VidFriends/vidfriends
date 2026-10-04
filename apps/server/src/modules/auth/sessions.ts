@@ -1,6 +1,6 @@
 // Opaque server-side sessions (ADR-0008, BR-SES-1..3, FR-AUTH-04..06).
 import { createHmac } from 'node:crypto';
-import { and, eq, ne, sql } from 'drizzle-orm';
+import { and, eq, gt, ne, sql } from 'drizzle-orm';
 import type { MiddlewareHandler } from 'hono';
 import { sessions, users } from '../../db/schema.js';
 import { DAY, MINUTE } from '../../infra/clock.js';
@@ -167,6 +167,24 @@ function setCsrfCookie(c: AppContext, deps: Deps, hash: Buffer, maxAge: number) 
 export function clearSessionCookies(c: AppContext, deps: Deps) {
   c.header('Set-Cookie', `${SESSION_COOKIE}=${cookieAttrs(deps, 0, true)}`, { append: true });
   c.header('Set-Cookie', `${CSRF_COOKIE}=${cookieAttrs(deps, 0, false)}`, { append: true });
+}
+
+/** Whether a session is still usable (not revoked or expired, account active); no side effects. */
+export async function sessionStillValid(deps: Deps, sessionHash: Buffer): Promise<boolean> {
+  const now = deps.clock.now();
+  const [row] = await deps.db
+    .select({ status: users.status })
+    .from(sessions)
+    .innerJoin(users, eq(users.id, sessions.userId))
+    .where(
+      and(
+        eq(sessions.tokenHash, sessionHash),
+        gt(sessions.idleExpiresAt, now),
+        gt(sessions.absoluteExpiresAt, now),
+      ),
+    )
+    .limit(1);
+  return row?.status === 'active';
 }
 
 /** Resolves the viewer from a bearer token or the session cookie (SDD §2). */

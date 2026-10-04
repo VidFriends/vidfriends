@@ -150,3 +150,34 @@ export const deletePushTarget = defineRoute({
   response: null,
   errors: ['not_found'],
 });
+
+/**
+ * FR-NOTIF-06, BR-NOT-7 (ADR-0019): what a realtime event says changed. Types and ids only; the
+ * client refetches the affected data through the API.
+ */
+export const RealtimeEvent = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('notification'),
+    notification_type: NotificationType,
+    share_id: Id.nullable(),
+  }),
+  z.object({ type: z.literal('notifications_read') }),
+]);
+export type RealtimeEvent = z.infer<typeof RealtimeEvent>;
+
+/** BR-NOT-7: open streams per member. */
+export const MAX_EVENT_STREAMS = 5;
+
+export const events = defineRoute({
+  id: 'events',
+  method: 'get',
+  path: '/events',
+  auth: 'member',
+  tag: 'notifications',
+  summary:
+    'Realtime invalidation events as server-sent events: `event: ready`, then `data: RealtimeEvent` lines (FR-NOTIF-06)',
+  status: 200,
+  response: null,
+  stream: 'text/event-stream',
+  errors: ['rate_limited'],
+});

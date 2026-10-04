@@ -21047,6 +21047,369 @@
         }
       }
     },
+    "/api/v1/events": {
+      "get": {
+        "operationId": "events",
+        "summary": "Realtime invalidation events as server-sent events: `event: ready`, then `data: RealtimeEvent` lines (FR-NOTIF-06)",
+        "tags": [
+          "notifications"
+        ],
+        "x-auth": "member",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-sent events; each `data:` line is a RealtimeEvent",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "notification"
+                          ]
+                        },
+                        "notification_type": {
+                          "type": "string",
+                          "enum": [
+                            "share_received",
+                            "reaction_received",
+                            "reply_received",
+                            "friend_request_received",
+                            "friend_request_accepted",
+                            "share_watched"
+                          ]
+                        },
+                        "share_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "uuid"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "notification_type",
+                        "share_id"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "notifications_read"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "recovery_invalid",
+                            "ceremony_invalid",
+                            "passkey_invalid",
+                            "code_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "reauth_required",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "last_passkey",
+                            "too_many_passkeys",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "recovery_invalid",
+                            "ceremony_invalid",
+                            "passkey_invalid",
+                            "code_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "reauth_required",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "last_passkey",
+                            "too_many_passkeys",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error: rate_limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "recovery_invalid",
+                            "ceremony_invalid",
+                            "passkey_invalid",
+                            "code_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "reauth_required",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "last_passkey",
+                            "too_many_passkeys",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "recovery_invalid",
+                            "ceremony_invalid",
+                            "passkey_invalid",
+                            "code_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "reauth_required",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "last_passkey",
+                            "too_many_passkeys",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/notification-prefs": {
       "get": {
         "operationId": "getNotificationPrefs",

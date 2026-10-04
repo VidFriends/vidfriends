@@ -47,6 +47,8 @@ interface SessionApi extends SessionState {
   api: ApiClient;
   pair(instance: storage.PairedInstance, inviteCode: string | null): Promise<void>;
   signIn(token: string): Promise<void>;
+  /** The bearer token, for requests outside the API client (the realtime stream). */
+  bearerToken(): string | null;
   /** WF-AUTH-5: sign in or join with a passkey in the browser, then return to the app. */
   startHandoff(mode: HandoffRequest['mode'], invite?: string | null): Promise<HandoffOutcome>;
   /** Finishes a hand-off from its `vidfriends://auth` callback (once per code). */
@@ -154,6 +156,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setState((s) => ({ ...s, instance, pendingInvite: inviteCode }));
     },
     signIn,
+    bearerToken: () => token.current,
     async startHandoff(mode, invite) {
       if (!state.instance) throw new Error('not paired');
       const verifier = randomToken(Crypto.getRandomBytes(32));

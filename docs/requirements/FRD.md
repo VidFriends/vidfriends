@@ -250,6 +250,7 @@ The sender may delete a share while `watched_at` is null. The recipient's notifi
 | BR-NOT-4 | Coalescing: several `share_received` events from the same sender within 2 minutes become one push ("Sam sent you 3 videos"). |
 | BR-NOT-5 | In-app notifications are kept for 90 days, then purged. Reading the referenced item marks the notification read. |
 | BR-NOT-6 | A push endpoint that returns *gone* (Web Push 404/410, Expo `DeviceNotRegistered`) is deleted. |
+| BR-NOT-7 | **Realtime ([ADR-0019](../adr/0019-realtime-invalidation-over-sse.md)):** when a notification is created for a member, or their notifications are marked read, each of their open streams gets an event naming only the change (`notification` with its type and share id, or `notifications_read`). Clients refetch the affected lists through the API. A member has at most 5 open streams; streams re-check the session every 25 s and end after 30 minutes, on sign-out, revocation or suspension, and clients reconnect. |
 
 ## 10. Administration
 

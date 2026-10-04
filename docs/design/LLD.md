@@ -324,6 +324,7 @@ LIMIT :n + 1;
 | `GET /shares/{id}/replies`, `POST …/replies`, `DELETE /replies/{id}` | M (participant / author) | `{body}` → `{reply}` | `rate_limited` | ENG-02 |
 | `GET /feed`, `GET /inbox`, `GET /saved`, `GET /history?sender=&q=`, `GET /sent` | M | paginated share lists (BR-FEED-*) | – | FEED-01,02; SHR-05 |
 | `GET /notifications`, `POST /notifications/read` `{ids? \| all}` , `GET /notifications/unread-count` | M | list / mark / count | – | NOTIF-01,05 |
+| `GET /events` | M | → `text/event-stream`: `event: ready` first, then `data: RealtimeEvent` (`{type:'notification', notification_type, share_id}` or `{type:'notifications_read'}`), a `: ping` comment every 25 s; ends after 30 min or when the session stops being valid (ADR-0019). Fan-out: `pg_notify('vf_events', {u, e})` in the writing transaction, one `LISTEN` connection per API process | `rate_limited` (more than 5 open streams) | NOTIF-06 |
 | `GET /notification-prefs`, `PUT /notification-prefs` | M | matrix of type × channel | – | NOTIF-04 |
 | `GET /push/vapid-public-key` | M | → `{key}` | – | NOTIF-02 |
 | `POST /push-targets`, `DELETE /push-targets/{id}` | M | `{kind, endpoint, keys?, private_previews?}` | – | NOTIF-02,03 |
