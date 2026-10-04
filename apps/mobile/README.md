@@ -35,11 +35,6 @@ Expo push tokens need the EAS project id of the build (`extra.eas.projectId`). U
 has EAS credentials (roadmap M6-T7), builds show push as unavailable and members use the in-app
 notification list.
 
-## Known gaps
-
-- Profile pictures show as initials: the avatar route redirects to a presigned URL, and the app's
-  bearer header must not travel with that redirect. A direct-URL variant of the route would fix it.
-
 ## Accessibility review (NFR-A11Y-02, M6-T6)
 
 - Every control is a `Pressable`/`Button` with `accessibilityRole` and `accessibilityLabel`;
