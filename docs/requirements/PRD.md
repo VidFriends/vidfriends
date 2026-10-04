@@ -46,7 +46,7 @@ MoSCoW priority applies to v1. "v1" means milestones M1–M6 in the [roadmap](..
 | CAP-15 | Offline downloads on mobile | Could | – | – | Backlog |
 | CAP-16 | Passkey sign-in | Should (post-v1) | BO-5 | – | Backlog |
 | CAP-17 | Import from YouTube or other playlists via OAuth | Won't | – | – | Not planned |
-| CAP-18 | Self-service data export | Should (post-v1) | BO-5 | – | Backlog |
+| CAP-18 | Self-service data export | Should (post-v1; scheduled by the owner 2026-10-04) | BO-5 | FR-ACCT-05 | M7 |
 | CAP-19 | Realtime updates (push-to-open-tab) | Could. Polling is acceptable in v1. | – | – | Backlog |
 
 ## 4. User journeys

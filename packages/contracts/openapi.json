@@ -102,6 +102,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -166,6 +167,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -230,6 +232,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -294,6 +297,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -358,6 +362,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -501,6 +506,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -565,6 +571,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -629,6 +636,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -693,6 +701,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -757,6 +766,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -896,6 +906,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -960,6 +971,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -1024,6 +1036,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -1088,6 +1101,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -1244,6 +1258,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -1308,6 +1323,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -1372,6 +1388,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -1436,6 +1453,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -1500,6 +1518,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -1619,6 +1638,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -1683,6 +1703,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -1834,6 +1855,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -1898,6 +1920,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -1962,6 +1985,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -2117,6 +2141,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -2181,6 +2206,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -2245,6 +2271,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -2309,6 +2336,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -2431,6 +2459,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -2495,6 +2524,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -2559,6 +2589,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -2623,6 +2654,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -2687,6 +2719,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -2751,6 +2784,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -2919,6 +2953,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -2983,6 +3018,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -3047,6 +3083,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -3111,6 +3148,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -3175,6 +3213,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -3277,6 +3316,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -3341,6 +3381,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -3405,6 +3446,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -3469,6 +3511,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -3644,6 +3687,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -3708,6 +3752,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -3772,6 +3817,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -3836,6 +3882,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -4015,6 +4062,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -4079,6 +4127,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -4143,6 +4192,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -4207,6 +4257,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -4271,6 +4322,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -4485,6 +4537,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -4549,6 +4602,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -4613,6 +4667,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -4677,6 +4732,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -4899,6 +4955,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -4963,6 +5020,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -5027,6 +5085,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -5139,6 +5198,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -5203,6 +5263,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -5267,6 +5328,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -5365,6 +5427,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -5429,6 +5492,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -5493,6 +5557,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -5557,6 +5622,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -5621,6 +5687,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -5785,6 +5852,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -5849,6 +5917,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -5913,6 +5982,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -5977,6 +6047,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -6041,6 +6112,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -6139,6 +6211,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -6203,6 +6276,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -6267,6 +6341,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -6331,6 +6406,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -6395,6 +6471,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -6491,6 +6568,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -6555,6 +6633,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -6619,6 +6698,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -6683,6 +6763,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -6747,6 +6828,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -6845,6 +6927,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -6909,6 +6992,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -6973,6 +7057,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -7037,6 +7122,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -7101,6 +7187,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -7199,6 +7286,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -7263,6 +7351,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -7327,6 +7416,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -7391,6 +7481,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -7455,6 +7546,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -7562,6 +7654,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -7626,6 +7719,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -7690,6 +7784,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -7754,6 +7849,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -7872,6 +7968,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -7936,6 +8033,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -8000,6 +8098,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -8064,6 +8163,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -8220,6 +8320,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -8284,6 +8385,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -8348,6 +8450,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -8519,6 +8622,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -8583,6 +8687,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -8647,6 +8752,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -8816,6 +8922,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -8880,6 +8987,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -8944,6 +9052,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -9008,6 +9117,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -9072,6 +9182,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -9136,6 +9247,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -9200,6 +9312,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -9356,6 +9469,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -9420,6 +9534,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -9484,6 +9599,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -9582,6 +9698,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -9646,6 +9763,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -9710,6 +9828,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -9774,6 +9893,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -9838,6 +9958,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -10005,6 +10126,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -10069,6 +10191,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -10133,6 +10256,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -10472,6 +10596,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -10536,6 +10661,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -10600,6 +10726,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -10664,6 +10791,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -10728,6 +10856,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -10792,6 +10921,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -11159,6 +11289,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -11223,6 +11354,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -11287,6 +11419,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -11351,6 +11484,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -11415,6 +11549,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -11479,6 +11614,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -11646,6 +11782,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -11710,6 +11847,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -11774,6 +11912,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -11838,6 +11977,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -11902,6 +12042,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -11966,6 +12107,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -12179,6 +12321,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -12243,6 +12386,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -12307,6 +12451,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -12371,6 +12516,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -12499,6 +12645,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -12563,6 +12710,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -12627,6 +12775,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -12691,6 +12840,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -12755,6 +12905,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -13111,6 +13262,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -13175,6 +13327,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -13239,6 +13392,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -13303,6 +13457,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -13367,6 +13522,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -13739,6 +13895,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -13803,6 +13960,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -13867,6 +14025,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -13931,6 +14090,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -13995,6 +14155,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -14093,6 +14254,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -14157,6 +14319,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -14221,6 +14384,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -14285,6 +14449,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -14349,6 +14514,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -14717,6 +14883,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -14781,6 +14948,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -14845,6 +15013,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -15192,6 +15361,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -15256,6 +15426,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -15320,6 +15491,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -15649,6 +15821,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -15713,6 +15886,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -15777,6 +15951,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -16106,6 +16281,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -16170,6 +16346,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -16234,6 +16411,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -16583,6 +16761,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -16647,6 +16826,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -16711,6 +16891,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -17067,6 +17248,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -17131,6 +17313,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -17195,6 +17378,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -17259,6 +17443,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -17355,6 +17540,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -17419,6 +17605,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -17483,6 +17670,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -17547,6 +17735,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -17611,6 +17800,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -17675,6 +17865,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -18046,6 +18237,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -18110,6 +18302,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -18174,6 +18367,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -18238,6 +18432,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -18302,6 +18497,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -18430,6 +18626,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -18494,6 +18691,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -18558,6 +18756,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -18622,6 +18821,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -18686,6 +18886,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -18887,6 +19088,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -18951,6 +19153,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -19015,6 +19218,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -19079,6 +19283,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -19267,6 +19472,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -19331,6 +19537,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -19395,6 +19602,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -19459,6 +19667,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -19523,6 +19732,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -19587,6 +19797,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -19735,6 +19946,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -19799,6 +20011,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -19863,6 +20076,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -19927,6 +20141,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -19991,6 +20206,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -20160,6 +20376,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -20224,6 +20441,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -20288,6 +20506,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -20352,6 +20571,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -20416,6 +20636,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -20592,6 +20813,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -20656,6 +20878,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -20720,6 +20943,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -20784,6 +21008,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -20882,6 +21107,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -20946,6 +21172,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -21010,6 +21237,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -21074,6 +21302,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -21138,6 +21367,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -21260,6 +21490,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -21324,6 +21555,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -21388,6 +21620,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -21545,6 +21778,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -21609,6 +21843,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -21673,6 +21908,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -21737,6 +21973,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -21839,6 +22076,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -21903,6 +22141,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -21967,6 +22206,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -22181,6 +22421,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -22245,6 +22486,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -22309,6 +22551,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -22437,6 +22680,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -22501,6 +22745,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -22565,6 +22810,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -22629,6 +22875,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -22731,6 +22978,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -22795,6 +23043,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -22859,6 +23108,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -23102,6 +23352,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -23166,6 +23417,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -23230,6 +23482,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -23294,6 +23547,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -23410,6 +23664,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -23474,6 +23729,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -23538,6 +23794,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -23602,6 +23859,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -23666,6 +23924,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -23730,6 +23989,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -23938,6 +24198,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -24002,6 +24263,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -24066,6 +24328,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -24130,6 +24393,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -24194,6 +24458,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -24258,6 +24523,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -24443,6 +24709,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -24507,6 +24774,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -24571,6 +24839,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -24635,6 +24904,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -24895,6 +25165,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -24959,6 +25230,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -25023,6 +25295,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -25087,6 +25360,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -25307,6 +25581,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -25371,6 +25646,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -25435,6 +25711,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -25499,6 +25776,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -25617,6 +25895,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -25681,6 +25960,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -25745,6 +26025,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -25809,6 +26090,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -25873,6 +26155,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -25988,6 +26271,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -26052,6 +26336,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -26116,6 +26401,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -26180,6 +26466,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -26361,6 +26648,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -26425,6 +26713,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -26489,6 +26778,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -26553,6 +26843,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -26693,6 +26984,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -26757,6 +27049,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -26821,6 +27114,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -26919,6 +27213,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -26983,6 +27278,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -27047,6 +27343,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -27111,6 +27408,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -27175,6 +27473,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -27286,6 +27585,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -27350,6 +27650,7 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",
@@ -27414,6 +27715,1096 @@
                             "already_friends",
                             "already_watched",
                             "last_admin",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/exports": {
+      "post": {
+        "operationId": "createExport",
+        "summary": "Request an export of my data; built in the background (FR-ACCT-05, WF-ACCT-4)",
+        "tags": [
+          "me"
+        ],
+        "x-auth": "member",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "include_media": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "export": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "include_media": {
+                          "type": "boolean"
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "queued",
+                            "building",
+                            "ready",
+                            "failed",
+                            "expired"
+                          ]
+                        },
+                        "bytes": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "error": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "ready_at": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date-time"
+                        },
+                        "expires_at": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "include_media",
+                        "state",
+                        "bytes",
+                        "error",
+                        "created_at",
+                        "ready_at",
+                        "expires_at"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "export"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: csrf_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error: export_in_progress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error: rate_limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listExports",
+        "summary": "My data exports, newest first (FR-ACCT-05)",
+        "tags": [
+          "me"
+        ],
+        "x-auth": "member",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "include_media": {
+                            "type": "boolean"
+                          },
+                          "state": {
+                            "type": "string",
+                            "enum": [
+                              "queued",
+                              "building",
+                              "ready",
+                              "failed",
+                              "expired"
+                            ]
+                          },
+                          "bytes": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ]
+                          },
+                          "error": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "ready_at": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date-time"
+                          },
+                          "expires_at": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "include_media",
+                          "state",
+                          "bytes",
+                          "error",
+                          "created_at",
+                          "ready_at",
+                          "expires_at"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/exports/{id}/download": {
+      "get": {
+        "operationId": "downloadExport",
+        "summary": "Redirect to a short-lived signed link for a ready export of mine (FR-ACCT-05)",
+        "tags": [
+          "me"
+        ],
+        "x-auth": "member",
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to a short-lived signed URL"
+          },
+          "400": {
+            "description": "Error: validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error: not_found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "export_in_progress",
+                            "cooldown",
+                            "conflict",
+                            "not_playable",
+                            "too_large",
+                            "quota_exceeded",
+                            "storage_full",
+                            "rate_limited",
+                            "internal_error",
+                            "unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "validation_failed",
+                            "invite_invalid",
+                            "url_not_allowed",
+                            "query_too_short",
+                            "invalid_reaction",
+                            "upload_incomplete",
+                            "reset_invalid",
+                            "setup_invalid",
+                            "unauthorized",
+                            "invalid_credentials",
+                            "account_suspended",
+                            "forbidden",
+                            "csrf_failed",
+                            "not_found",
+                            "video_not_found",
+                            "username_taken",
+                            "already_friends",
+                            "already_watched",
+                            "last_admin",
+                            "export_in_progress",
                             "cooldown",
                             "conflict",
                             "not_playable",

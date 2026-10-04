@@ -87,10 +87,18 @@ Requires the current password. Revokes the user's other sessions (BR-SES-2).
 - **Effect** (hard delete, executed in a transaction plus asynchronous media cleanup):
   1. Delete the user's sessions, push subscriptions, invites, friendships and blocks.
   2. Delete the shares they **sent** and the shares they **received**, which cascades to the reactions and replies in those conversations.
-  3. Delete their notifications.
+  3. Delete their notifications and data exports.
   4. Media with no remaining shares becomes eligible for garbage collection (BR-MED-5).
   5. Write an audit entry that records only the deleted user id.
 - **Last admin:** if the user is the only admin, deletion is refused with 409 `last_admin` until another admin exists.
+
+### WF-ACCT-4 Export my data
+- **Request:** a member asks for an export, optionally including media. At most one export is in progress per member, and at most 3 can be requested per 24 hours (429 `rate_limited`).
+- **Build** (background job): a ZIP with `README.txt`, `profile.json`, `friends.json` (friends, requests in and out, blocks), `received.json` and `sent.json` (each share with its video's title, original link and platform, the note, delivery and watch times, saved and hidden for received shares, the reaction and the whole conversation), `videos.json` (videos the member added), `security.json` (the member's own audit entries: action, time, network address) and the avatar. With media, the stored files of videos the member added are included under `media/` while their total stays under 4 GiB; beyond that the README says which were left out.
+- **Contents rule:** the export holds only what the member could already see in the app. Other members appear by username and display name; their replies are included only inside the member's own conversations.
+- **Download:** a short-lived signed link, available for 7 days after the export is ready. Then the file is deleted and the export shows as expired.
+- **Failure:** the export shows as failed and no partial file is kept. A build still unfinished after 2 hours (for example because the worker stopped) is marked failed by the cleanup job, so the member can request again.
+- Deleting the account deletes its exports (WF-ACCT-3). Requests are audited (`account.export_requested`).
 
 ## 3. Invites
 
