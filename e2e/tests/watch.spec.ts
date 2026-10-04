@@ -1,5 +1,5 @@
 // J-4 Watch + J-5 sender closure + J-6 revisit (FR-FEED-01..06, FR-ENG-01/02, FR-SHR-04/05,
-// FR-NOTIF-01/05).
+// FR-NOTIF-01/05). Also NFR-PRIV-01: every request in the journey stays on this origin.
 import { expect, test } from '@playwright/test';
 import { expectAccessible } from '../support/a11y';
 import { befriend, loginPage, person } from '../support/people';
@@ -17,6 +17,15 @@ test('watch, react, reply, then the sender sees it all; saved and history work',
   expect(ready.state).toBe('ready');
 
   const joPage = await (await browser.newContext()).newPage();
+  const origin = new URL(baseURL!).origin;
+  const foreign: string[] = [];
+  const watchRequests = (p: typeof joPage) =>
+    p.on('request', (r) => {
+      const url = new URL(r.url());
+      if (!['data:', 'blob:'].includes(url.protocol) && url.origin !== origin)
+        foreign.push(r.url());
+    });
+  watchRequests(joPage);
   // A fake clock lets the 60 s polling interval elapse instantly (FR-NOTIF-05).
   await joPage.clock.install();
   await loginPage(joPage, jo);
@@ -67,6 +76,7 @@ test('watch, react, reply, then the sender sees it all; saved and history work',
 
   // J-5: Sam sees watched + reaction + reply count; unsends the unwatched one.
   const samPage = await (await browser.newContext()).newPage();
+  watchRequests(samPage);
   await loginPage(samPage, sam);
   await samPage.getByRole('link', { name: 'Sent' }).click();
   const rows = samPage.getByTestId('sent-recipient');
@@ -90,4 +100,6 @@ test('watch, react, reply, then the sender sees it all; saved and history work',
   await joPage.getByLabel('Search titles').fill('Probed');
   await expect(joPage.getByRole('list', { name: 'History' }).getByRole('listitem')).toHaveCount(1);
   await expectAccessible(joPage, '/history');
+
+  expect(foreign, 'requests to other origins (NFR-PRIV-01)').toEqual([]);
 });

@@ -1,4 +1,4 @@
-# Release images (M5-T4, TDD §6): a `vX.Y.Z` tag builds the server and worker images for
+# Release images (M5-T4, NFR-OPS-04, TDD §6): a `vX.Y.Z` tag builds the server and worker images for
 # linux/amd64 and linux/arm64, pushes them to GHCR with SBOM and provenance attestations, and
 # publishes a GitHub release with SPDX SBOMs attached. Pull requests that touch the release path
 # build both architectures without pushing, so a broken release is caught before tagging.

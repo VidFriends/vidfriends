@@ -90,7 +90,7 @@ describe('FR-SHR-01/02 send', () => {
     expect(replay.body.results[0]!.status).toBe('sent');
   });
 
-  it('refuses blocked, pending and suspended recipients, and videos the sender cannot see', async () => {
+  it('refuses blocked, pending and suspended recipients, and videos the sender cannot see (FR-SHR-02)', async () => {
     const { sender, friends } = await circle(3);
     const [blocked, pending, suspended] = friends as [Member, Member, Member];
     await setRelationship(server, sender.user.id, blocked.user.id, 'blocked', blocked.user.id);
