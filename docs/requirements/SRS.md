@@ -135,6 +135,7 @@
 | FR-MOB-01 | iOS and Android apps (Expo) implement pairing, auth, feed, inbox, saved, history, sent, send, friends, reactions and replies, and notifications, using the same API. | M | CAP-11 | ADR-0004 | M6 | E2E (Maestro) |
 | FR-MOB-02 | An OS share sheet extension or intent receives a URL (and, on Android, a video file) and opens Send. | M | CAP-11 | ADR-0004 | M6 | Runbook (device), E2E where automatable |
 | FR-MOB-03 | Session tokens are stored only in the iOS Keychain or Android Keystore-backed storage (expo-secure-store). | M | L-13 | ADR-0008 | M6 | Audit |
+| FR-MOB-04 | The app can download a share's ready video for offline playback, lists downloads with their size against a member-chosen cap, plays them without a connection, and removes them under BR-OFF-3/4. | S | BR-OFF-1..4 | – | M7 | Unit, E2E (mobile) |
 
 ## 2. Non-functional requirements
 
@@ -227,6 +228,6 @@ The tables above are the trace matrix: each row links a requirement to its PRD c
 | M4 | FR-SHR-01..03,05; FR-FEED-01..06; FR-ENG-01..02; FR-NOTIF-01,04,05; NFR-A11Y-01; NFR-COMPAT-01 |
 | M5 | FR-ACCT-03; FR-VID-06; FR-ADM-01..05 (UI); NFR-REL-04,05; NFR-DATA-01; NFR-OPS-01,03(metrics),04 |
 | M6 | FR-PAIR-03,04(in-app); FR-NOTIF-03; FR-MOB-01..03; NFR-A11Y-02; NFR-COMPAT-02 |
-| M7 | Passkey-only sign-in (ADR-0018): FR-AUTH-01..04, FR-ACCT-02,03, FR-ADM-03, FR-PAIR-03 (https-only), NFR-SEC-02 change their mechanism; FR-ACCT-05 (S) data export; FR-NOTIF-06 (S) realtime updates (ADR-0019); FR-NOTIF-07 (S) ntfy and Gotify push (ADR-0020) |
+| M7 | Passkey-only sign-in (ADR-0018): FR-AUTH-01..04, FR-ACCT-02,03, FR-ADM-03, FR-PAIR-03 (https-only), NFR-SEC-02 change their mechanism; FR-ACCT-05 (S) data export; FR-NOTIF-06 (S) realtime updates (ADR-0019); FR-NOTIF-07 (S) ntfy and Gotify push (ADR-0020); FR-MOB-04 (S) offline downloads |
 
 Every Must requirement appears in exactly one delivery milestone (or is split explicitly by layer); the M7 row lists requirements whose mechanism M7 replaced. NFR-MAINT-03 applies to every milestone.

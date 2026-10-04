@@ -1,5 +1,6 @@
 # Mobile acceptance (M6-T6, FR-MOB-01, FR-PAIR-03): J-2 join through a join link, J-3 send a
-# link to a friend, M7-T2 request a data export, J-4/J-5 the friend watches, reacts and replies.
+# link to a friend, M7-T2 request a data export, J-4/J-5 the friend watches, reacts and replies,
+# M7-T13 the friend downloads it and plays it offline.
 # Env: from seed.mjs (SERVER_URL, JOIN_URL, HANDOFF_CHALLENGE, MIA_TOKEN, ADMIN_TOKEN) and
 # VIDEO_URL (fake yt-dlp fixture link).
 appId: io.github.vidfriends.app
@@ -10,3 +11,4 @@ appId: io.github.vidfriends.app
 - runFlow: flows/send.yaml
 - runFlow: flows/export.yaml
 - runFlow: flows/watch.yaml
+- runFlow: flows/offline.yaml

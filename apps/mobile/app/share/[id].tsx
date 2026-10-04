@@ -21,6 +21,8 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { DownloadButton } from '@/features/offline/download-button';
+import { useOffline } from '@/features/offline/store';
 import { errorText, relativeTime } from '@/i18n';
 import { Body, Button, Card, ErrorBox, Field, Loading, Screen } from '@/ui/kit';
 import { useTheme } from '@/ui/theme';
@@ -31,10 +33,15 @@ export default function ShareScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const qc = useQueryClient();
   const share = useApiQuery(getShare, { params: { id } });
+  // FR-MOB-04: an offline copy plays without fetching a media URL.
+  const localUri = useOffline().localUri(id);
   const media = useApiQuery(
     getShareMedia,
     { params: { id } },
-    { enabled: share.data?.share.video.state === 'ready', staleTime: 10 * 60_000 },
+    {
+      enabled: !localUri && share.data?.share.video.state === 'ready',
+      staleTime: 10 * 60_000,
+    },
   );
   const replies = useApiInfiniteQuery(listReplies, { params: { id }, query: { limit: 50 } });
   const [draft, setDraft] = useState('');
@@ -79,8 +86,8 @@ export default function ShareScreen() {
 
   return (
     <Screen edges={['bottom']}>
-      {media.data?.media_url ? (
-        <SharePlayer uri={media.data.media_url} />
+      {localUri || media.data?.media_url ? (
+        <SharePlayer uri={(localUri ?? media.data?.media_url)!} />
       ) : (
         <Card>
           <Body>{t(`share.state.${s.video.state}`, { defaultValue: s.video.state })}</Body>
@@ -96,6 +103,7 @@ export default function ShareScreen() {
         {s.watched_at ? ` · ${t('share.watched', { when: relativeTime(s.watched_at) })}` : ''}
       </Body>
       {s.note ? <Body>{s.note}</Body> : null}
+      <DownloadButton share={s} />
       {s.video.source_url ? (
         <Button
           label={t('feed.openOriginal')}

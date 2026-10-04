@@ -1,0 +1,23 @@
+# M7-T13 / FR-MOB-04: on the share Alex just watched, download it, then play it from Downloads
+# with the phone offline.
+appId: io.github.vidfriends.app
+---
+- scrollUntilVisible:
+    element:
+      id: offline-download
+    direction: UP
+- tapOn:
+    id: offline-download
+- extendedWaitUntil:
+    visible:
+      id: offline-remove
+    timeout: 60000
+- back
+- tapOn: 'More'
+- tapOn: 'Downloads'
+- assertVisible: 'Fixture ok'
+- setAirplaneMode: enabled
+- tapOn: 'Fixture ok'
+- assertVisible: 'From Mia'
+- assertNotVisible: 'This download is no longer on this phone.'
+- setAirplaneMode: disabled

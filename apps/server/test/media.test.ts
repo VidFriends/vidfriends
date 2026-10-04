@@ -96,6 +96,8 @@ describe.skipIf(!hasS3)('video.fetch (FR-VID-02, fake yt-dlp)', () => {
     });
     expect(video.duration_ms).toBeGreaterThan(2500);
     expect([video.width, video.height]).toEqual([320, 240]);
+    // FR-MOB-04: the app checks the size before an offline download.
+    expect(video.media_bytes).toBeGreaterThan(1000);
 
     const media = await member.client.ok(getVideoMedia, { params: { id: video.id } });
     const range = await fetch(media.media_url as string, { headers: { Range: 'bytes=0-99' } });
