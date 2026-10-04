@@ -2,21 +2,36 @@
 appId: io.github.vidfriends.app
 ---
 - tapOn: 'Send'
+- scrollUntilVisible:
+    element:
+      id: send-url
 - tapOn:
     id: send-url
 - inputText: ${VIDEO_URL}
 - hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: send-add
 - tapOn:
     id: send-add
 - extendedWaitUntil:
     visible: 'Ready'
     timeout: 60000
+- scrollUntilVisible:
+    element:
+      id: send-friend-alex
 - tapOn:
     id: send-friend-alex
+- scrollUntilVisible:
+    element:
+      id: send-note
 - tapOn:
     id: send-note
 - inputText: for you
 - hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: send-submit
 - tapOn:
     id: send-submit
 - assertVisible: 'Sent to 1 friend.'

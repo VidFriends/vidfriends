@@ -9,13 +9,23 @@ appId: io.github.vidfriends.app
 - tapOn:
     id: settings-signout
 - assertVisible: 'Log in'
+- scrollUntilVisible:
+    element:
+      id: login-username
 - tapOn:
     id: login-username
 - inputText: ${ADMIN_USER}
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: login-password
 - tapOn:
     id: login-password
 - inputText: ${ADMIN_PASSWORD}
 - hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: login-submit
 - tapOn:
     id: login-submit
 - extendedWaitUntil:
@@ -24,10 +34,16 @@ appId: io.github.vidfriends.app
 - assertVisible: 'for you'
 - tapOn: 'React & reply'
 - tapOn: 'Fire'
+- scrollUntilVisible:
+    element:
+      id: reply-input
 - tapOn:
     id: reply-input
 - inputText: so good
 - hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: reply-send
 - tapOn:
     id: reply-send
 - assertVisible: 'so good'
