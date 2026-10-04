@@ -6,15 +6,21 @@ import {
   changePassword,
   createAvatarUpload,
   deleteAvatar,
+  deleteMe,
+  listSessions,
+  revokeSessionRoute,
+  type Session,
   DisplayName,
   logout,
   Password,
   setAvatar,
   updateMe,
 } from '@vidfriends/contracts';
-import { useApi } from '@vidfriends/api-client/react';
+import { useApi, useApiQuery } from '@vidfriends/api-client/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Avatar } from '@/components/avatar';
+import { ConfirmDialog } from '@/components/confirm-dialog';
+import { formatRelative } from '@/i18n';
 import { PushCard } from '@/features/notifications/push-card';
 import { Input } from '@/components/ui/input';
 import { meQuery } from '@/lib/session';
@@ -54,6 +60,7 @@ function SettingsPage() {
       <PasswordCard />
       <SessionsCard />
       <AppearanceCard />
+      <DeleteAccountCard />
     </div>
   );
 }
@@ -117,15 +124,56 @@ function SessionsCard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = Route.useRouteContext().queryClient;
+  const sessions = useApiQuery(listSessions);
   const mutation = useApiMutation(logout, {
     onSettled: async () => {
       queryClient.clear();
       await navigate({ to: '/login' });
     },
   });
+  const revoke = useApiMutation(revokeSessionRoute, {
+    onSuccess: async () => {
+      toast.success(t('settings.sessionRevoked'));
+      await queryClient.invalidateQueries({ queryKey: [listSessions.id] });
+    },
+    onError: (err) => toast.error(errorMessage(t, err)),
+  });
   return (
     <Card className="grid gap-3">
       <CardTitle>{t('settings.sessionsTitle')}</CardTitle>
+      <CardDescription>{t('settings.sessionsHelp')}</CardDescription>
+      {sessions.isError && <Alert variant="destructive">{errorMessage(t, sessions.error)}</Alert>}
+      {sessions.data && (
+        <ul className="grid gap-2" aria-label={t('settings.sessionsTitle')}>
+          {(sessions.data.items as Session[]).map((s) => (
+            <li
+              key={s.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3"
+            >
+              <div className="grid gap-0.5 text-sm">
+                <span className="font-medium">
+                  {s.client === 'web' ? t('settings.sessionWeb') : t('settings.sessionMobile')}
+                  {s.current && ` · ${t('settings.sessionCurrent')}`}
+                </span>
+                <span className="break-all text-muted-foreground">{s.user_agent}</span>
+                <span className="text-muted-foreground">
+                  {t('settings.sessionSeen', { when: formatRelative(s.last_seen_at) })}
+                </span>
+              </div>
+              {!s.current && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={revoke.isPending}
+                  onClick={() => revoke.mutate({ params: { id: s.id } })}
+                >
+                  {t('settings.sessionRevoke')}
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
       <CardDescription>{t('settings.logoutEverywhereHelp')}</CardDescription>
       <div>
         <Button
@@ -136,6 +184,56 @@ function SessionsCard() {
           {t('settings.logoutEverywhere')}
         </Button>
       </div>
+    </Card>
+  );
+}
+
+function DeleteAccountCard() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const queryClient = Route.useRouteContext().queryClient;
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState('');
+  const mutation = useApiMutation(deleteMe, {
+    onSuccess: async () => {
+      queryClient.clear();
+      toast.success(t('settings.deleted'));
+      await navigate({ to: '/login' });
+    },
+  });
+  return (
+    <Card className="grid gap-3">
+      <CardTitle>{t('settings.deleteTitle')}</CardTitle>
+      <CardDescription>{t('settings.deleteHelp')}</CardDescription>
+      <div>
+        <Button variant="destructive" onClick={() => setOpen(true)}>
+          {t('settings.deleteSubmit')}
+        </Button>
+      </div>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={(o) => {
+          setOpen(o);
+          if (!o) {
+            setPassword('');
+            mutation.reset();
+          }
+        }}
+        title={t('settings.deleteTitle')}
+        description={t('settings.deleteConfirm')}
+        confirmLabel={t('settings.deleteSubmit')}
+        pending={mutation.isPending || !password}
+        onConfirm={() => mutation.mutate({ body: { password } })}
+      >
+        {mutation.isError && <Alert variant="destructive">{errorMessage(t, mutation.error)}</Alert>}
+        <Field label={t('settings.currentPassword')}>
+          <PasswordInput
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </Field>
+      </ConfirmDialog>
     </Card>
   );
 }
