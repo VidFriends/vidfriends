@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json",
     "lint": "eslint .",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "size": "node scripts/check-bundle-size.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "5.9.1",
@@ -32,6 +33,9 @@
     "react-i18next": "17.0.15",
     "sonner": "2.0.8",
     "tailwind-merge": "3.7.0",
+    "workbox-core": "7.4.1",
+    "workbox-precaching": "7.4.1",
+    "workbox-routing": "7.4.1",
     "zod": "4.3.6"
   },
   "devDependencies": {
@@ -45,6 +49,9 @@
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
     "vite": "8.3.2",
-    "vitest": "5.0.3"
+    "vite-plugin-pwa": "2.0.0",
+    "vitest": "5.0.3",
+    "workbox-build": "7.4.1",
+    "workbox-window": "7.4.1"
   }
 }

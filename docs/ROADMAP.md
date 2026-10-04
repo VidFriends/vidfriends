@@ -2,7 +2,7 @@
 
 > **This is the single authoritative plan** for scope, priorities, dependencies, sequencing and completion criteria ([ADR-0001](adr/0001-record-architecture-decisions.md)). It links to the specifications rather than restating them. If another document disagrees with this one about *what* is planned or *when*, this document wins. Requirement wording belongs to the [SRS](requirements/SRS.md).
 
-- **Last updated:** 2026-10-03
+- **Last updated:** 2026-10-04
 - **Status legend:** ✅ done (with evidence) · 🟡 partial · ⬜ planned · ⛔ blocked · 💤 deferred
 
 ## 1. Product summary
@@ -147,7 +147,7 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 | M0-T4 Archive the six superseded repos (`vidshare`, `vidfriends-backend`, `-web`, `-ios`, `-android`, `VidFriends-iOS-Android`); close the 35 obsolete Dependabot PRs; reduce this repo to the single branch `main` | ✅ | Done 2026-10-03 at the owner's request. `gh repo list VidFriends` shows all six `archived=true`; only `main` remains here. Human-authored PR vidfriends-android#2 was left open in the archive, and its work is tagged `legacy/vidfriends-android-2026/vid-503-fix`. | `gh repo view … --json isArchived` returns true for each |
 | M0-T5 Owner answers OQ-1..OQ-4 and reviews provisional decisions | ✅ | BRD §7 answers; ADR-0014; ADR-0005/0009/0013 status lines updated |
 
-### M1: Foundations and accounts 🟡 (in progress)
+### M1: Foundations and accounts 🟡 (all tasks done except M1-T2 merge blocking: owner must enable branch protection)
 
 **Goal:** a walking skeleton. An operator deploys the stack locally, claims the instance, creates an invite, and a friend registers through the join link, logs in and logs out. CI enforces the full quality gate.
 
@@ -161,21 +161,21 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 
 | Task | Objective | References | Depends on | Completion check |
 |---|---|---|---|---|
-| M1-T1 Monorepo scaffold | pnpm workspace + Turborepo; `apps/server`, `apps/web`, `packages/{contracts,api-client,config,test-utils}`; shared tsconfig, ESLint (jsx-a11y, import/no-cycle) and Prettier; MIT LICENSE (BRD OQ-2); root README dev instructions | ADR-0012, TDD §1 | – | `pnpm install && pnpm build && pnpm lint && pnpm typecheck` succeed locally and in CI |
-| M1-T2 CI pipeline | GitHub Actions on PR and `main`: static, unit, contract, API integration (Postgres + SeaweedFS S3 services, ADR-0015), Playwright (Chromium), Docker build, Trivy (blocking on fixable criticals), migration-immutability check, Dependabot or Renovate config | NFR-MAINT-02, NFR-SEC-07, NFR-REL-03, TDD §7 | T1 | Workflow green on a PR; a deliberately failing test blocks merge |
-| M1-T3 Contracts and OpenAPI | Error envelope, pagination schema, route-definition helper with `auth` level; `GET /instance`; OpenAPI generation script and CI drift check; typed client in `api-client` | ADR-0006, LLD §3, NFR-MAINT-01 | T1 | `pnpm --filter contracts gen` output is committed; CI fails when it is stale (verified by a test PR) |
-| M1-T4 Server skeleton | Env config schema with secret checks; Hono app with the middleware chain from SDD §2 (request id, pino with redaction, security headers and CSP, IP rate limit, error mapper); `/healthz`, `/readyz`; SPA static serving with fallback; `ROLE` entrypoint; graceful shutdown | SDD §1–2, TDD §3, LLD §5, NFR-SEC-03/04/06, NFR-OPS-02/03, NFR-REL-02, NFR-PRIV-02 | T3 | Unit tests: config rejects default and short secrets; log redaction; API test: security headers present, `/readyz` fails when the DB is down |
-| M1-T5 Database and migrations | Drizzle setup; migrate entrypoint; tables `users`, `sessions`, `invites`, `invite_redemptions`, `relationships` (for auto-friend), `instance_settings`, `audit_log`, `password_resets` | LLD §2, NFR-REL-03 | T4 | `migrate` applies to an empty DB in CI; migration checksum file present |
-| M1-T6 Containers and compose | Multi-target Dockerfile (`server`; `worker` stub); `deploy/compose.dev.yml`; `deploy/compose.yml` (caddy, migrate, server, worker, postgres, seaweedfs per ADR-0015) and `.env.example` without working secrets | HLD §3, TDD §6 | T4, T5 | `docker compose -f deploy/compose.yml up` on a clean machine reaches `/readyz` = 200 behind Caddy (local TLS) |
-| M1-T7 Authentication and sessions | Setup bootstrap; register (invite, auto-friend); login and logout (all); session middleware (cookie and bearer, idle and absolute expiry, status and role from DB); CSRF; password change; auth rate limits; audit entries | FRD §2–3, ADR-0008, LLD §3/§5, FR-AUTH-*, FR-ACCT-02 | T5 | API tests per FR-AUTH-01..06 including suspended-user rejection and concurrent invite consumption; unit tests for validation and password denylist |
-| M1-T8 Invites | Create, list, revoke, preview; hashed codes; `members_can_invite` setting | FR-INV-01..03, BR-INV-* | T7 | API tests; code is returned only once; revoked or expired invites are rejected |
-| M1-T9 Authorization-matrix harness | `test-utils` fixture world and matrix runner; CI fails for any id-bearing route not in the matrix | SDD §3, NFR-SEC-01 | T7 | Harness covers all M1 routes; meta-test proves an unlisted route fails CI |
-| M1-T10 Web shell | Vite + TanStack Router/Query + Tailwind + shadcn/ui + i18n catalogs; routes `/setup`, `/login`, `/join/$code`, app layout with nav placeholders (only real routes are linked), `/settings` (password change, logout everywhere), `/invites` (create with join URL and QR, list, revoke); global 401 handling | ADR-0003, SDD §5, TDD §4, FR-PAIR-02/04, FR-INV-03 | T3, T7, T8 | Playwright specs below pass; axe reports no violations on these pages |
-| M1-T11 E2E harness and acceptance | Playwright runs against the production image via compose; API-based seed helpers; specs `setup.spec.ts` (J-1: claim instance, create invite) and `join.spec.ts` (J-2: register through join URL, auto-friend relationship exists via API, logout, login) | TDD §7, NFR-MAINT-03 | T6, T10 | Both specs green in CI on `main` |
+| M1-T1 Monorepo scaffold | pnpm workspace + Turborepo; `apps/server`, `apps/web`, `packages/{contracts,api-client,config,test-utils}`; shared tsconfig, ESLint (jsx-a11y, import/no-cycle) and Prettier; MIT LICENSE (BRD OQ-2); root README dev instructions | ADR-0012, TDD §1 | – | `pnpm install && pnpm build && pnpm lint && pnpm typecheck` succeed locally and in CI <br>**✅** `pnpm build/lint/typecheck` green in [CI run 183](https://github.com/VidFriends/vidfriends/actions/runs/37182089651) |
+| M1-T2 CI pipeline | GitHub Actions on PR and `main`: static, unit, contract, API integration (Postgres + SeaweedFS S3 services, ADR-0015), Playwright (Chromium), Docker build, Trivy (blocking on fixable criticals), migration-immutability check, Dependabot or Renovate config | NFR-MAINT-02, NFR-SEC-07, NFR-REL-03, TDD §7 | T1 | Workflow green on a PR; a deliberately failing test blocks merge <br>**🟡** Workflow green in [CI run 183](https://github.com/VidFriends/vidfriends/actions/runs/37182089651); red runs observed for real failures. Merge blocking needs branch protection on `main`, which no available tool can set (owner action). |
+| M1-T3 Contracts and OpenAPI | Error envelope, pagination schema, route-definition helper with `auth` level; `GET /instance`; OpenAPI generation script and CI drift check; typed client in `api-client` | ADR-0006, LLD §3, NFR-MAINT-01 | T1 | `pnpm --filter contracts gen` output is committed; CI fails when it is stale (verified by a test PR) <br>**✅** `packages/contracts/openapi.json` + `gen:check` step in [CI run 183](https://github.com/VidFriends/vidfriends/actions/runs/37182089651) |
+| M1-T4 Server skeleton | Env config schema with secret checks; Hono app with the middleware chain from SDD §2 (request id, pino with redaction, security headers and CSP, IP rate limit, error mapper); `/healthz`, `/readyz`; SPA static serving with fallback; `ROLE` entrypoint; graceful shutdown | SDD §1–2, TDD §3, LLD §5, NFR-SEC-03/04/06, NFR-OPS-02/03, NFR-REL-02, NFR-PRIV-02 | T3 | Unit tests: config rejects default and short secrets; log redaction; API test: security headers present, `/readyz` fails when the DB is down <br>**✅** `apps/server/test/{config,logger,http,ip}.test.ts` |
+| M1-T5 Database and migrations | Drizzle setup; migrate entrypoint; tables `users`, `sessions`, `invites`, `invite_redemptions`, `relationships` (for auto-friend), `instance_settings`, `audit_log`, `password_resets` | LLD §2, NFR-REL-03 | T4 | `migrate` applies to an empty DB in CI; migration checksum file present <br>**✅** `apps/server/drizzle/` + `CHECKSUMS`; migrate applied in CI |
+| M1-T6 Containers and compose | Multi-target Dockerfile (`server`; `worker` stub); `deploy/compose.dev.yml`; `deploy/compose.yml` (caddy, migrate, server, worker, postgres, seaweedfs per ADR-0015) and `.env.example` without working secrets | HLD §3, TDD §6 | T4, T5 | `docker compose -f deploy/compose.yml up` on a clean machine reaches `/readyz` = 200 behind Caddy (local TLS) <br>**✅** `Dockerfile`, `deploy/compose.yml`; stack reaches `/readyz` behind Caddy in [CI run 183](https://github.com/VidFriends/vidfriends/actions/runs/37182089651) |
+| M1-T7 Authentication and sessions | Setup bootstrap; register (invite, auto-friend); login and logout (all); session middleware (cookie and bearer, idle and absolute expiry, status and role from DB); CSRF; password change; auth rate limits; audit entries | FRD §2–3, ADR-0008, LLD §3/§5, FR-AUTH-*, FR-ACCT-02 | T5 | API tests per FR-AUTH-01..06 including suspended-user rejection and concurrent invite consumption; unit tests for validation and password denylist <br>**✅** `apps/server/test/auth.test.ts` |
+| M1-T8 Invites | Create, list, revoke, preview; hashed codes; `members_can_invite` setting | FR-INV-01..03, BR-INV-* | T7 | API tests; code is returned only once; revoked or expired invites are rejected <br>**✅** `apps/server/test/invites.test.ts` |
+| M1-T9 Authorization-matrix harness | `test-utils` fixture world and matrix runner; CI fails for any id-bearing route not in the matrix | SDD §3, NFR-SEC-01 | T7 | Harness covers all M1 routes; meta-test proves an unlisted route fails CI <br>**✅** `packages/test-utils/src/authz-matrix.ts`, `apps/server/test/authz-matrix.test.ts` (meta-test included) |
+| M1-T10 Web shell | Vite + TanStack Router/Query + Tailwind + shadcn/ui + i18n catalogs; routes `/setup`, `/login`, `/join/$code`, app layout with nav placeholders (only real routes are linked), `/settings` (password change, logout everywhere), `/invites` (create with join URL and QR, list, revoke); global 401 handling | ADR-0003, SDD §5, TDD §4, FR-PAIR-02/04, FR-INV-03 | T3, T7, T8 | Playwright specs below pass; axe reports no violations on these pages <br>**✅** `apps/web/src/routes/*`; axe-clean in the E2E specs |
+| M1-T11 E2E harness and acceptance | Playwright runs against the production image via compose; API-based seed helpers; specs `setup.spec.ts` (J-1: claim instance, create invite) and `join.spec.ts` (J-2: register through join URL, auto-friend relationship exists via API, logout, login) | TDD §7, NFR-MAINT-03 | T6, T10 | Both specs green in CI on `main` <br>**✅** `e2e/tests/setup.spec.ts`, `e2e/tests/join.spec.ts` green in [CI run 183](https://github.com/VidFriends/vidfriends/actions/runs/37182089651) |
 
 **Exit criteria:** every check above passes. A new agent can run `pnpm dev`, then `pnpm test`, then `pnpm e2e` by following the README.
 
-### M2: Friends and profiles ⬜
+### M2: Friends and profiles ✅
 
 **Goal:** members find each other and manage relationships.
 **Requirements:** FR-ACCT-01; FR-FRND-01..05.
@@ -183,15 +183,15 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 
 | Task | Objective | References | Completion check |
 |---|---|---|---|
-| M2-T1 Relationship service | State machine with auto-accept, decline cooldown, block and unblock, rate limit | FRD §4, LLD §2 `relationships` | Table-driven API test covering every transition and every forbidden transition |
-| M2-T2 Search and lists | `GET /users`, friends, requests (in and out), blocks | BR-FRND-8 | API tests, including block-aware exclusion; authz matrix updated |
-| M2-T3 Object storage foundation | S3 client, presigned PUT/GET helpers, key scheme, SeaweedFS in the CI services | ADR-0009, ADR-0015, LLD §4 | API test: presign round-trip against SeaweedFS |
-| M2-T4 Profile and avatar | Display name edit; avatar upload (presigned, re-encoded to 256 px WebP by an inline server step or a simple job) | FR-ACCT-01, BR-ACCT-3, NFR-SEC-08 | API test rejects a non-image disguised as an image |
-| M2-T5 Friends UI | `/friends` (search, requests, friends, blocked) with optimistic actions and rollback | SDD §5, NFR-A11Y-01 | Playwright `friends.spec.ts`: request → accept → remove → block → unblock across two users |
+| M2-T1 Relationship service | State machine with auto-accept, decline cooldown, block and unblock, rate limit | FRD §4, LLD §2 `relationships` | Table-driven API test covering every transition and every forbidden transition <br>**✅** `apps/server/test/friends.test.ts` (26-row transition table) |
+| M2-T2 Search and lists | `GET /users`, friends, requests (in and out), blocks | BR-FRND-8 | API tests, including block-aware exclusion; authz matrix updated <br>**✅** `apps/server/test/friends.test.ts` (search, lists) |
+| M2-T3 Object storage foundation | S3 client, presigned PUT/GET helpers, key scheme, SeaweedFS in the CI services | ADR-0009, ADR-0015, LLD §4 | API test: presign round-trip against SeaweedFS <br>**✅** `apps/server/test/storage.test.ts` |
+| M2-T4 Profile and avatar | Display name edit; avatar upload (presigned, re-encoded to 256 px WebP by an inline server step or a simple job) | FR-ACCT-01, BR-ACCT-3, NFR-SEC-08 | API test rejects a non-image disguised as an image <br>**✅** `apps/server/test/profile.test.ts` |
+| M2-T5 Friends UI | `/friends` (search, requests, friends, blocked) with optimistic actions and rollback | SDD §5, NFR-A11Y-01 | Playwright `friends.spec.ts`: request → accept → remove → block → unblock across two users <br>**✅** `e2e/tests/friends.spec.ts` green in [CI run 183](https://github.com/VidFriends/vidfriends/actions/runs/37182089651) |
 
 **Exit:** M2-T5 spec green; FR-FRND state-machine test green.
 
-### M3: Media pipeline ⬜
+### M3: Media pipeline 🟡 (M3-T7 dispatch check pending merge)
 
 **Goal:** a member adds a video by link or upload and it becomes playable (or link-only) through durable jobs.
 **Requirements:** FR-VID-01..05, 07, 09; NFR-SEC-05, 08; NFR-REL-01; NFR-PERF-03; NFR-OPS-05.
@@ -199,18 +199,18 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 
 | Task | Objective | References | Completion check |
 |---|---|---|---|
-| M3-T1 Job runtime | pg-boss setup, worker entrypoint, transactional enqueue helper, job conventions (idempotency, logging, metrics hooks) | SDD §4, ADR-0007 | Kill-and-restart API test: an enqueued job completes exactly once after a worker restart |
-| M3-T2 URL validation and normalisation | Allowlist, SSRF guard (DNS + private ranges), normalisation rules, short-link resolution | BR-MED-1, LLD §4, NFR-SEC-05 | Unit test table of ≥ 40 URLs (valid, invalid, SSRF, tracking params) |
-| M3-T3 `video.fetch` | yt-dlp runner (execFile, `--`, caps, temp directory cleanup), retries, link_only fallback, `link_download_enabled` | FR-VID-02, 09, TDD §2 | API tests using a **fake yt-dlp script** fixture covering success, oversize, timeout, failure → link_only; temp dir empty after each |
-| M3-T4 `video.process` | ffprobe, remux or transcode, thumbnail, upload renditions, storage accounting | FR-VID-04, LLD §4 | Fixture media tests: H.264 MP4 (remux), HEVC MOV (transcode), corrupt file (failed) |
-| M3-T5 Uploads | Presigned (multipart) upload, complete, sniff, hash, dedup | FR-VID-03, BR-MED-4 | API tests: quota exceeded rejected before upload; duplicate hash reuses the video |
-| M3-T6 Media access | `GET /videos/{id}`, media URL issuance with visibility rule (added_by only until M4), Range support verified through Caddy | FR-VID-05, BR-SHR-6 | API test performs a Range GET via the presigned URL through the proxy and gets 206 |
-| M3-T7 Worker image and yt-dlp bump | Worker target with pinned yt-dlp and ffmpeg, sandbox settings; scheduled workflow opening bump PRs; nightly opt-in live smoke test | NFR-OPS-05, TDD §2 | Image builds in CI; the bump workflow opens a PR on manual dispatch |
-| M3-T8 Minimal UI | `/send` step 1: paste link or upload with progress, show processing state and preview player | PRD J-3 | Playwright `add-video.spec.ts`: fixture link becomes ready and plays; seeking works |
+| M3-T1 Job runtime | pg-boss setup, worker entrypoint, transactional enqueue helper, job conventions (idempotency, logging, metrics hooks) | SDD §4, ADR-0007 | Kill-and-restart API test: an enqueued job completes exactly once after a worker restart <br>**✅** `apps/server/test/jobs.test.ts` |
+| M3-T2 URL validation and normalisation | Allowlist, SSRF guard (DNS + private ranges), normalisation rules, short-link resolution | BR-MED-1, LLD §4, NFR-SEC-05 | Unit test table of ≥ 40 URLs (valid, invalid, SSRF, tracking params) <br>**✅** `apps/server/test/url.test.ts` (52 URLs) |
+| M3-T3 `video.fetch` | yt-dlp runner (execFile, `--`, caps, temp directory cleanup), retries, link_only fallback, `link_download_enabled` | FR-VID-02, 09, TDD §2 | API tests using a **fake yt-dlp script** fixture covering success, oversize, timeout, failure → link_only; temp dir empty after each <br>**✅** `apps/server/test/media.test.ts` (fake yt-dlp) |
+| M3-T4 `video.process` | ffprobe, remux or transcode, thumbnail, upload renditions, storage accounting | FR-VID-04, LLD §4 | Fixture media tests: H.264 MP4 (remux), HEVC MOV (transcode), corrupt file (failed) <br>**✅** `apps/server/test/media.test.ts` (H.264 remux, HEVC transcode, corrupt) |
+| M3-T5 Uploads | Presigned (multipart) upload, complete, sniff, hash, dedup | FR-VID-03, BR-MED-4 | API tests: quota exceeded rejected before upload; duplicate hash reuses the video <br>**✅** `apps/server/test/media.test.ts` (quota, dedup, sniffing, multipart) |
+| M3-T6 Media access | `GET /videos/{id}`, media URL issuance with visibility rule (added_by only until M4), Range support verified through Caddy | FR-VID-05, BR-SHR-6 | API test performs a Range GET via the presigned URL through the proxy and gets 206 <br>**✅** `apps/server/test/media.test.ts` (206 via presigned URL); through Caddy in `e2e/tests/add-video.spec.ts` |
+| M3-T7 Worker image and yt-dlp bump | Worker target with pinned yt-dlp and ffmpeg, sandbox settings; scheduled workflow opening bump PRs; nightly opt-in live smoke test | NFR-OPS-05, TDD §2 | Image builds in CI; the bump workflow opens a PR on manual dispatch <br>**🟡** Worker image builds with pinned yt-dlp in [CI run 183](https://github.com/VidFriends/vidfriends/actions/runs/37182089651); `yt-dlp-bump.yml` and `nightly.yml` can only be dispatched once merged to `main`. |
+| M3-T8 Minimal UI | `/send` step 1: paste link or upload with progress, show processing state and preview player | PRD J-3 | Playwright `add-video.spec.ts`: fixture link becomes ready and plays; seeking works <br>**✅** `e2e/tests/add-video.spec.ts` green on Chrome in [CI run 183](https://github.com/VidFriends/vidfriends/actions/runs/37182089651) |
 
 **Exit:** all of the above green. No test depends on real source platforms.
 
-### M4: Sharing, feed, engagement, notifications (Web MVP) ⬜
+### M4: Sharing, feed, engagement, notifications (Web MVP) 🟡 (server done; web UI in progress)
 
 **Goal:** the core product loop works on the web.
 **Requirements:** FR-SHR-01..05; FR-FEED-01..06; FR-ENG-01..02; FR-NOTIF-01, 02(S), 04, 05; FR-PWA-01..02(S); FR-VID-08(C); NFR-A11Y-01; NFR-COMPAT-01; NFR-PERF-02, 04(S).

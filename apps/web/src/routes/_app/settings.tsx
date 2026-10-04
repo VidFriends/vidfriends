@@ -15,6 +15,7 @@ import {
 import { useApi } from '@vidfriends/api-client/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Avatar } from '@/components/avatar';
+import { PushCard } from '@/features/notifications/push-card';
 import { Input } from '@/components/ui/input';
 import { meQuery } from '@/lib/session';
 import { useState } from 'react';
@@ -49,6 +50,7 @@ function SettingsPage() {
     <div className="grid max-w-2xl gap-6">
       <h1 className="text-2xl font-semibold">{t('settings.title')}</h1>
       <ProfileCard />
+      <PushCard />
       <PasswordCard />
       <SessionsCard />
       <AppearanceCard />

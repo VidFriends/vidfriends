@@ -64,6 +64,29 @@ export class Api {
     });
   }
 
+  async patch<T = unknown>(path: string, data: unknown = {}): Promise<T> {
+    const res = await this.ctx.patch(API_PREFIX + path, { data, headers: this.headers() });
+    if (!res.ok()) throw new Error(`PATCH ${path} → ${res.status()}: ${await res.text()}`);
+    return (await res.json()) as T;
+  }
+
+  /** Adds a fixture link (fake yt-dlp in the E2E worker) and waits for it to settle. */
+  async addVideo(
+    mode: 'ok' | 'unsupported' = 'ok',
+  ): Promise<{ id: string; state: string; title: string }> {
+    const { video } = await this.post<{ video: { id: string } }>('/videos', {
+      url: `https://www.youtube.com/watch?v=${mode}&e2e=${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
+    });
+    for (let i = 0; i < 120; i++) {
+      const res = await this.get<{ video: { id: string; state: string; title: string } }>(
+        `/videos/${video.id}`,
+      );
+      if (['ready', 'link_only', 'failed'].includes(res.video.state)) return res.video;
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    throw new Error('video did not settle');
+  }
+
   async dispose() {
     await this.ctx.dispose();
   }

@@ -37,6 +37,8 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm format:check
+      - name: Web bundle budget (NFR-PERF-04)
+        run: pnpm --filter @vidfriends/web size
       - name: OpenAPI is up to date (NFR-MAINT-01)
         run: pnpm --filter @vidfriends/contracts gen:check
       - name: Environment reference is up to date (NFR-OPS-02)
