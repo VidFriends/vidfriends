@@ -1,0 +1,38 @@
+default_platform(:android)
+
+platform :android do
+  desc "Build and sign the release APK"
+  lane :build_release do
+    gradle(
+      task: "assembleRelease",
+      build_type: "Release",
+      properties: {
+        "android.injected.signing.store.file" => ENV["ANDROID_SIGNING_KEYSTORE"],
+        "android.injected.signing.store.password" => ENV["ANDROID_SIGNING_STORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["ANDROID_SIGNING_KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["ANDROID_SIGNING_KEY_PASSWORD"],
+      }
+    )
+  end
+
+  desc "Submit a new beta build to Firebase App Distribution"
+  lane :firebase_distribution do
+    build_release
+
+    firebase_app_distribution(
+      app: ENV["FIREBASE_APP_ID"],
+      firebase_cli_token: ENV["FIREBASE_CLI_TOKEN"],
+      android_artifact_type: "APK",
+      android_artifact_path: "app/build/outputs/apk/release/app-release.apk",
+      groups: "internal-testers",
+      release_notes: "Latest build from CI. See commit: #{ENV['GITHUB_SHA']}"
+    )
+  end
+
+  desc "Run all checks: lint, detekt, and tests"
+  lane :check do
+    gradle(task: "lint")
+    gradle(task: "detekt")
+    gradle(task: "test")
+  end
+end
