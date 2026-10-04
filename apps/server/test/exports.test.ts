@@ -3,6 +3,7 @@ import {
   createExport,
   deleteMe,
   downloadExport,
+  getExportUrl,
   listExports,
   sendShares,
 } from '@vidfriends/contracts';
@@ -116,6 +117,10 @@ describe.skipIf(!hasS3)('FR-ACCT-05 data export', () => {
     // No secrets in the export.
     const all = names.map((n) => new TextDecoder().decode(files[n])).join('\n');
     expect(all).not.toMatch(/argon2|password_hash|token/i);
+
+    // Bearer clients get the same link as data.
+    const asData = await a.client.ok(getExportUrl, { params: { id: requested.id } });
+    expect((await fetch(asData.url)).status).toBe(200);
 
     // Nobody else can download it (BR-GEN-3).
     expect((await b.client.call(downloadExport, { params: { id: requested.id } })).status).toBe(

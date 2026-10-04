@@ -34,6 +34,7 @@ import {
   declineFriendRequest,
   defineRoute,
   downloadExport,
+  getExportUrl,
   getAvatar,
   getAvatarUrl,
   previewInvite,
@@ -452,6 +453,38 @@ function cases(): MatrixCase[] {
       },
       expect: hasS3
         ? only(['owner'], 302)
+        : {
+            owner: 503,
+            participant: 503,
+            friend: 503,
+            stranger: 503,
+            blocked: 503,
+            suspended: 401,
+            admin: 503,
+            anonymous: 401,
+          },
+    }),
+    matrixCase({
+      route: getExportUrl,
+      // Same rule as downloadExport, as JSON for bearer clients.
+      prepare: async () => {
+        const id = newId();
+        const now = server.clock.now();
+        await server.deps.db.insert(exports).values({
+          id,
+          userId: owner(),
+          includeMedia: false,
+          state: 'ready',
+          objectKey: `exports/${owner()}/${id}.zip`,
+          bytes: 1,
+          createdAt: now,
+          readyAt: now,
+          expiresAt: new Date(now.getTime() + DAY),
+        });
+        return { params: { id } };
+      },
+      expect: hasS3
+        ? only(['owner'], 200)
         : {
             owner: 503,
             participant: 503,

@@ -52,3 +52,17 @@ export const downloadExport = defineRoute({
   response: null,
   errors: ['not_found'],
 });
+
+export const getExportUrl = defineRoute({
+  id: 'getExportUrl',
+  method: 'get',
+  path: '/me/exports/{id}/download-url',
+  auth: 'member',
+  tag: 'me',
+  summary:
+    'The same short-lived signed link as JSON, for clients that authenticate with a bearer token (FR-ACCT-05, FR-MOB-01)',
+  params: z.object({ id: Id }),
+  status: 200,
+  response: z.object({ url: z.string(), expires_at: Timestamp }),
+  errors: ['not_found'],
+});

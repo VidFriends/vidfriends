@@ -1,10 +1,11 @@
-// Settings: push (FR-NOTIF-03), server, sign out; switching servers requires signing out (WF-PAIR-2).
+// Settings: push (FR-NOTIF-03), data export (FR-ACCT-05), server, sign out; switching servers requires signing out (WF-PAIR-2).
 import { useApiQuery } from '@vidfriends/api-client/react';
 import { getMe, logout } from '@vidfriends/contracts';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Switch, Text, View } from 'react-native';
+import { ExportCard } from '@/features/export/export-card';
 import { disablePush, enablePush, pushStatus, type PushStatus } from '@/features/push';
 import { errorText } from '@/i18n';
 import { useSession } from '@/lib/session';
@@ -98,6 +99,7 @@ export default function Settings() {
         </View>
         <Body muted>{t('settings.privatePreviewsHelp')}</Body>
       </Card>
+      <ExportCard />
       <Button
         label={t('settings.signOut')}
         variant="secondary"

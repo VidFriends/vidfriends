@@ -35,6 +35,8 @@ export const EXPORTS_PER_DAY = 3;
 /** Builds still unfinished after this are marked failed by `session.cleanup`. */
 const STUCK_AFTER_MS = 2 * HOUR;
 /** Media is included while the archive stays under this size (WF-ACCT-4). */
+/** Lifetime of a signed download link. */
+export const LINK_TTL_S = 15 * 60;
 export const MEDIA_LIMIT_BYTES = 4 * 1024 ** 3;
 
 type ExportRow = typeof exports.$inferSelect;
@@ -117,7 +119,7 @@ export async function downloadUrl(deps: Deps, viewer: Viewer, id: string): Promi
   if (!row || row.state !== 'ready' || !row.objectKey || !row.expiresAt || row.expiresAt <= now)
     throw notFound();
   const day = (row.readyAt ?? now).toISOString().slice(0, 10);
-  return storage.presignGet(row.objectKey, 15 * 60, `vidfriends-export-${day}.zip`);
+  return storage.presignGet(row.objectKey, LINK_TTL_S, `vidfriends-export-${day}.zip`);
 }
 
 const userRef = (u: { username: string; displayName: string } | null | undefined) =>
