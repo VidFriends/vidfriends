@@ -320,7 +320,7 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7
 ## 7. Next actionable milestone
 
 **M7: post-v1 backlog.** Data export and passkey-only sign-in are done; realtime updates (M7-T7..T9) are next, chosen by the owner on 2026-10-04.
-- **Now (agents):** M7-T17 collections (owner's choice, 2026-10-04; M7-T14..T16 are done or in review); then the next backlog item the owner schedules.
+- **Now (agents):** M7-T17 collections (owner's choice, 2026-10-04; M7-T14..T16 are done); then the next backlog item the owner schedules.
 - **Owner:** check passkey sign-in on a real Android phone and iPhone against an HTTPS instance (M7-T6); enable branch protection on `main` (M1-T2); Apple and Google developer accounts for store builds (M6-T7). The alpha (M5-T9) is postponed by the owner.
 - **Verification:** each item's completion check in §5, with the CI run or record linked in the task row.
 
@@ -328,6 +328,7 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7
 
 | Date | Change |
 |---|---|
+| 2026-10-04 | M7-T16 groups of friends ✅, merged in [PR #126](https://github.com/VidFriends/vidfriends/pull/126) with CI green, including Playwright `groups.spec.ts` and the Android Maestro suite. |
 | 2026-10-04 | Owner answer (multiple choice): next, **collections** (M7-T17, CAP-14, FR-FEED-07, BR-COL-1..3): named lists of received videos; adding one also saves it. Assumption: limits of 50 collections of 500 videos each, and the data export gains `collections.json` and `groups.json` (groups were missing from it). |
 | 2026-10-04 | M7-T14 Spanish and M7-T15 push titles in the member's language ✅, merged in [PR #125](https://github.com/VidFriends/vidfriends/pull/125) with CI green, including Playwright `language.spec.ts` and the Android Maestro suite. |
 | 2026-10-04 | M7-T7..T9 realtime updates ✅, merged in [PR #122](https://github.com/VidFriends/vidfriends/pull/122) with CI green, including the Android Maestro suite. |
