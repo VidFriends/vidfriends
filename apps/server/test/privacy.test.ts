@@ -40,6 +40,8 @@ describe('NFR-PRIV-03: personal data is minimal', () => {
         'created_at',
         'display_name',
         'id',
+        // A UI language preference (NFR-I18N-01), not contact data.
+        'language',
         'last_active_at',
         'webauthn_user_id',
         'quota_bytes_override',

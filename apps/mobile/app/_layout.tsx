@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import '@/i18n';
 import { PushRegistration } from '@/features/push';
 import { OfflineProvider } from '@/features/offline/store';
+import { LanguageSync } from '@/features/language-sync';
 import { RealtimeUpdates } from '@/features/realtime';
 import { SessionProvider } from '@/lib/session';
 import { useTheme } from '@/ui/theme';
@@ -16,6 +17,7 @@ export default function RootLayout() {
         <StatusBar style="auto" />
         <PushRegistration />
         <RealtimeUpdates />
+        <LanguageSync />
         <OfflineProvider>
           <Screens />
         </OfflineProvider>

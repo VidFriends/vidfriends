@@ -16,12 +16,19 @@ export const Role = z.enum(['member', 'admin']);
 export const UserStatus = z.enum(['active', 'suspended']);
 
 /** A user as seen by themselves. */
+/** UI languages (NFR-I18N-01). */
+export const LANGUAGES = ['en', 'es'] as const;
+export const Language = z.enum(LANGUAGES);
+export type Language = z.infer<typeof Language>;
+
 export const SelfUser = z.object({
   id: Id,
   username: z.string(),
   display_name: z.string(),
   avatar_url: z.string().nullable(),
   role: Role,
+  /** Language for server-written texts such as push titles (NFR-I18N-01). */
+  language: Language,
   created_at: Timestamp,
 });
 export type SelfUser = z.infer<typeof SelfUser>;
@@ -96,8 +103,10 @@ export const updateMe = defineRoute({
   path: '/me',
   auth: 'member',
   tag: 'me',
-  summary: 'Edit display name (FR-ACCT-01)',
-  body: z.object({ display_name: DisplayName }),
+  summary: 'Edit display name or language (FR-ACCT-01, NFR-I18N-01)',
+  body: z
+    .object({ display_name: DisplayName.optional(), language: Language.optional() })
+    .refine((b) => b.display_name !== undefined || b.language !== undefined, 'empty'),
   status: 200,
   response: z.object({ user: SelfUser }),
 });

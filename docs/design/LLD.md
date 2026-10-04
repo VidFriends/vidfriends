@@ -40,6 +40,7 @@ erDiagram
 - `avatar_key` text NULL
 - `role` text NOT NULL DEFAULT 'member', CHECK in (`member`, `admin`)
 - `status` text NOT NULL DEFAULT 'active', CHECK in (`active`, `suspended`)
+- `language` text NOT NULL DEFAULT 'en', CHECK in (`en`, `es`): language of server-written texts (push titles), set by the client (NFR-I18N-01)
 - `storage_bytes` bigint NOT NULL DEFAULT 0
 - `quota_bytes_override` bigint NULL (null means the instance default)
 - `last_active_at` timestamptz NULL
@@ -287,7 +288,7 @@ LIMIT :n + 1;
 | `POST /auth/signin` | P | `{ceremony_id, credential}` → `{user}` + cookie session | `invalid_credentials`, `account_suspended`, `rate_limited` | AUTH-04 |
 | `POST /auth/logout` | M | `{all?: bool}` → 204 | – | AUTH-04 |
 | `GET /me` | M | → `{user, settings_summary}` | – | – |
-| `PATCH /me` | M | `{display_name?}` → `{user}` | – | ACCT-01 |
+| `PATCH /me` | M | `{display_name?, language?: en\|es}` (at least one) → `{user}`; `language` sets the language of server-written texts such as push titles | – | ACCT-01, NFR-I18N-01 |
 | `POST /me/avatar/upload`, `PUT /me/avatar`, `DELETE /me/avatar` | M | `{bytes, content_type}` → `{upload_id, put_url, expires_at}` (presigned PUT to `tmp/avatars/<user>/<upload_id>`, ≤ 2 MB); then `{upload_id}` → `{user}` after re-encoding to a 256×256 WebP; delete → `{user}` | `too_large`, `upload_incomplete`, `validation_failed` (`not_an_image`) | ACCT-01 |
 | `GET /users/{user_id}/avatar` | M | → 302 to a signed URL (≤ 15 min). 404 when the viewer is blocked by, or blocking, the user | 404 | ACCT-01 |
 | `GET /users/{user_id}/avatar-url` | M | → `{url, expires_at}`: the same signed URL as data, for bearer clients (the redirect would carry their `Authorization` header to the store). Same visibility as `/avatar` | 404 | ACCT-01, MOB-01 |

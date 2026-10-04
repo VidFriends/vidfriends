@@ -10,6 +10,8 @@ export interface PushPayload {
   /** Opaque ids only (BR-NOT-3); the client fetches details after authenticating. */
   data: { notification_id: string; url: string };
   tag: string;
+  /** The recipient's language, for the private-previews title (NFR-I18N-01). */
+  lang?: 'en' | 'es';
 }
 
 export type PushKind = 'webpush' | 'expo' | 'ntfy' | 'gotify';

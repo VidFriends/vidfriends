@@ -276,5 +276,9 @@
       "not_ready": "This video isn't ready to download yet.",
       "failed": "The download failed. Check your connection and try again."
     }
+  },
+  "language": {
+    "title": "Language",
+    "system": "Phone language"
   }
 }

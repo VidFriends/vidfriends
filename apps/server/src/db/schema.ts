@@ -44,6 +44,10 @@ export const users = pgTable(
     status: text('status', { enum: ['active', 'suspended'] })
       .notNull()
       .default('active'),
+    /** Language of server-written texts such as push titles (NFR-I18N-01). */
+    language: text('language', { enum: ['en', 'es'] })
+      .notNull()
+      .default('en'),
     storageBytes: bigint('storage_bytes', { mode: 'number' }).notNull().default(0),
     quotaBytesOverride: bigint('quota_bytes_override', { mode: 'number' }),
     lastActiveAt: tstz('last_active_at'),
@@ -57,6 +61,7 @@ export const users = pgTable(
     check('users_username_format', sql`${t.username} ~ '^[a-z0-9][a-z0-9_.]{2,29}$'`),
     check('users_role_check', sql`${t.role} in ('member','admin')`),
     check('users_status_check', sql`${t.status} in ('active','suspended')`),
+    check('users_language_check', sql`${t.language} in ('en','es')`),
     check('users_display_name_length', sql`char_length(${t.displayName}) <= 50`),
   ],
 );

@@ -1,0 +1,704 @@
+{
+  "app": {
+    "name": "VidFriends",
+    "tagline": "Videos de tus amigos, y de nadie más."
+  },
+  "nav": {
+    "main": "Navegación principal",
+    "skip": "Saltar al contenido",
+    "home": "Inicio",
+    "invites": "Invitaciones",
+    "settings": "Ajustes",
+    "logout": "Cerrar sesión",
+    "account": "Sesión iniciada como {{name}}",
+    "friends": "Amigos",
+    "send": "Enviar",
+    "inbox": "Bandeja de entrada",
+    "saved": "Guardados",
+    "history": "Historial",
+    "sent": "Enviados",
+    "notifications": "Notificaciones",
+    "notificationsCount": "Notificaciones ({{count}} sin leer)",
+    "more": "Más",
+    "admin": "Administración"
+  },
+  "common": {
+    "loading": "Cargando…",
+    "retry": "Intentar de nuevo",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "close": "Cerrar",
+    "loadMore": "Cargar más",
+    "optional": "opcional",
+    "genericError": "Algo salió mal. Inténtalo de nuevo.",
+    "theme": "Tema",
+    "themeSystem": "Sistema",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "back": "Atrás"
+  },
+  "errors": {
+    "validation_failed": "Revisa los campos marcados.",
+    "invite_invalid": "Este enlace de invitación no es válido. Puede que haya caducado, que ya se haya usado todas las veces permitidas o que se haya revocado. Pide uno nuevo a tu amigo.",
+    "setup_invalid": "Ese token de configuración no es correcto. Vuelve a copiarlo del registro del servidor.",
+    "unauthorized": "Inicia sesión.",
+    "invalid_credentials": "Esa llave de acceso no está registrada en este servidor.",
+    "account_suspended": "Esta cuenta está suspendida. Contacta con el administrador de tu servidor.",
+    "forbidden": "No tienes permiso para hacer eso.",
+    "csrf_failed": "Tu sesión necesita actualizarse. Recarga la página e inténtalo de nuevo.",
+    "not_found": "No encontrado.",
+    "username_taken": "Ese nombre de usuario ya está en uso.",
+    "rate_limited": "Demasiados intentos. Espera un minuto e inténtalo de nuevo.",
+    "network_error": "No se pudo conectar con el servidor. Revisa tu conexión.",
+    "internal_error": "Algo salió mal en el servidor. Inténtalo de nuevo.",
+    "unavailable": "El servidor no está disponible temporalmente.",
+    "cooldown": "Podrás enviar otra solicitud a esta persona más adelante.",
+    "already_friends": "Ya son amigos.",
+    "query_too_short": "Escribe al menos 2 caracteres.",
+    "too_large": "Ese archivo es demasiado grande.",
+    "upload_incomplete": "La subida no terminó. Inténtalo de nuevo.",
+    "url_not_allowed": "Ese enlace no es de un sitio compatible o no es una dirección web pública.",
+    "quota_exceeded": "Has usado todo tu almacenamiento. Pide más al administrador de tu servidor.",
+    "storage_full": "Este servidor se ha quedado sin espacio de almacenamiento.",
+    "not_playable": "Este video aún no está listo.",
+    "already_watched": "Tu amigo ya vio este video, así que no se puede anular el envío.",
+    "video_not_found": "Ese video no está disponible.",
+    "invalid_reaction": "Elige una de las reacciones.",
+    "last_admin": "Este es el único administrador. Primero haz administrador a otra persona.",
+    "export_in_progress": "Tus datos ya se están preparando.",
+    "recovery_invalid": "Este enlace de recuperación no es válido. Pide uno nuevo a tu administrador.",
+    "ceremony_invalid": "Tardó demasiado. Inténtalo de nuevo.",
+    "passkey_invalid": "No se pudo verificar la llave de acceso. Inténtalo de nuevo.",
+    "code_invalid": "Este código de inicio de sesión no es válido. Vuelve a empezar desde la app.",
+    "reauth_required": "Primero confirma con tu llave de acceso.",
+    "last_passkey": "No puedes eliminar tu última llave de acceso. Primero añade otra.",
+    "too_many_passkeys": "Ya tienes 10 llaves de acceso. Primero elimina una.",
+    "too_many_push_targets": "Ya tienes 5 destinos de ntfy o Gotify. Primero elimina uno."
+  },
+  "fieldErrors": {
+    "required": "Obligatorio.",
+    "username_format": "Usa de 3 a 30 caracteres: letras minúsculas, dígitos, puntos o guiones bajos, empezando por una letra o un dígito.",
+    "too_long": "Demasiado largo.",
+    "invalid": "Valor no válido.",
+    "username_taken": "Ese nombre de usuario ya está en uso.",
+    "not_an_image": "Ese archivo no es una imagen que podamos usar.",
+    "not_a_video": "Ese archivo no es un video que podamos usar.",
+    "push_endpoint_not_allowed": "Usa una dirección https:// de internet. Los servidores de tu red doméstica solo funcionan si el operador del servidor los permite.",
+    "invalid_url": "Esa no es una dirección web válida."
+  },
+  "setup": {
+    "title": "Configura tu servidor de VidFriends",
+    "intro": "Reclama este servidor para convertirte en su administrador. Encontrarás el token de configuración de un solo uso en el registro del servidor.",
+    "token": "Token de configuración",
+    "tokenHelp": "Aparece en el registro del servidor como “enter the setup token: …”.",
+    "instanceName": "Nombre del servidor",
+    "instanceNameHelp": "Lo ve todo el que se une, por ejemplo “Los García”.",
+    "username": "Nombre de usuario del administrador",
+    "submit": "Reclamar servidor",
+    "claimed": "Este servidor ya está configurado.",
+    "goLogin": "Ir a iniciar sesión",
+    "displayName": "Tu nombre visible",
+    "passkeyHelp": "A continuación, tu dispositivo crea una llave de acceso para este servidor. Inicias sesión con ella en lugar de con una contraseña."
+  },
+  "login": {
+    "title": "Iniciar sesión",
+    "subtitle": "en {{name}}",
+    "passkeyHelp": "Usa la llave de acceso que creaste al unirte. Tu dispositivo te pedirá tu huella, tu cara o el bloqueo de pantalla.",
+    "submit": "Iniciar sesión con una llave de acceso",
+    "noAccount": "¿No tienes cuenta? Pide un enlace de invitación a un amigo de este servidor.",
+    "lostPasskey": "¿Perdiste tu llave de acceso? Pide un enlace de recuperación al administrador de tu servidor.",
+    "expired": "Tu sesión terminó. Vuelve a iniciar sesión."
+  },
+  "join": {
+    "title": "Únete a {{name}}",
+    "invitedBy": "{{name}} te invitó.",
+    "expires": "Esta invitación caduca {{when}}.",
+    "displayName": "Nombre visible",
+    "displayNameHelp": "Lo que ven tus amigos. Puedes cambiarlo más tarde.",
+    "username": "Nombre de usuario",
+    "usernameHelp": "De 3 a 30 caracteres: letras minúsculas, dígitos, puntos y guiones bajos. No se puede cambiar.",
+    "submit": "Crear cuenta",
+    "trust": "El administrador de tu servidor puede técnicamente acceder a los datos almacenados. Únete solo a servidores gestionados por personas de confianza.",
+    "appHint": "¿Usas la app de VidFriends? Ábrela y escanea el mismo código QR desde dentro de la app.",
+    "haveAccount": "¿Ya tienes una cuenta? Inicia sesión",
+    "passkeyHelp": "Tu dispositivo crea una llave de acceso para este servidor (huella, cara o bloqueo de pantalla). No hay contraseña."
+  },
+  "home": {
+    "title": "Inicio",
+    "welcome": "¡Te damos la bienvenida, {{name}}!",
+    "intro": "Este es tu feed privado de videos que te envían tus amigos. Invita a tus amigos para empezar.",
+    "inviteCta": "Invitar a un amigo"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "sessionsTitle": "Sesiones",
+    "logoutEverywhere": "Cerrar sesión en todas partes",
+    "logoutEverywhereHelp": "Cierra todas las sesiones en todos los dispositivos, incluido este.",
+    "appearanceTitle": "Apariencia",
+    "profileTitle": "Perfil",
+    "displayName": "Nombre visible",
+    "displayNameHelp": "Lo que ven tus amigos. Hasta 50 caracteres.",
+    "saveProfile": "Guardar",
+    "profileSaved": "Perfil guardado.",
+    "avatar": "Foto de perfil",
+    "avatarHelp": "Una imagen de hasta 2 MB. Se recorta en forma cuadrada.",
+    "avatarChoose": "Elegir una foto",
+    "avatarRemove": "Quitar foto",
+    "avatarSaved": "Foto de perfil actualizada.",
+    "username": "Nombre de usuario: {{username}}",
+    "sessionsHelp": "Dispositivos en los que has iniciado sesión. Revoca cualquiera que no reconozcas.",
+    "sessionCurrent": "Este dispositivo",
+    "sessionWeb": "Web",
+    "sessionMobile": "App móvil",
+    "sessionSeen": "Última actividad: {{when}}",
+    "sessionRevoke": "Revocar",
+    "sessionRevoked": "Sesión revocada.",
+    "exportTitle": "Descargar tus datos",
+    "exportHelp": "Obtén un archivo ZIP con tu perfil, tus amigos, los videos que enviaste y recibiste con sus notas y conversaciones, y tu historial de inicios de sesión. Se prepara en segundo plano y se puede descargar durante 7 días.",
+    "exportIncludeMedia": "Incluir los archivos de video que añadí (pueden ocupar mucho)",
+    "exportSubmit": "Preparar mis datos",
+    "exportRequested": "Preparando tus datos. Esta página se actualizará cuando estén listos.",
+    "exportRateLimited": "Puedes preparar tus datos 3 veces al día. Inténtalo de nuevo mañana.",
+    "exportList": "Tus exportaciones de datos",
+    "exportWithMedia": "con videos",
+    "exportExpires": "Caduca {{when}}",
+    "exportRequestedAt": "Solicitada {{when}}",
+    "exportDownload": "Descargar",
+    "exportState": {
+      "queued": "Esperando para empezar",
+      "building": "Preparando…",
+      "ready": "Lista",
+      "failed": "Falló",
+      "expired": "Caducada"
+    },
+    "deleteTitle": "Eliminar cuenta",
+    "deleteHelp": "Elimina para siempre tu cuenta, tus amistades, los videos que enviaste y tus conversaciones. No se puede deshacer.",
+    "deleteConfirm": "Confirma con tu llave de acceso para eliminar tu cuenta.",
+    "deleteSubmit": "Eliminar mi cuenta",
+    "deleted": "Tu cuenta se eliminó."
+  },
+  "invites": {
+    "title": "Invitaciones",
+    "intro": "Invita a personas de confianza. Cada invitación es un enlace (y un código QR) que permite a alguien crear una cuenta en este servidor.",
+    "createTitle": "Nueva invitación",
+    "maxUses": "Cuántas personas pueden usarla",
+    "expiresInDays": "Caduca después de (días)",
+    "autoFriend": "Hacerse amigos automáticamente",
+    "autoFriendHelp": "Las personas que se unan con esta invitación serán tus amigos de inmediato.",
+    "create": "Crear invitación",
+    "createdTitle": "Invitación lista",
+    "createdHelp": "Comparte este enlace o deja que escaneen el código QR. Por seguridad, solo se muestra ahora.",
+    "joinUrl": "Enlace para unirse",
+    "qrLabel": "Código QR del enlace para unirse",
+    "listTitle": "Tus invitaciones",
+    "listTitleAll": "Todas las invitaciones",
+    "showAll": "Mostrar todas las invitaciones",
+    "empty": "Aún no hay invitaciones.",
+    "uses": "{{uses}} de {{max}} usadas",
+    "expires": "Caduca {{when}}",
+    "createdBy": "Creada por {{name}}",
+    "revoke": "Revocar",
+    "revokeConfirm": "¿Revocar esta invitación? Nadie podrá volver a usarla.",
+    "revoked": "Invitación revocada.",
+    "notAllowed": "En este servidor solo los administradores pueden crear invitaciones.",
+    "status": {
+      "active": "Activa",
+      "expired": "Caducada",
+      "revoked": "Revocada",
+      "exhausted": "Agotada"
+    }
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "home": "Ir al inicio"
+  },
+  "friends": {
+    "title": "Amigos",
+    "intro": "Tus amigos son las personas que pueden enviarte videos y recibir los tuyos. Para ser amigos, los dos tienen que aceptar.",
+    "searchLabel": "Buscar personas en este servidor",
+    "searchPlaceholder": "Buscar por nombre de usuario o nombre",
+    "searchHelp": "Escribe al menos 2 caracteres.",
+    "searchEmpty": "No se encontró a nadie.",
+    "incoming": "Solicitudes para ti",
+    "outgoing": "Solicitudes que enviaste",
+    "friendsList": "Tus amigos",
+    "blocked": "Bloqueados",
+    "noFriends": "Aún no tienes amigos. Busca arriba o envía una invitación a alguien.",
+    "noIncoming": "No hay solicitudes pendientes.",
+    "noOutgoing": "No hay solicitudes en espera.",
+    "noBlocked": "No has bloqueado a nadie.",
+    "add": "Añadir amigo",
+    "accept": "Aceptar",
+    "decline": "Rechazar",
+    "cancel": "Cancelar solicitud",
+    "remove": "Quitar",
+    "block": "Bloquear",
+    "unblock": "Desbloquear",
+    "state": {
+      "none": "",
+      "friends": "Amigos",
+      "request_sent": "Solicitud enviada",
+      "request_received": "Quiere ser tu amigo",
+      "blocked": "Bloqueado"
+    },
+    "blockConfirmTitle": "¿Bloquear a {{name}}?",
+    "blockConfirm": "No podrá encontrarte, enviarte videos ni pedirte amistad. Los videos entre ustedes se eliminan. Puedes desbloquearlo más tarde, pero la amistad no se recuperará automáticamente.",
+    "removeConfirmTitle": "¿Quitar a {{name}}?",
+    "removeConfirm": "Dejarán de ser amigos. Puedes volver a pedirle amistad más tarde.",
+    "cooldown": "Podrás volver a pedirlo más tarde.",
+    "done": {
+      "request": "Solicitud de amistad enviada.",
+      "accept": "Ahora son amigos.",
+      "decline": "Solicitud rechazada.",
+      "cancel": "Solicitud cancelada.",
+      "remove": "Amigo quitado.",
+      "block": "Bloqueado.",
+      "unblock": "Desbloqueado."
+    }
+  },
+  "send": {
+    "title": "Enviar un video",
+    "intro": "Pega un enlace de TikTok, YouTube, Instagram y más, o sube un archivo de video.",
+    "linkTab": "Pegar un enlace",
+    "uploadTab": "Subir un archivo",
+    "linkLabel": "Enlace del video",
+    "linkPlaceholder": "https://…",
+    "linkSubmit": "Añadir video",
+    "fileLabel": "Archivo de video",
+    "fileHelp": "Hasta {{size}}.",
+    "uploadSubmit": "Subir",
+    "uploading": "Subiendo… {{percent}}%",
+    "status": {
+      "queued": "Esperando para obtener el video…",
+      "fetching": "Obteniendo el video…",
+      "processing": "Preparando el video…",
+      "ready": "Listo para enviar.",
+      "link_only": "No pudimos descargar este video, así que tus amigos recibirán un enlace al original.",
+      "failed": "No se pudo procesar este video.",
+      "expired": "El archivo de este video ha caducado."
+    },
+    "reasons": {
+      "too_large": "Es más grande de lo que permite este servidor.",
+      "too_long": "Es más largo de lo que permite este servidor.",
+      "unsupported": "Ese sitio o enlace no es compatible.",
+      "downloads_disabled": "Este servidor no descarga videos.",
+      "unplayable": "El archivo no es un video reproducible.",
+      "fetch_failed": "El sitio no nos permitió descargarlo.",
+      "quota_exceeded": "Has usado todo tu almacenamiento."
+    },
+    "preview": "Vista previa",
+    "openOriginal": "Abrir original",
+    "another": "Añadir otro video",
+    "notAVideo": "Ese archivo no es un video que podamos usar."
+  },
+  "feed": {
+    "title": "Tu feed",
+    "label": "Videos de tus amigos",
+    "empty": "Aún no hay nada. Cuando tus amigos te envíen videos, aparecerán aquí.",
+    "caughtUp": "Estás al día",
+    "caughtUpHelp": "Sigue desplazándote para ver los videos que viste hace poco.",
+    "from": "De {{name}}",
+    "alsoSentBy": "También enviado por {{names}}",
+    "newVideos": "Videos nuevos: mostrarlos",
+    "unmute": "Activar sonido",
+    "mute": "Silenciar",
+    "play": "Reproducir",
+    "pause": "Pausar",
+    "save": "Guardar",
+    "saved": "Guardado",
+    "openOriginal": "Abrir original",
+    "linkOnly": "Este video solo está disponible en el sitio original.",
+    "expired": "El archivo de este video ha caducado.",
+    "position": "Video {{index}} de {{total}}",
+    "keyboardHelp": "Usa ↑ y ↓ (o j y k) para moverte, Espacio para reproducir o pausar y m para silenciar.",
+    "loadingMore": "Cargando más…",
+    "conversation_one": "Conversación ({{count}} respuesta)",
+    "conversation_other": "Conversación ({{count}} respuestas)",
+    "conversation_many": "Conversación ({{count}} respuestas)"
+  },
+  "reactions": {
+    "label": "Reaccionar",
+    "clear": "Quitar reacción",
+    "👍": "Me gusta",
+    "❤️": "Me encanta",
+    "😂": "Me divierte",
+    "😮": "Me asombra",
+    "😢": "Me entristece",
+    "🔥": "Fuego"
+  },
+  "lists": {
+    "inboxTitle": "Bandeja de entrada",
+    "inboxEmpty": "Tu bandeja de entrada está vacía.",
+    "savedTitle": "Guardados",
+    "savedEmpty": "Aún no has guardado nada. Guarda videos desde el feed para encontrarlos aquí.",
+    "historyTitle": "Historial",
+    "historyEmpty": "No hay videos vistos.",
+    "historyFilterTitle": "Buscar títulos",
+    "historyFilterSender": "Remitente",
+    "anySender": "Cualquiera",
+    "sentTitle": "Enviados",
+    "sentEmpty": "Aún no has enviado nada.",
+    "unwatched": "Nuevo",
+    "watchedAt": "Visto {{when}}",
+    "sentAt": "Enviado {{when}}",
+    "status": {
+      "processing": "Procesando",
+      "delivered": "Entregado",
+      "watched": "Visto"
+    },
+    "lastReply": "Última respuesta: {{text}}",
+    "replyDeleted": "Respuesta eliminada",
+    "unsend": "Anular envío",
+    "unsendConfirm": "¿Anular el envío de este video? Tu amigo ya no podrá verlo.",
+    "unsent": "Envío anulado.",
+    "hide": "Quitar de la bandeja de entrada",
+    "unhide": "Restaurar",
+    "open": "Abrir",
+    "replies_one": "{{count}} respuesta",
+    "replies_other": "{{count}} respuestas",
+    "replies_many": "{{count}} respuestas"
+  },
+  "share": {
+    "title": "Conversación",
+    "with": "Con {{name}}",
+    "note": "Nota de {{name}}",
+    "replyLabel": "Escribe una respuesta",
+    "replyPlaceholder": "Di algo…",
+    "send": "Enviar",
+    "deleteReply": "Eliminar respuesta",
+    "replyDeleted": "Respuesta eliminada",
+    "noReplies": "Aún no hay respuestas.",
+    "private": "Solo tú y {{name}} pueden ver esta conversación.",
+    "you": "Tú"
+  },
+  "sendStep2": {
+    "title": "Enviar a amigos",
+    "chooseFriends": "Elige amigos",
+    "noFriends": "Aún no tienes amigos aquí. Añade algunos en la página Amigos.",
+    "note": "Nota",
+    "noteHelp": "Opcional, hasta 500 caracteres.",
+    "send": "Enviar",
+    "sending": "Enviando…",
+    "resultSent": "Enviado a {{name}}",
+    "resultAlready": "Ya enviado a {{name}}",
+    "resultNotAllowed": "No se pudo enviar a {{name}}",
+    "pendingNote": "Le llegará en cuanto el video esté listo."
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "No hay notificaciones.",
+    "markAll": "Marcar todas como leídas",
+    "types": {
+      "share_received": "{{name}} te envió un video",
+      "reaction_received": "{{name}} reaccionó con {{emoji}} a tu video",
+      "reply_received": "{{name}} respondió",
+      "friend_request_received": "{{name}} quiere ser tu amigo",
+      "friend_request_accepted": "{{name}} aceptó tu solicitud de amistad",
+      "share_watched": "{{name}} vio tu video"
+    },
+    "someone": "Alguien",
+    "unread": "Sin leer"
+  },
+  "push": {
+    "title": "Notificaciones en este dispositivo",
+    "help": "Recibe una notificación cuando tus amigos envíen videos, reaccionen o respondan. Los mensajes solo muestran el nombre de quien envía, nunca el contenido.",
+    "enable": "Activar notificaciones",
+    "disable": "Desactivar en este dispositivo",
+    "enabled": "Las notificaciones están activadas en este dispositivo.",
+    "unsupported": "Este navegador no admite notificaciones push.",
+    "denied": "Las notificaciones están bloqueadas en los ajustes de tu navegador.",
+    "privatePreviews": "Vistas previas privadas (ocultar el nombre de quien envía)",
+    "prefsTitle": "Avisarme de",
+    "types": {
+      "share_received": "Videos nuevos",
+      "reaction_received": "Reacciones",
+      "reply_received": "Respuestas",
+      "friend_request_received": "Solicitudes de amistad",
+      "friend_request_accepted": "Solicitudes aceptadas",
+      "share_watched": "Cuando mis amigos ven lo que envié"
+    }
+  },
+  "admin": {
+    "title": "Administración",
+    "nav": "Secciones de administración",
+    "users": "Miembros",
+    "invites": "Invitaciones",
+    "settings": "Ajustes",
+    "storage": "Almacenamiento",
+    "audit": "Registro de auditoría",
+    "invitesHelp": "Crea, consulta y revoca invitaciones para este servidor. Activa “Mostrar todas las invitaciones” para ver las de todos.",
+    "invitesLink": "Abrir invitaciones",
+    "search": "Buscar por nombre",
+    "statusFilter": "Estado",
+    "statusAll": "Todos",
+    "status": {
+      "active": "Activo",
+      "suspended": "Suspendido"
+    },
+    "role": {
+      "admin": "Administrador",
+      "member": "Miembro"
+    },
+    "usersEmpty": "Ningún miembro coincide.",
+    "joined": "Se unió {{when}}",
+    "lastActive": "Última actividad: {{when}}",
+    "neverActive": "Aún sin actividad",
+    "storageUsed": "{{bytes}} almacenados",
+    "counts": "{{sent}} enviados · {{received}} recibidos",
+    "quotaOverride": "Cuota personalizada: {{bytes}}",
+    "you": "(tú)",
+    "suspend": "Suspender",
+    "unsuspend": "Reactivar",
+    "promote": "Hacer administrador",
+    "demote": "Quitar administrador",
+    "resetLink": "Enlace de recuperación",
+    "delete": "Eliminar",
+    "updated": "Miembro actualizado.",
+    "suspendConfirm": "Se cerrará la sesión de {{name}} en todas partes y no podrá iniciar sesión. Sus envíos quedarán ocultos hasta que lo reactives.",
+    "deleteConfirm": "¿Eliminar la cuenta de {{name}} y todo lo que envió? No se puede deshacer.",
+    "deletedUser": "Miembro eliminado.",
+    "resetTitle": "Enlace de recuperación",
+    "resetHelp": "Da este enlace en privado al miembro. Funciona una sola vez en un plazo de 24 horas y le permite crear una nueva llave de acceso; sus llaves de acceso anteriores se eliminan y se cierra la sesión en todos sus dispositivos.",
+    "quotaTitle": "Cuota de almacenamiento",
+    "quotaLabel": "Cuota personalizada en MB (vacío = valor predeterminado del servidor)",
+    "settingsSaved": "Ajustes guardados.",
+    "fields": {
+      "instance_name": "Nombre del servidor",
+      "signup_mode": "Quién puede unirse",
+      "signup_invite_only": "Solo con invitación",
+      "signup_open": "Cualquiera con el enlace",
+      "members_can_invite": "Los miembros pueden crear invitaciones",
+      "link_download_enabled": "Descargar videos desde enlaces",
+      "platform_allowlist": "Sitios permitidos (uno por línea)",
+      "max_media_bytes": "Tamaño máximo de video (MB)",
+      "max_duration_seconds": "Duración máxima de video (segundos)",
+      "per_user_quota_bytes": "Almacenamiento por miembro (MB, vacío = ilimitado)",
+      "instance_storage_cap_bytes": "Límite de almacenamiento del servidor (MB, vacío = ilimitado)",
+      "retention_days": "Conservar los videos vistos durante (días, 0 = siempre)",
+      "session_idle_days": "Cerrar sesión tras inactividad (días)",
+      "session_absolute_days": "Duración máxima de la sesión (días)"
+    },
+    "totalBytes": "Total almacenado: {{bytes}}",
+    "byState": "Videos por estado",
+    "perUser": "Almacenamiento por miembro",
+    "retention": "Los videos vistos se conservan durante {{days}} días. Próxima limpieza de retención: {{when}}.",
+    "retentionOff": "La retención está desactivada: los videos se conservan hasta que se eliminen. Próxima ejecución programada: {{when}}.",
+    "runRetention": "Ejecutar la retención ahora",
+    "retentionQueued": "Limpieza de retención en cola.",
+    "auditEmpty": "Ninguna entrada de auditoría coincide.",
+    "auditActor": "Autor",
+    "auditAction": "Acción",
+    "auditBefore": "Antes de",
+    "auditSystem": "Sistema",
+    "filter": "Filtrar",
+    "clear": "Borrar",
+    "auditTarget": "Objetivo",
+    "auditTime": "Hora",
+    "videoState": {
+      "queued": "En cola",
+      "fetching": "Descargando",
+      "processing": "Procesando",
+      "ready": "Listo",
+      "link_only": "Solo enlace",
+      "failed": "Falló",
+      "expired": "Caducado"
+    }
+  },
+  "footer": {
+    "privacy": "Privacidad",
+    "help": "Ayuda",
+    "label": "Acerca de este servidor"
+  },
+  "privacy": {
+    "title": "Privacidad en {{name}}",
+    "intro": "VidFriends es privado por diseño: sin anuncios, sin desconocidos, sin rastreo. Esta página explica exactamente qué almacena este servidor y quién puede verlo.",
+    "sections": [
+      {
+        "title": "Quién gestiona este servidor",
+        "body": [
+          "Este servidor lo gestiona su operador, normalmente la persona que te invitó. No lo gestiona el proyecto VidFriends, y no existe ningún servicio central de VidFriends.",
+          "El operador controla la máquina, así que técnicamente puede acceder a todo lo que hay almacenado en ella, incluidos videos y conversaciones, leyendo directamente la base de datos o el almacenamiento. Únete solo a un servidor gestionado por alguien de confianza."
+        ]
+      },
+      {
+        "title": "Qué se almacena sobre ti",
+        "body": [
+          "Tu nombre de usuario, tu nombre visible, tu foto de perfil opcional y las claves públicas de tus llaves de acceso (tu dispositivo guarda la parte privada; el servidor nunca la ve). No se recoge ninguna dirección de correo electrónico ni número de teléfono.",
+          "Los videos que añades, a quién se los envías, tus notas, reacciones y respuestas, lo que has visto, guardado u ocultado, tu lista de amigos y bloqueos, y tus ajustes de notificaciones.",
+          "Tus sesiones activas (tipo de dispositivo, nombre del navegador o de la app, última actividad) y, si activas las notificaciones push, la dirección push que nos dio tu navegador o tu teléfono, o la dirección de ntfy o Gotify que introdujiste (su token se almacena cifrado)."
+        ]
+      },
+      {
+        "title": "Quién puede ver qué",
+        "body": [
+          "Solo tú y los amigos a los que envías un video pueden ver ese envío, su nota y su conversación. No hay perfil público, feed global ni lista de seguidores.",
+          "Otros miembros pueden encontrarte por tu nombre de usuario o tu nombre visible para enviarte una solicitud de amistad; solo ven tu nombre de usuario, tu nombre visible y tu foto de perfil.",
+          "Los administradores de este servidor pueden ver una lista de miembros con recuentos (videos enviados y recibidos, almacenamiento usado) y un registro de auditoría de eventos de las cuentas. La app no les ofrece ninguna forma de leer tus conversaciones, notas o feed."
+        ]
+      },
+      {
+        "title": "Registros y el registro de auditoría",
+        "body": [
+          "El servidor guarda un registro de auditoría de eventos de seguridad (inicios de sesión e intentos fallidos, acciones de administración, eliminaciones de cuentas, uso de invitaciones, cambios de ajustes) con la dirección de red desde la que se produjeron. Se conserva durante 365 días.",
+          "Los registros del servidor nunca contienen datos de llaves de acceso, tokens de sesión, códigos de invitación, notas ni respuestas."
+        ]
+      },
+      {
+        "title": "Cuánto tiempo se conservan las cosas",
+        "body": [
+          "Los archivos de los videos vistos se eliminan tras el periodo de retención del servidor ({{days}} días en este servidor), salvo que alguien los haya guardado; el título y la miniatura se conservan, con un enlace al original. Un video que no se envió a nadie se elimina al cabo de un día.",
+          "Las notificaciones se eliminan después de 90 días. Las sesiones terminan tras un periodo de inactividad o cuando cierras sesión."
+        ]
+      },
+      {
+        "title": "Terceros",
+        "body": [
+          "Las apps no cargan nada de otras empresas: ni analíticas, ni rastreadores, ni anuncios, ni fuentes, ni CDN.",
+          "Cuando añades un enlace, este servidor descarga el video desde ese sitio, así que el sitio ve una solicitud de este servidor, no tuya. Al abrir el enlace original vas a ese sitio.",
+          "Las notificaciones push pasan por el servicio push de tu navegador o de tu teléfono (por ejemplo Google, Apple o Mozilla), o por el servidor de ntfy o Gotify que elegiste. Solo contienen un texto genérico breve, como \"Nuevo video de Sam\", o ningún nombre si tienes activadas las vistas previas privadas."
+        ]
+      },
+      {
+        "title": "Tus opciones",
+        "body": [
+          "Cambia tu perfil, tus llaves de acceso, tus notificaciones y tus sesiones en Ajustes. Puedes cerrar sesión en todos los dispositivos a la vez.",
+          "Descarga una copia de tus datos en Ajustes: un archivo ZIP con tu perfil, tus amigos, los videos que enviaste y recibiste con sus notas y conversaciones, y tu historial de inicios de sesión, y opcionalmente los archivos de video que añadiste. Solo tú puedes descargarlo, durante 7 días.",
+          "Elimina tu cuenta en Ajustes. Esto elimina de inmediato tu cuenta, tus amistades, todos los envíos que hiciste o recibiste con sus conversaciones, y tus notificaciones; los archivos de video que nadie más necesita se limpian poco después. Las copias de seguridad que guarde el operador pueden conservar una copia hasta que caduquen."
+        ]
+      }
+    ]
+  },
+  "help": {
+    "title": "Cómo funciona VidFriends",
+    "intro": "Un feed privado hecho solo de videos que te enviaron tus amigos.",
+    "sections": [
+      {
+        "title": "Añadir amigos",
+        "body": [
+          "Únete con un enlace de invitación de un amigo. Si así lo eligió, serán amigos de inmediato.",
+          "Encuentra a más personas en Amigos por nombre de usuario o nombre y envíales una solicitud. Aparecerán en tu lista de amigos cuando la acepten. Puedes quitar o bloquear a alguien en cualquier momento; al bloquear también se elimina lo que se enviaron entre ustedes."
+        ]
+      },
+      {
+        "title": "Enviar un video",
+        "body": [
+          "Abre Enviar, pega un enlace de un sitio compatible (o compártelo con VidFriends desde tu teléfono), o sube un archivo de video.",
+          "Elige amigos, añade una nota si quieres y envía. Si el video aún se está descargando, tus amigos lo recibirán en cuanto esté listo. Puedes anular el envío mientras no lo hayan visto."
+        ]
+      },
+      {
+        "title": "Ver videos",
+        "body": [
+          "Inicio es tu feed: primero aparecen los videos que no has visto, empezando por los más antiguos, y después los que viste hace poco. Desplázate o usa las teclas de flecha para pasar de un video a otro.",
+          "Un video cuenta como visto tras 10 segundos o la mitad de su duración, lo que ocurra primero, o cuando abres el original. Tu amigo ve cuándo lo viste.",
+          "Si un sitio no permite descargas, o el archivo se limpió, verás en su lugar una tarjeta con un enlace al original."
+        ]
+      },
+      {
+        "title": "Reaccionar y responder",
+        "body": [
+          "Toca una reacción o responde debajo de un video. Cada envío tiene su propia conversación privada entre tú y el amigo que te lo envió. Puedes eliminar tus propias respuestas."
+        ]
+      },
+      {
+        "title": "Llevar el control",
+        "body": [
+          "Bandeja de entrada muestra lo nuevo, Guardados conserva los videos que quieres guardar (los videos guardados nunca se limpian), Historial muestra todo lo que viste y Enviados muestra qué hicieron tus amigos con los videos que enviaste."
+        ]
+      },
+      {
+        "title": "Notificaciones",
+        "body": [
+          "La campana muestra videos nuevos, reacciones, respuestas y solicitudes de amistad. Para recibir notificaciones con la app cerrada, activa las notificaciones push en Ajustes, y activa las vistas previas privadas si no quieres que aparezcan nombres en tu pantalla de bloqueo."
+        ]
+      },
+      {
+        "title": "Instalar la app",
+        "body": [
+          "En Chrome, Edge o Safari, usa \"Instalar app\" o \"Añadir a pantalla de inicio\" para abrir VidFriends como una app. En Android, la app instalada también aparece en el menú Compartir de otras apps.",
+          "App para Android: hasta que VidFriends esté en Google Play, cada versión en la página de GitHub del proyecto incluye un archivo de app (.apk) que puedes instalar directamente. Ábrelo y luego escanea el código QR de tu servidor o pega tu enlace para unirte; instala las versiones nuevas de la misma forma. Aún no hay app para iPhone."
+        ]
+      },
+      {
+        "title": "Ayuda con la cuenta",
+        "body": [
+          "¿Perdiste todos los dispositivos con tu llave de acceso? Pide un enlace de recuperación a un administrador de este servidor; funciona una sola vez, caduca a las 24 horas y sustituye tus llaves de acceso anteriores.",
+          "Puedes eliminar tu cuenta en Ajustes. Consulta Privacidad para saber qué se elimina."
+        ]
+      }
+    ]
+  },
+  "recover": {
+    "title": "Recupera tu cuenta",
+    "for": "Para {{name}}",
+    "intro": "Tu administrador te dio este enlace. Funciona una sola vez y caduca a las 24 horas.",
+    "effect": "Al crear aquí una nueva llave de acceso se eliminan tus llaves de acceso anteriores y se cierra la sesión en todos los dispositivos.",
+    "submit": "Crear una nueva llave de acceso",
+    "goLogin": "Ir a iniciar sesión"
+  },
+  "passkeys": {
+    "title": "Llaves de acceso",
+    "help": "Inicias sesión con llaves de acceso. Añade una por cada dispositivo o gestor de contraseñas que uses, para que perder un dispositivo no te deje sin acceso.",
+    "current": "esta sesión",
+    "created": "Añadida {{when}}",
+    "lastUsed": "Último uso: {{when}}",
+    "synced": "sincronizada",
+    "add": "Añadir una llave de acceso",
+    "added": "Llave de acceso añadida.",
+    "addAnother": "Consejo: añade una segunda llave de acceso, por ejemplo en otro dispositivo.",
+    "rename": "Cambiar nombre",
+    "renameHelp": "Un nombre que te indique qué dispositivo o gestor de contraseñas es.",
+    "name": "Nombre",
+    "save": "Guardar",
+    "renamed": "Nombre de la llave de acceso cambiado.",
+    "remove": "Eliminar",
+    "removed": "Llave de acceso eliminada. Se cerró la sesión en los dispositivos que la usaban para iniciar sesión.",
+    "cancelled": "La solicitud de la llave de acceso se canceló o se agotó el tiempo.",
+    "alreadyRegistered": "Este dispositivo ya tiene una llave de acceso para tu cuenta.",
+    "unsupported": "Este navegador no puede usar llaves de acceso. Prueba con un navegador actualizado en un dispositivo con bloqueo de pantalla."
+  },
+  "appAuth": {
+    "title": "Iniciar sesión en la app",
+    "subtitle": "La app de VidFriends pide iniciar sesión en {{name}}.",
+    "continueAs": "Continuar como {{name}}",
+    "otherAccount": "Usar otra llave de acceso",
+    "note": "Después de iniciar sesión volverás a la app. Continúa solo si abriste esto desde la app de VidFriends.",
+    "done": "Sesión iniciada. La app debería abrirse ahora.",
+    "invalid": "Este enlace de inicio de sesión está incompleto. Vuelve a empezar desde la app.",
+    "return": "Volver a la app"
+  },
+  "pushServers": {
+    "title": "ntfy y Gotify",
+    "help": "Recibe notificaciones a través de tu propio tema de ntfy o servidor de Gotify en lugar de las notificaciones push del navegador o de la app, por ejemplo en un teléfono sin servicios de Google. Los mensajes solo muestran el nombre de quien envía (o nada, con las vistas previas privadas), nunca el contenido. Cualquiera que adivine un tema público de ntfy puede leerlo: usa un token de acceso o las vistas previas privadas.",
+    "kind": "Servicio",
+    "kinds": {
+      "ntfy": "ntfy",
+      "gotify": "Gotify"
+    },
+    "topicUrl": "URL del tema",
+    "topicHelp": "Por ejemplo https://ntfy.sh/un-tema-largo-y-aleatorio o tu propio servidor de ntfy.",
+    "serverUrl": "URL del servidor",
+    "serverHelp": "La dirección de tu servidor de Gotify, por ejemplo https://gotify.example.org.",
+    "ntfyToken": "Token de acceso (opcional)",
+    "ntfyTokenHelp": "Necesario si el tema está protegido. Se almacena cifrado; nunca se vuelve a mostrar.",
+    "gotifyToken": "Token de aplicación",
+    "gotifyTokenHelp": "Crea una aplicación en Gotify y pega su token. Se almacena cifrado; nunca se vuelve a mostrar.",
+    "add": "Añadir",
+    "added": "Añadido. Envía una prueba para comprobar que funciona.",
+    "test": "Enviar prueba",
+    "testOk": "Notificación de prueba enviada.",
+    "testFailed": "El servidor no aceptó la prueba. Revisa la dirección e inténtalo de nuevo más tarde.",
+    "testGone": "El servidor rechazó el token o el tema, así que se eliminó.",
+    "remove": "Eliminar",
+    "removed": "Eliminado.",
+    "lastSuccess": "Última entrega: {{when}}",
+    "neverDelivered": "Aún no se ha entregado nada",
+    "private": "vistas previas privadas"
+  },
+  "language": {
+    "title": "Idioma",
+    "system": "Idioma del navegador"
+  }
+}

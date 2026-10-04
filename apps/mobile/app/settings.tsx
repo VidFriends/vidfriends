@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Switch, Text, View } from 'react-native';
 import { ExportCard } from '@/features/export/export-card';
 import { disablePush, enablePush, pushStatus, type PushStatus } from '@/features/push';
-import { errorText } from '@/i18n';
+import { errorText, LANGUAGES, setLanguage, storedLanguage, type Language } from '@/i18n';
 import { useSession } from '@/lib/session';
 import { Body, Button, Card, ErrorBox, Screen } from '@/ui/kit';
 import { useTheme } from '@/ui/theme';
@@ -20,9 +20,15 @@ export default function Settings() {
   const [push, setPush] = useState<PushStatus | null>(null);
   const [privatePreviews, setPrivatePreviews] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [language, setLanguageState] = useState<Language | null>(null);
   useEffect(() => {
     void pushStatus().then(setPush);
+    void storedLanguage().then(setLanguageState);
   }, []);
+  const chooseLanguage = (lng: Language | null) => {
+    setLanguageState(lng);
+    void setLanguage(lng);
+  };
 
   async function togglePush(on: boolean) {
     setError(null);
@@ -98,6 +104,29 @@ export default function Settings() {
         </View>
         <Body muted>{t('settings.privatePreviewsHelp')}</Body>
       </Card>
+      <Card>
+        <Text accessibilityRole="header" style={{ color: theme.text, fontSize: 16 }}>
+          {t('language.title')}
+        </Text>
+        <View
+          accessibilityRole="radiogroup"
+          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}
+        >
+          <Button
+            label={t('language.system')}
+            variant={language === null ? 'primary' : 'secondary'}
+            onPress={() => chooseLanguage(null)}
+          />
+          {LANGUAGES.map((l) => (
+            <Button
+              key={l}
+              label={LANGUAGE_NAMES[l]}
+              variant={language === l ? 'primary' : 'secondary'}
+              onPress={() => chooseLanguage(l)}
+            />
+          ))}
+        </View>
+      </Card>
       <ExportCard />
       <Button
         label={t('settings.signOut')}
@@ -114,3 +143,6 @@ export default function Settings() {
     </Screen>
   );
 }
+
+/** Each language in its own name, so it can be found whatever the current language is. */
+const LANGUAGE_NAMES: Record<Language, string> = { en: 'English', es: 'Español' };

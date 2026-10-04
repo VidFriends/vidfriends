@@ -7,6 +7,7 @@ import {
   MAX_SERVER_PUSH_TARGETS,
   sendFriendRequest,
   testPushTarget,
+  updateMe,
 } from '@vidfriends/contracts';
 import { eq } from 'drizzle-orm';
 import { createServer, type IncomingMessage, type Server } from 'node:http';
@@ -179,6 +180,26 @@ describe('ntfy and Gotify targets (FR-NOTIF-07)', () => {
       expect(res.status, endpoint).toBe(400);
       expect(res.body.error?.details, endpoint).toMatchObject({ fields: { endpoint: reason } });
     }
+  });
+});
+
+describe('push titles in the member language (NFR-I18N-01)', () => {
+  it('stores the language and writes Spanish titles for Spanish members', async () => {
+    const kim = await member();
+    const empty = await kim.client.call(updateMe, { body: {} });
+    expect(empty.status).toBe(400);
+    const { user } = await kim.client.ok(updateMe, { body: { language: 'es' } });
+    expect(user).toMatchObject({ language: 'es', display_name: 'Kim' });
+    const { target } = await kim.client.ok(createPushTarget, {
+      body: { kind: 'ntfy', endpoint: `${base}/es-topic` },
+    });
+    const other = await registerMember(server, admin, { autoFriend: false, displayName: 'Ana' });
+    await other.client.ok(sendFriendRequest, { body: { user_id: kim.user.id } });
+    await waitFor(async () => received.length > 0);
+    expect(received[0]!.body).toBe('Ana quiere ser tu amigo');
+    received = [];
+    await kim.client.ok(testPushTarget, { params: { id: target.id }, body: {} });
+    expect(received[0]!.body).toBe('Notificación de prueba de VidFriends');
   });
 });
 

@@ -29,7 +29,15 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Avatar } from '@/components/avatar';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { SiteFooter } from '@/components/info-page';
-import { formatBytes, formatRelative } from '@/i18n';
+import {
+  formatBytes,
+  formatRelative,
+  LANGUAGES,
+  setLanguage,
+  storedLanguage,
+  type Language,
+} from '@/i18n';
+import { Label } from '@/components/ui/label';
 import { PushCard } from '@/features/notifications/push-card';
 import { PushServersCard } from '@/features/notifications/push-servers-card';
 import { Input } from '@/components/ui/input';
@@ -399,6 +407,7 @@ function DeleteAccountCard() {
 function AppearanceCard() {
   const { t } = useTranslation();
   const [theme, setThemeState] = useState<Theme>(getTheme());
+  const [language, setLanguageState] = useState<Language | null>(storedLanguage());
   const options: Theme[] = ['system', 'light', 'dark'];
   return (
     <Card className="grid gap-3">
@@ -421,9 +430,32 @@ function AppearanceCard() {
           </label>
         ))}
       </fieldset>
+      <div className="grid gap-1.5">
+        <Label htmlFor="language">{t('language.title')}</Label>
+        <select
+          id="language"
+          className="h-9 max-w-xs rounded-md border bg-background px-3 text-sm"
+          value={language ?? 'system'}
+          onChange={(e) => {
+            const v = e.target.value === 'system' ? null : (e.target.value as Language);
+            setLanguageState(v);
+            void setLanguage(v);
+          }}
+        >
+          <option value="system">{t('language.system')}</option>
+          {LANGUAGES.map((l) => (
+            <option key={l} value={l} lang={l}>
+              {LANGUAGE_NAMES[l]}
+            </option>
+          ))}
+        </select>
+      </div>
     </Card>
   );
 }
+
+/** Each language in its own name, so it can be found whatever the current language is. */
+const LANGUAGE_NAMES: Record<Language, string> = { en: 'English', es: 'Español' };
 
 const AVATAR_TYPES = [
   'image/jpeg',

@@ -12,7 +12,7 @@ import * as profile from './service.js';
 
 export const accountHandlers = [
   handler(updateMe, async ({ deps, viewer, body }) => ({
-    user: toSelfUser(await profile.updateDisplayName(deps, viewer, body.display_name)),
+    user: toSelfUser(await profile.updateProfile(deps, viewer, body)),
   })),
   handler(createAvatarUpload, async ({ deps, viewer, body }) =>
     profile.createAvatarUpload(deps, viewer, body.bytes, body.content_type),
