@@ -1,2 +1,0 @@
-DROP TABLE IF EXISTS friends;
-DROP TYPE IF EXISTS friend_status;

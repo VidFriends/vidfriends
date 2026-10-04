@@ -1,7 +1,0 @@
-/vidflow-server
-/tmp/
-.env
-coverage.out
-coverage.html
-*.test
-*.out
