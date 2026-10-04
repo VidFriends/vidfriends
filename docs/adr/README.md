@@ -23,12 +23,13 @@ These records follow the rules in [ADR-0001](0001-record-architecture-decisions.
 | [0013](0013-instance-pairing-and-join-links.md) | HTTPS join links; QR encodes the same URL | Accepted; amended by 0014 and 0018 | Claude (delegated) |
 | [0014](0014-self-host-only-no-public-instance.md) | Self-host only; no public or default instance; no project domain | Accepted | Owner |
 | [0015](0015-bundled-object-store-seaweedfs.md) | Bundle SeaweedFS instead of MinIO; serve `/<bucket>/` unrewritten | Accepted; supersedes part of 0009 | Claude (delegated) |
-| [0016](0016-accepted-residual-security-risks-v0-1.md) | Accept unproxied yt-dlp redirects (optional egress proxy) and operator data access for v0.1 | Accepted | Claude (delegated) |
+| [0016](0016-accepted-residual-security-risks-v0-1.md) | Accept unproxied yt-dlp redirects (optional egress proxy) and operator data access for v0.1 | Accepted; item 1 partly superseded by [0023](0023-bundled-egress-proxy.md) | Claude (delegated) |
 | [0017](0017-single-react-version-pinned-by-expo.md) | One React version for the monorepo, set by the Expo SDK | Accepted | Claude (delegated) |
 | [0018](0018-passkey-only-sign-in.md) | Passkey-only sign-in; no passwords; mobile sign-in by browser hand-off | Accepted | Owner (+ Claude for the mechanism) |
 | [0019](0019-realtime-invalidation-over-sse.md) | Realtime updates: server-sent invalidation hints over Postgres LISTEN/NOTIFY | Accepted | Owner (+ Claude for the mechanism) |
 | [0020](0020-ntfy-and-gotify-push-channels.md) | ntfy and Gotify push channels; UnifiedPush deferred | Accepted | Owner (+ Claude for the mechanism) |
 | [0021](0021-cloudflare-test-instance.md) | Cloudflare test instance: one container behind a Worker, backed up to R2 | Accepted | Owner (+ Claude for the mechanism) |
 | [0022](0022-perceptual-dedup-shares-files-only.md) | Perceptual dedup shares stored files only | Accepted | Owner (+ Claude for the mechanism) |
+| [0023](0023-bundled-egress-proxy.md) | Bundled, optional egress proxy for link downloads | Accepted | Owner (+ Claude for the mechanism) |
 
 **Template for new ADRs:** use the header fields Status, Date, Decided by and Supersedes, then the sections Context, Decision, Alternatives considered, Consequences, and Revisit when.

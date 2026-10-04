@@ -1,6 +1,6 @@
 # ADR-0016: Accept two residual security risks for v0.1 (unproxied yt-dlp redirects; operator can read all data)
 
-- **Status:** Accepted
+- **Status:** Accepted; item 1 partly superseded by [ADR-0023](0023-bundled-egress-proxy.md) (a bundled, optional egress proxy)
 - **Date:** 2026-10-04
 - **Decided by:** Claude under delegation (M5-T7 security review; owner may override at M5-T9 sign-off)
 - **Supersedes:** none. Records the M5 revisit that [TDD §5](../design/TDD.md#5-security-engineering) asked for.
