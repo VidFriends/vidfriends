@@ -24,5 +24,6 @@ These records follow the rules in [ADR-0001](0001-record-architecture-decisions.
 | [0014](0014-self-host-only-no-public-instance.md) | Self-host only; no public or default instance; no project domain | Accepted | Owner |
 | [0015](0015-bundled-object-store-seaweedfs.md) | Bundle SeaweedFS instead of MinIO; serve `/<bucket>/` unrewritten | Accepted; supersedes part of 0009 | Claude (delegated) |
 | [0016](0016-accepted-residual-security-risks-v0-1.md) | Accept unproxied yt-dlp redirects (optional egress proxy) and operator data access for v0.1 | Accepted | Claude (delegated) |
+| [0017](0017-single-react-version-pinned-by-expo.md) | One React version for the monorepo, set by the Expo SDK | Accepted | Claude (delegated) |
 
 **Template for new ADRs:** use the header fields Status, Date, Decided by and Supersedes, then the sections Context, Decision, Alternatives considered, Consequences, and Revisit when.
