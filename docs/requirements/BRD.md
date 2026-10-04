@@ -1,6 +1,6 @@
 # BRD: Business Requirements
 
-- **Status:** Draft v1. Owner review pending (see [Open questions](#7-open-questions)).
+- **Status:** Draft v1. Owner review pending (see [Open questions](#7-open-questions-all-resolved-2026-10-03)).
 - **Owns:** the business problem, outcomes (`BO-*`), stakeholders, business constraints (`BC-*`), and success measures.
 - **Does not own:** product capabilities ([PRD](PRD.md)) or detailed requirements ([SRS](SRS.md)).
 
@@ -46,9 +46,10 @@ People send each other short-form videos (TikTok, Instagram Reels, YouTube Short
 | BC-2 | Low operating cost. It must run on a single small VM or home server. Paid tiers only when usage demands it. | [Owner] "minimal server load", "free tier" |
 | BC-3 | Private-circle product. No public discovery, no public profiles, no strangers' content. | [Owner] + [Legacy] invite-only |
 | BC-4 | Delivery is mostly by AI engineering agents, so specs must be explicit and verifiable | [Owner] this task; [Legacy] evidence |
-| BC-5 | **Downloading third-party platform videos may conflict with those platforms' terms and with copyright.** VidFriends stores copies only for private viewing within an invite-only instance. Copies are never republished and expire per retention policy. The operator is responsible for their instance. | [Decision]. Legal review is an open question, OQ-1. |
+| BC-5 | **Downloading third-party platform videos may conflict with those platforms' terms and with copyright.** VidFriends stores copies only for private viewing within an invite-only instance. Copies are never republished and expire per retention policy. The operator is responsible for their instance. | [Decision]; risk **accepted by owner** 2026-10-03 (OQ-1) |
 | BC-6 | The app is self-hostable, so no feature may depend on a proprietary SaaS that an operator cannot replace. Mobile push via Apple/Google is the accepted exception. | [Legacy] + [Decision] [ADR-0005](../adr/0005-instance-model.md) |
 | BC-7 | App store distribution needs an Apple Developer account (US$99/yr) and a Google Play account (US$25 once) before the mobile milestone | [Decision] [ADR-0004](../adr/0004-mobile-expo.md) |
+| BC-8 | Self-host only. The project operates no public or default instance and owns no domain. | [Owner] 2026-10-03, [ADR-0014](../adr/0014-self-host-only-no-public-instance.md) |
 
 ## 6. Scope at business level
 
@@ -62,13 +63,11 @@ People send each other short-form videos (TikTok, Instagram Reels, YouTube Short
 - Content creation tools beyond simple capture.
 - Multi-tenant hosting of many communities on one deployment.
 
-## 7. Open questions
+## 7. Open questions (all resolved 2026-10-03)
 
-These are owner decisions. Each one has a conservative default that is used until the owner answers.
-
-| ID | Question | Default assumed | Blocks |
+| ID | Question | Owner answer (2026-10-03) | Former default |
 |---|---|---|---|
-| OQ-1 | Is downloading and storing copies of third-party platform videos acceptable for the owner-run instance (ToS and copyright exposure)? | Yes for a private invite-only instance, with retention limits. Link-only mode is available as an instance setting (FR-VID-09). | Public launch of an owner-operated instance (M6), not development |
-| OQ-2 | Licence for the new codebase. Legacy licences were AGPL-3.0 (2026 backend), Apache-2.0 (2025) and an unfiled "MIT" claim. | **AGPL-3.0-only**. It fits a self-hostable server whose modifications should stay open. | M1 (needs a LICENSE file) |
-| OQ-3 | Product and legal name. Legacy used "VidFriends Inc.", "VidFlow Inc.", and the domains `vidfriends.app` and `vidfriends.ai`. | Product "VidFriends"; primary domain `vidfriends.app` (owner-era) | M6 |
-| OQ-4 | Will the owner operate a public signup instance in future, or only private ones? | Private, invite-only | Nothing before M6 |
+| OQ-1 | Is downloading and storing copies of third-party platform videos acceptable for the owner-run instance (ToS and copyright exposure)? | **Accepted:** "comfortable with the risk, its for private groups". Link-only mode stays available (FR-VID-09). | Yes, with retention limits |
+| OQ-2 | Licence for the new codebase. Legacy licences were AGPL-3.0 (2026 backend), Apache-2.0 (2025) and an unfiled "MIT" claim. | **MIT** (LICENSE added in M1-T1) | AGPL-3.0-only |
+| OQ-3 | Product and legal name. Legacy used "VidFriends Inc.", "VidFlow Inc.", and the domains `vidfriends.app` and `vidfriends.ai`. | **Name: VidFriends. No project domain**, because it is self-host only ([ADR-0014](../adr/0014-self-host-only-no-public-instance.md)). | `vidfriends.app` |
+| OQ-4 | Will the owner operate a public instance? | **No public server.** Self-host only ([ADR-0014](../adr/0014-self-host-only-no-public-instance.md)). | Private, invite-only |

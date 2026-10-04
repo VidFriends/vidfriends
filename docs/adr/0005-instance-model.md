@@ -1,6 +1,6 @@
 # ADR-0005: Single-tenant, self-hostable instances with invite-only signup
 
-- **Status:** Accepted (provisional; owner review requested, BRD OQ-4)
+- **Status:** Accepted; **superseded in part by [ADR-0014](0014-self-host-only-no-public-instance.md)** (no owner-run or default instance)
 - **Date:** 2026-10-03
 - **Decided by:** Claude under delegation, reconciling conflicting legacy intent
 

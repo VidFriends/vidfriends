@@ -39,13 +39,13 @@ Agents wrote the 2026 generation: an "AI-agent org" whose commits are co-authore
 | Theme | 2025 (owner-written Worker README) | 2026 (agent-written docs) | Resolution |
 |---|---|---|---|
 | Core promise | "builds users an fyp that only contains videos sent from friends" | "a unified place to find all of your shortform videos sent by your friends" | Same promise. Adopted. |
-| Hosting | Cloudflare free tier at `vidfriends.app`; "privacy focused" | Self-hosted by a trusted friend; invite-only | [ADR-0005](../adr/0005-instance-model.md): single-tenant instance, self-hostable; the owner runs the first instance |
+| Hosting | Cloudflare free tier at `vidfriends.app`; "privacy focused" | Self-hosted by a trusted friend; invite-only | [ADR-0005](../adr/0005-instance-model.md) + [ADR-0014](../adr/0014-self-host-only-no-public-instance.md): single-tenant, **self-host only**, no public or default instance |
 | Share model | Per-recipient link record | Per-recipient `received_videos` (backend, iOS); broadcast or no recipients (vidfriends 2025, Android) | Per-recipient shares ([ADR-0010](../adr/0010-share-centric-social-model.md)) |
 | Feed | Inbox of received videos | Received FYP plus a global "all videos on server" feed | Received-only; **no global feed** |
 | Engagement | One reaction or reply per share | Public-to-server likes, comments, reactions | Private to the share conversation ([ADR-0010](../adr/0010-share-centric-social-model.md)) |
 | Media | Server-side download to R2 | yt-dlp download to S3/MinIO plus direct upload | Both, through a durable job queue ([ADR-0009](../adr/0009-media-ingestion-and-storage.md)) |
 | Notifications | Web Push (payload-less) plus a pull inbox | ntfy/Gotify/FCM/APNs plus WebSocket (all dead) | In-app notifications plus Web Push, then Expo push ([ADR-0011](../adr/0011-notifications.md)) |
-| Monetisation | "no ads, may eventually charge a subscription" | Open source (AGPL), no telemetry | No ads, no telemetry; licence is an open owner decision ([BRD](../requirements/BRD.md) OQ-2) |
+| Monetisation | "no ads, may eventually charge a subscription" | Open source (AGPL), no telemetry | No ads, no telemetry; **MIT** licence (owner, [BRD](../requirements/BRD.md) OQ-2) |
 
 ## 4. Lessons (referenced by ID from the design docs)
 

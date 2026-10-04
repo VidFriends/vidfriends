@@ -39,7 +39,7 @@
 | Working features | None. No legacy attempt worked end to end ([AUDIT §2](legacy/AUDIT.md#2-what-each-attempt-contributes)). | All Must requirements in the SRS verified |
 | Specs | This document set (Draft v1) | Maintained alongside code |
 | Tests / CI | None | CI gate per NFR-MAINT-02; E2E for J-1..J-8 |
-| Deployments | Unknown legacy deployments may exist (see M0-T3) | The owner instance runs v1, and self-hosters have a runbook |
+| Deployments | Unknown legacy deployments may exist (see M0-T3) | v1 released as self-hostable software; the owner's private instance runs it; operators have a runbook |
 
 ## 3. Constraints, decisions, assumptions, open questions
 
@@ -54,25 +54,31 @@ BC-1..BC-7 in the [BRD](requirements/BRD.md#5-business-constraints): no ads or t
 | Web stack: React, Vite, TS, Tailwind, shadcn/ui, Radix, TanStack Query and Router | **Owner** | [ADR-0003](adr/0003-web-client-stack.md) |
 | Mobile via Expo instead of native apps | **Owner** (accepted Claude's recommendation) | [ADR-0004](adr/0004-mobile-expo.md) |
 | Document-set governance | Claude (delegated) | [ADR-0001](adr/0001-record-architecture-decisions.md) |
-| Single-tenant, self-hostable, invite-only instances | Claude (delegated, **owner review requested**) | [ADR-0005](adr/0005-instance-model.md) |
+| Single-tenant, self-hostable, invite-only instances | Claude (delegated); default-instance clause superseded by ADR-0014 | [ADR-0005](adr/0005-instance-model.md) |
 | Zod contracts → OpenAPI; snake_case JSON; `/api/v1` | Claude (delegated) | [ADR-0006](adr/0006-api-contract-first.md) |
 | Backend: Node + Hono + Postgres + Drizzle + pg-boss; separate worker | Claude (delegated) | [ADR-0007](adr/0007-backend-stack.md) |
 | Opaque DB sessions (cookie for web, bearer for mobile) | Claude (delegated) | [ADR-0008](adr/0008-authentication-sessions.md) |
-| Download and host media through durable jobs; private S3 with presigned URLs | Claude (delegated, **legal flag OQ-1**) | [ADR-0009](adr/0009-media-ingestion-and-storage.md) |
+| Download and host media through durable jobs; private S3 with presigned URLs | Claude (delegated); legal risk **accepted by owner** (OQ-1) | [ADR-0009](adr/0009-media-ingestion-and-storage.md) |
 | Share-centric model; private conversations; no global feed | Claude (delegated) | [ADR-0010](adr/0010-share-centric-social-model.md) |
 | In-app + Web Push + Expo Push; polling, no realtime | Claude (delegated) | [ADR-0011](adr/0011-notifications.md) |
 | pnpm + Turborepo monorepo layout | Claude (delegated) | [ADR-0012](adr/0012-monorepo-and-tooling.md) |
-| HTTPS join links; QR encodes the same URL | Claude (delegated) | [ADR-0013](adr/0013-instance-pairing-and-join-links.md) |
+| HTTPS join links; QR encodes the same URL | Claude (delegated); amended by ADR-0014 | [ADR-0013](adr/0013-instance-pairing-and-join-links.md) |
+| Self-host only: no public or default instance, no project domain; licence MIT; name VidFriends | **Owner** (2026-10-03) | [ADR-0014](adr/0014-self-host-only-no-public-instance.md), [BRD §7](requirements/BRD.md#7-open-questions-all-resolved-2026-10-03) |
 
 ### 3.3 Assumptions (owner may overturn)
-- **A-1:** Licence is AGPL-3.0-only (BRD OQ-2).
+
+The numbering is kept stable. A-1 (licence) and A-4 (default instance) were resolved by the owner on 2026-10-03 and removed.
+
 - **A-2:** No email is collected; password recovery is admin-assisted (BR-ACCT-4).
 - **A-3:** Scale is ≤ 50 users per instance. All performance numbers marked † are proposals.
-- **A-4:** The owner will run the first instance at `vidfriends.app` (BRD OQ-3).
 - **A-5:** Expo push relay is acceptable (BC-6 exception).
 
 ### 3.4 Open questions
-See [BRD §7](requirements/BRD.md#7-open-questions). **None blocks M1–M4.** OQ-1 (legal stance on downloading) and OQ-3 (name and domain) block the **public alpha in M5**. OQ-2 (licence) is needed in M1, and assumption A-1 is used until the owner answers.
+**None open.** The owner resolved OQ-1..OQ-4 on 2026-10-03 ([BRD §7](requirements/BRD.md#7-open-questions-all-resolved-2026-10-03)):
+- Download risk accepted for private groups.
+- Licence is MIT.
+- Name is VidFriends, with no project domain.
+- There will be no public server ([ADR-0014](adr/0014-self-host-only-no-public-instance.md)).
 
 ### 3.5 Resolved conflicts between legacy sources
 
@@ -137,8 +143,8 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 | M0-T1 Transfer `vidshare` and `vidfriends` into the `VidFriends` org | ✅ | `gh repo list VidFriends` shows both (2026-10-03) |
 | M0-T2 Merge all seven histories into this repo, tag `legacy-code-snapshot`, remove code, write docs | ✅ | Tag `legacy-code-snapshot`; this document set; [ADR-0002](adr/0002-consolidate-repos-and-greenfield-reset.md) |
 | M0-T3 **Owner:** decommission any running legacy deployment (2025 Worker, 2026 compose stacks) and never reuse the committed VAPID key ([AUDIT §5](legacy/AUDIT.md#5-security-follow-ups-that-apply-outside-this-repository)) | ⬜ | Owner confirms no legacy service is reachable |
-| M0-T4 **Owner:** archive the six superseded repos (`vidshare`, `vidfriends-backend`, `-web`, `-ios`, `-android`, `VidFriends-iOS-Android`) after reviewing this repo | ⬜ | `gh repo view … --json isArchived` returns true for each |
-| M0-T5 **Owner:** review the provisional decisions (ADR-0005, ADR-0009 legal) and answer OQ-1..OQ-4 | ⬜ | Answers recorded in BRD §7; ADR statuses updated |
+| M0-T4 Archive the six superseded repos (`vidshare`, `vidfriends-backend`, `-web`, `-ios`, `-android`, `VidFriends-iOS-Android`); close the 35 obsolete Dependabot PRs; reduce this repo to the single branch `main` | ✅ | Done 2026-10-03 at the owner's request. `gh repo list VidFriends` shows all six `archived=true`; only `main` remains here. Human-authored PR vidfriends-android#2 was left open in the archive, and its work is tagged `legacy/vidfriends-android-2026/vid-503-fix`. | `gh repo view … --json isArchived` returns true for each |
+| M0-T5 Owner answers OQ-1..OQ-4 and reviews provisional decisions | ✅ | BRD §7 answers; ADR-0014; ADR-0005/0009/0013 status lines updated |
 
 ### M1: Foundations and accounts ⬜ (next)
 
@@ -150,11 +156,11 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 
 **Prerequisites:**
 - None technical.
-- The owner should enable branch protection on `main` when CI lands (M1-T2), and confirm or override the licence assumption A-1.
+- The owner should enable branch protection on `main` when CI lands (M1-T2).
 
 | Task | Objective | References | Depends on | Completion check |
 |---|---|---|---|---|
-| M1-T1 Monorepo scaffold | pnpm workspace + Turborepo; `apps/server`, `apps/web`, `packages/{contracts,api-client,config,test-utils}`; shared tsconfig, ESLint (jsx-a11y, import/no-cycle) and Prettier; LICENSE (A-1); root README dev instructions | ADR-0012, TDD §1 | – | `pnpm install && pnpm build && pnpm lint && pnpm typecheck` succeed locally and in CI |
+| M1-T1 Monorepo scaffold | pnpm workspace + Turborepo; `apps/server`, `apps/web`, `packages/{contracts,api-client,config,test-utils}`; shared tsconfig, ESLint (jsx-a11y, import/no-cycle) and Prettier; MIT LICENSE (BRD OQ-2); root README dev instructions | ADR-0012, TDD §1 | – | `pnpm install && pnpm build && pnpm lint && pnpm typecheck` succeed locally and in CI |
 | M1-T2 CI pipeline | GitHub Actions on PR and `main`: static, unit, contract, API integration (Postgres + MinIO services), Playwright (Chromium), Docker build, Trivy (blocking on fixable criticals), migration-immutability check, Dependabot or Renovate config | NFR-MAINT-02, NFR-SEC-07, NFR-REL-03, TDD §7 | T1 | Workflow green on a PR; a deliberately failing test blocks merge |
 | M1-T3 Contracts and OpenAPI | Error envelope, pagination schema, route-definition helper with `auth` level; `GET /instance`; OpenAPI generation script and CI drift check; typed client in `api-client` | ADR-0006, LLD §3, NFR-MAINT-01 | T1 | `pnpm --filter contracts gen` output is committed; CI fails when it is stale (verified by a test PR) |
 | M1-T4 Server skeleton | Env config schema with secret checks; Hono app with the middleware chain from SDD §2 (request id, pino with redaction, security headers and CSP, IP rate limit, error mapper); `/healthz`, `/readyz`; SPA static serving with fallback; `ROLE` entrypoint; graceful shutdown | SDD §1–2, TDD §3, LLD §5, NFR-SEC-03/04/06, NFR-OPS-02/03, NFR-REL-02, NFR-PRIV-02 | T3 | Unit tests: config rejects default and short secrets; log redaction; API test: security headers present, `/readyz` fails when the DB is down |
@@ -225,7 +231,7 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 
 **Goal:** an operator can run the instance safely. The owner's alpha group uses it.
 **Requirements:** FR-ACCT-03, 04(S); FR-VID-06; FR-ADM-01..05 (UI); NFR-REL-04, 05; NFR-DATA-01; NFR-OPS-01, 03 (metrics), 04; NFR-PERF-01.
-**Prerequisites:** M4. **Owner answers OQ-1 and OQ-3 before the public alpha.**
+**Prerequisites:** M4. The alpha is a **private** instance run by the owner for their own group. There is no public launch ([ADR-0014](adr/0014-self-host-only-no-public-instance.md)).
 
 | Task | Objective | Completion check |
 |---|---|---|
@@ -237,18 +243,18 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 | M5-T6 Fresh-VM deploy | Runbook from a blank VM to a claimed instance in ≤ 30 min (BO-4) | Executed and timed by someone (or an agent) following only the docs |
 | M5-T7 Load and security review | k6 at 50 VUs (NFR-PERF-01); threat-model review against TDD §5; dependency audit | Report committed under `docs/reports/`; issues fixed or accepted in an ADR |
 | M5-T8 Operator and user guides | Self-hosting guide, privacy disclosure, member help pages | Docs reviewed against the deployed alpha |
-| M5-T9 Alpha release v0.1.0 | Owner instance live; alpha group onboarded; BO metrics collection plan (manual, privacy-preserving) | Owner sign-off |
+| M5-T9 Alpha release v0.1.0 | Owner's private self-hosted instance live; alpha group onboarded; BO metrics collection plan (manual, privacy-preserving) | Owner sign-off |
 
 ### M6: Mobile apps (Expo) ⬜
 
 **Goal:** iOS and Android apps with share-sheet intake and push.
 **Requirements:** FR-PAIR-03, 04 (app links); FR-NOTIF-03; FR-MOB-01..03; NFR-A11Y-02; NFR-COMPAT-02.
-**Prerequisites:** M4 (stable API v1); the owner has Apple and Google developer accounts (BC-7); the default-instance domain is decided (OQ-3). Detailed tasks are written when M4 closes. The high-level tasks are:
+**Prerequisites:** M4 (stable API v1); the owner has Apple and Google developer accounts (BC-7). There is no default instance or domain ([ADR-0014](adr/0014-self-host-only-no-public-instance.md)). Detailed tasks are written when M4 closes. The high-level tasks are:
 
 1. Expo app scaffold in the monorepo (Metro workspace config, shared `api-client`).
-2. Pairing (scan, paste, default instance) and secure storage.
+2. Pairing (in-app QR scan, paste) and secure storage.
 3. Authentication, feed player (expo-video), lists, send, friends, conversation.
-4. Share intent (iOS extension, Android intents), push (expo-notifications), deep and app links for the default domain.
+4. Share intent (iOS extension, Android intents), push (expo-notifications). There are no Universal or App Links (ADR-0014).
 5. Maestro E2E for J-2..J-5; accessibility audit.
 6. EAS build, TestFlight and Play internal track.
 
@@ -278,14 +284,14 @@ Not scheduled. Each item needs a PRD update and, where architectural, an ADR bef
 
 | ID | Risk | Likelihood / impact | Mitigation | Trigger to revisit |
 |---|---|---|---|---|
-| R-1 | Legal or ToS exposure from downloading platform media | M / H | Private instances, retention, `link_download_enabled` switch, owner decision OQ-1 | Takedown notice or owner legal advice |
+| R-1 | Legal or ToS exposure from downloading platform media | M / H | Private instances, retention, `link_download_enabled` switch, risk accepted by owner (OQ-1, 2026-10-03) | Takedown notice or owner legal advice |
 | R-2 | yt-dlp breakage when platforms change | H / M | Pinned plus automated bumps, link_only fallback, nightly live smoke test | Smoke test failing for more than 3 days |
 | R-3 | Another restart through scope drift or unverifiable "done" claims | M / H | This roadmap + AGENTS.md rules + E2E-gated exits (NFR-MAINT-03) | Any milestone closed without linked CI evidence |
 | R-4 | Expo share-extension or monorepo friction | M / M | Spike at the start of M6; fall back to native share-extension module | Spike fails |
 | R-5 | Mobile push depends on the Expo service | L / M | In-app list is authoritative; operator can disable | Expo policy change |
 | R-6 | Storage growth on small hosts | M / M | Quotas, retention, external S3 option | Instance > 80% disk |
 | R-7 | Leaked historical secrets (VAPID key, dev JWT) used against old deployments | L / M | M0-T3 | – |
-| R-8 | Provisional ADR-0005 overturned (e.g. owner wants hosted multi-tenant) | L / H | Single-tenant design keeps tenancy out of the schema; a multi-tenant layer would be a new ADR | Owner decision |
+| R-8 | Onboarding friction without a default instance (users must scan or paste) | M / M | In-app QR scanner, join-page "open in app" hint, clear operator docs (ADR-0014) | Alpha feedback |
 
 ## 7. Next actionable milestone
 
@@ -293,11 +299,12 @@ Not scheduled. Each item needs a PRD update and, where architectural, an ADR bef
 - **Start with** M1-T1, then M1-T2 and M1-T3 in parallel.
 - **Prerequisites:**
   - Read AGENTS.md, this roadmap, SRS §1.1–1.3, FRD §2–3, ADR-0003/0006/0007/0008/0012, SDD §1–3, TDD §1/§3/§7, and LLD §2–3/§5.
-  - Owner: confirm licence (A-1); enable branch protection once CI exists.
+  - Owner: enable branch protection once CI exists.
 - **Verification:** M1-T11 specs (`setup.spec.ts`, `join.spec.ts`) and all M1 API tests are green in CI on `main`, and the authorization matrix covers all M1 routes.
 
 ## 8. Change log
 
 | Date | Change |
 |---|---|
+| 2026-10-03 | Owner decisions recorded (OQ-1..4 → ADR-0014, MIT); old repos archived; Dependabot PRs closed; single `main` branch (M0-T4/T5 ✅). |
 | 2026-10-03 | Roadmap created during the consolidation of seven legacy repos (M0). No previous authoritative roadmap existed ([AUDIT §2](legacy/AUDIT.md#2-what-each-attempt-contributes)). |
