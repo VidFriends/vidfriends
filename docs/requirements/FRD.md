@@ -147,6 +147,14 @@ stateDiagram-v2
 | BR-FRND-7 | A member can send at most **30 friend requests per 24 hours** (spam control). |
 | BR-FRND-8 | User search is by username prefix and display-name substring. It requires at least 2 characters and returns at most 20 results. It excludes the caller, users who blocked the caller, and suspended users. Results show only username, display name, avatar and relationship state. |
 
+
+**Groups of friends** (FR-FRND-06)
+
+| ID | Rule |
+|---|---|
+| BR-GRP-1 | A member can keep up to 20 named groups (names of 1–40 characters, unique per member regardless of case) of up to 20 members each. Members must be the owner's current friends when the group is saved. Groups are private to their owner. |
+| BR-GRP-2 | A member who stops being a friend (removed, blocked, suspended or deleted) is left out of the group wherever it is shown or used; the group itself remains. |
+| BR-GRP-3 | Choosing a group on Send selects its members (at most 20 recipients per send, FR-SHR-01). Sending still creates one share and one private conversation per recipient ([ADR-0010](../adr/0010-share-centric-social-model.md)); recipients never see who else was in the group. |
 ## 5. Videos (media items)
 
 A **Video** is an immutable media record on the instance. It is created when a member adds a link or uploads a file. Videos are never browsable on their own; they are visible only through shares (BR-SHR-6).

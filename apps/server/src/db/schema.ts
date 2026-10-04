@@ -129,6 +129,39 @@ export const inviteRedemptions = pgTable(
   (t) => [primaryKey({ columns: [t.inviteId, t.userId] })],
 );
 
+/** A member's named group of friends for sending to several at once (BR-GRP-1..3). */
+export const friendGroups = pgTable(
+  'friend_groups',
+  {
+    id: uuid('id').primaryKey(),
+    ownerId: uuid('owner_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('friend_groups_owner_name_key').on(t.ownerId, sql`lower(${t.name})`),
+    check('friend_groups_name_length', sql`char_length(${t.name}) between 1 and 40`),
+  ],
+);
+
+export const friendGroupMembers = pgTable(
+  'friend_group_members',
+  {
+    groupId: uuid('group_id')
+      .notNull()
+      .references(() => friendGroups.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.groupId, t.userId] }),
+    index('friend_group_members_user_idx').on(t.userId),
+  ],
+);
+
 /** One row per unordered pair (BR-FRND-2). */
 export const relationships = pgTable(
   'relationships',

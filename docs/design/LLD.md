@@ -76,6 +76,13 @@ erDiagram
 - `created_at`
 - PK (`invite_id`, `user_id`)
 
+**`friend_groups`** (BR-GRP-1)
+- `id` PK, `owner_id` FK users CASCADE, `name` text (1–40), `created_at`
+- UNIQUE (`owner_id`, lower(`name`))
+
+**`friend_group_members`**
+- `group_id` FK friend_groups CASCADE, `user_id` FK users CASCADE; PK (`group_id`, `user_id`)
+
 **`relationships`** (one row per pair, BR-FRND-2)
 - `user_low`, `user_high`: FK users CASCADE, CHECK `user_low < user_high`, PK (`user_low`, `user_high`)
 - `state` text CHECK in (`none`, `pending`, `accepted`, `blocked`). `none` is a tombstone that only carries a decline cooldown (BR-FRND-4): `requested_by` then names the declined requester and `cooldown_until` when they may ask again. Migration 0001.
@@ -310,6 +317,7 @@ LIMIT :n + 1;
 | `POST /friends/requests` | M | `{user_id}` → `{relationship}` | `cooldown`, `blocked` (as 404), `already_friends`, `rate_limited` | FRND-02,04 |
 | `POST /friends/requests/{user_id}/accept` / `…/decline` / `DELETE /friends/requests/{user_id}` (cancel) | M | → `{relationship}` / 204 | `not_found` | FRND-02 |
 | `DELETE /friends/{user_id}` | M | → 204 | – | FRND-02 |
+| `GET /friend-groups`, `POST /friend-groups`, `PATCH /friend-groups/{id}`, `DELETE /friend-groups/{id}` | M (owner only) | list → `{items: FriendGroup[]}` (`id, name, members: PublicUser[]`, current friends only); create `{name, member_ids}` → `{group}`; update `{name?, member_ids?}` (replaces the members) → `{group}`; delete → 204 | `validation_failed` (`not_a_friend`), `too_many_groups`, `group_name_taken`, 404 | FRND-06 |
 | `PUT /blocks/{user_id}`, `DELETE /blocks/{user_id}` | M | → 204 | – | FRND-03 |
 | `POST /videos` | M | `{url}` → `{video:{id, state, title?…}}` (201 new, 200 reused) | `url_not_allowed`, `quota_exceeded` | VID-01,02,07 |
 | `POST /uploads` | M | `{bytes, content_type}` → `{upload_id, put_url \| multipart:{part_urls, …}, expires_at}` | `too_large`, `quota_exceeded`, `storage_full` | VID-03 |

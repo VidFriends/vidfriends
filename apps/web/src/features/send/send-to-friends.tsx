@@ -1,6 +1,12 @@
 // Send, step 2 (WF-SHR-1): choose friends, optional note, per-recipient results.
 import { useApiMutation, useApiQuery } from '@vidfriends/api-client/react';
-import { listFriends, sendShares, type Video } from '@vidfriends/contracts';
+import {
+  listFriendGroups,
+  listFriends,
+  MAX_GROUP_MEMBERS,
+  sendShares,
+  type Video,
+} from '@vidfriends/contracts';
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +19,7 @@ import { errorMessage } from '@/lib/errors';
 export function SendToFriends({ video }: { video: Video }) {
   const { t } = useTranslation();
   const friends = useApiQuery(listFriends);
+  const groups = useApiQuery(listFriendGroups);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [note, setNote] = useState('');
   // One key per composed send: retries of the same send are idempotent (WF-SHR-1).
@@ -82,6 +89,28 @@ export function SendToFriends({ video }: { video: Video }) {
       ) : (
         <fieldset className="grid gap-2">
           <legend className="mb-1 text-sm font-medium">{t('sendStep2.chooseFriends')}</legend>
+          {(groups.data?.items ?? []).some((g) => g.members.length) && (
+            <div className="flex flex-wrap gap-2" role="group" aria-label={t('groups.title')}>
+              {(groups.data?.items ?? [])
+                .filter((g) => g.members.length)
+                .map((g) => (
+                  <Button
+                    key={g.id}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // BR-GRP-3: a group adds its members to the selection (20 at most per send).
+                      const next = new Set(selected);
+                      for (const m of g.members) if (next.size < MAX_GROUP_MEMBERS) next.add(m.id);
+                      setSelected(next);
+                    }}
+                  >
+                    {t('groups.add', { name: g.name, count: g.members.length })}
+                  </Button>
+                ))}
+            </div>
+          )}
           {items.map((f) => (
             <label key={f.user.id} className="flex items-center gap-3 rounded-md border p-2">
               <input

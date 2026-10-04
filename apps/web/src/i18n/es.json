@@ -75,7 +75,9 @@
     "reauth_required": "Primero confirma con tu llave de acceso.",
     "last_passkey": "No puedes eliminar tu última llave de acceso. Primero añade otra.",
     "too_many_passkeys": "Ya tienes 10 llaves de acceso. Primero elimina una.",
-    "too_many_push_targets": "Ya tienes 5 destinos de ntfy o Gotify. Primero elimina uno."
+    "too_many_push_targets": "Ya tienes 5 destinos de ntfy o Gotify. Primero elimina uno.",
+    "too_many_groups": "Ya tienes 20 grupos. Elimina uno primero.",
+    "group_name_taken": "Ya tienes un grupo con este nombre."
   },
   "fieldErrors": {
     "required": "Obligatorio.",
@@ -86,7 +88,8 @@
     "not_an_image": "Ese archivo no es una imagen que podamos usar.",
     "not_a_video": "Ese archivo no es un video que podamos usar.",
     "push_endpoint_not_allowed": "Usa una dirección https:// de internet. Los servidores de tu red doméstica solo funcionan si el operador del servidor los permite.",
-    "invalid_url": "Esa no es una dirección web válida."
+    "invalid_url": "Esa no es una dirección web válida.",
+    "not_a_friend": "Solo tus amigos actuales pueden estar en un grupo."
   },
   "setup": {
     "title": "Configura tu servidor de VidFriends",
@@ -700,5 +703,21 @@
   "language": {
     "title": "Idioma",
     "system": "Idioma del navegador"
+  },
+  "groups": {
+    "title": "Grupos",
+    "help": "Grupos de amigos a los que envías a menudo, como la familia o un equipo. Al elegir un grupo en Enviar se seleccionan todos sus miembros; cada persona sigue teniendo su propia conversación privada.",
+    "noMembers": "Todavía sin miembros",
+    "new": "Nuevo grupo",
+    "edit": "Editar",
+    "name": "Nombre del grupo",
+    "members": "Miembros (hasta {{max}})",
+    "save": "Guardar grupo",
+    "saved": "Grupo guardado.",
+    "delete": "Eliminar grupo",
+    "deleted": "Grupo eliminado.",
+    "add_one": "{{name}} ({{count}} amigo)",
+    "add_other": "{{name}} ({{count}} amigos)",
+    "add_many": "{{name}} ({{count}} amigos)"
   }
 }

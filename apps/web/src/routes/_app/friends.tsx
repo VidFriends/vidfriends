@@ -25,6 +25,7 @@ import { Avatar } from '@/components/avatar';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
+import { GroupsCard } from '@/features/friends/groups-card';
 import {
   Dialog,
   DialogClose,
@@ -137,6 +138,7 @@ function FriendsPage() {
         empty={t('friends.noFriends')}
         route={listFriends}
       />
+      <GroupsCard />
       <ListCard
         title={t('friends.outgoing')}
         empty={t('friends.noOutgoing')}

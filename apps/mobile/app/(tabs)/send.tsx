@@ -6,7 +6,9 @@ import {
   addVideo,
   getSent,
   getVideo,
+  listFriendGroups,
   listFriends,
+  MAX_GROUP_MEMBERS,
   sendShares,
   type Relationship,
   type Video,
@@ -41,6 +43,7 @@ export default function Send() {
   const [result, setResult] = useState<string | null>(null);
   const idempotency = useRef(newKey());
   const friends = useApiQuery(listFriends);
+  const groups = useApiQuery(listFriendGroups);
 
   // Poll the video while it is fetched or processed (FR-VID-02/04).
   const pending = video && ['queued', 'fetching', 'processing'].includes(video.state);
@@ -189,6 +192,22 @@ export default function Send() {
             {t('send.pickFriends')}
           </Text>
           {friendList.length === 0 ? <Body muted>{t('send.noFriends')}</Body> : null}
+          {/* BR-GRP-3: a group selects its members (managed on the web, Friends page). */}
+          {(groups.data?.items ?? [])
+            .filter((g) => g.members.length)
+            .map((g) => (
+              <Button
+                key={g.id}
+                label={t('groups.add', { name: g.name, count: g.members.length })}
+                variant="secondary"
+                testID={`send-group-${g.id}`}
+                onPress={() => {
+                  const next = new Set(picked);
+                  for (const m of g.members) if (next.size < MAX_GROUP_MEMBERS) next.add(m.id);
+                  setPicked(next);
+                }}
+              />
+            ))}
           {friendList.map(({ user }) => {
             const on = picked.has(user.id);
             const name = user.display_name || user.username;

@@ -280,5 +280,9 @@
   "language": {
     "title": "Language",
     "system": "Phone language"
+  },
+  "groups": {
+    "add_one": "Group: {{name}} ({{count}} friend)",
+    "add_other": "Group: {{name}} ({{count}} friends)"
   }
 }

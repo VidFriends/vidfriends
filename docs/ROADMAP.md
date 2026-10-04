@@ -291,13 +291,13 @@ Each item needs a PRD update and, where architectural, an ADR before work starts
 | M7-T13 Offline downloads (mobile) | `video.media_bytes` in the API; the app downloads a share's video into private storage (progress, cancel), lists it under More → Downloads with a 1/2/5 GB cap, plays it offline, removes copies whose share is gone (BR-OFF-3) and all copies on sign-out or server change (BR-OFF-4) | FR-MOB-04, BR-OFF-1..4, owner answer 2026-10-04 | Unit `apps/mobile/src/features/offline/plan.test.ts`; API `media.test.ts` (`media_bytes`); Maestro `offline.yaml`: download, airplane mode, play from Downloads <br>**✅** [PR #124](https://github.com/VidFriends/vidfriends/pull/124): unit, API and Maestro `offline.yaml` green in CI |
 | M7-T14 Spanish (web and app) | Spanish catalogs for the web app and the mobile app; language from the browser or phone, override in Settings (per device); `lang` on the web document; a parity test keeps keys and placeholders identical | NFR-I18N-01, owner answer 2026-10-04 | `apps/web/src/i18n/catalog.test.ts`, `apps/mobile/src/i18n/catalog.test.ts` green; Playwright `e2e/tests/language.spec.ts` (Spanish browser, switch in Settings, back to following the browser) |
 | M7-T15 Push titles in the member's language | `users.language` (migration `0007_user_language`), `PATCH /me {language}` and `SelfUser.language`; web and app report the language in use; Web Push, Expo, ntfy and Gotify titles (and the private-previews and test titles) in English or Spanish | NFR-I18N-01, owner answer 2026-10-04 | `apps/server/test/push-servers.test.ts` (Spanish titles through ntfy); Playwright `language.spec.ts` checks the account records Spanish |
+| M7-T16 Groups of friends (group sends) | `friend_groups` and `friend_group_members` (migration `0008_friend_groups`), CRUD API (owner-only, authz matrix), Friends → Groups card on the web, group buttons on Send (web and app) that select the members; one share per recipient as before (ADR-0010) | FR-FRND-06, BR-GRP-1..3, owner answer 2026-10-04 | `apps/server/test/groups.test.ts`; authz matrix `updateFriendGroup`/`deleteFriendGroup`; Playwright `e2e/tests/groups.spec.ts` |
 
 Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7..T9, offline downloads to M7-T13):
 
 | Item | Source |
 |---|---|
 | Collections (CAP-14) | 2026 web/backend |
-| Group sends | ADR-0010 alternative |
 | UnifiedPush channel (needs a native connector in the app; ADR-0020) | ADR-0011 |
 | Perceptual dedup | 2026 backend, redesigned per L-19 |
 | More languages | NFR-I18N-01 |
@@ -319,7 +319,7 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7
 ## 7. Next actionable milestone
 
 **M7: post-v1 backlog.** Data export and passkey-only sign-in are done; realtime updates (M7-T7..T9) are next, chosen by the owner on 2026-10-04.
-- **Now (agents):** M7-T14 Spanish, then M7-T15 push titles in the member's language (owner's choices, 2026-10-04); then the next backlog item the owner schedules.
+- **Now (agents):** M7-T14/T15 Spanish and localised push titles, then M7-T16 groups of friends (owner's choices, 2026-10-04); then the next backlog item the owner schedules.
 - **Owner:** check passkey sign-in on a real Android phone and iPhone against an HTTPS instance (M7-T6); enable branch protection on `main` (M1-T2); Apple and Google developer accounts for store builds (M6-T7). The alpha (M5-T9) is postponed by the owner.
 - **Verification:** each item's completion check in §5, with the CI run or record linked in the task row.
 
@@ -328,6 +328,7 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7
 | Date | Change |
 |---|---|
 | 2026-10-04 | M7-T7..T9 realtime updates ✅, merged in [PR #122](https://github.com/VidFriends/vidfriends/pull/122) with CI green, including the Android Maestro suite. |
+| 2026-10-04 | Owner answer (multiple choice): next, **group sends**: named groups of friends picked on Send (M7-T16, FR-FRND-06, BR-GRP-1..3); still one share per recipient. |
 | 2026-10-04 | Owner answer (multiple choice): next, **push titles in the member's language** (M7-T15). |
 | 2026-10-04 | M7-T13 offline downloads ✅, merged in [PR #124](https://github.com/VidFriends/vidfriends/pull/124) with the Android Maestro offline flow green. |
 | 2026-10-04 | Owner answer (multiple choice): after offline downloads, a **second language**: Spanish for the web app and the app (M7-T14, NFR-I18N-01). |
