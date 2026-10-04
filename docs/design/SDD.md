@@ -71,8 +71,9 @@ Three layers, all server-side:
 | `notify.dispatch` | Notification inserted | 4 | `notification_id` plus `push_target_id` sent-log | 5 (exponential) | FR-NOTIF-02/03 |
 | `retention.purge` | Cron daily 03:30 local, plus manual | singleton | Recomputes eligibility at run time | – | FR-VID-06 |
 | `storage.sweep` | Cron weekly | singleton | Lists bucket prefixes against the DB | – | NFR-REL-05 |
-| `session.cleanup` | Cron hourly | singleton | Deletes expired rows | – | BR-SES-1 |
+| `session.cleanup` | Cron hourly | singleton | Deletes expired rows; expires data exports older than 7 days and deletes their files | – | BR-SES-1, FR-ACCT-05 |
 | `account.purge_media` | Account deleted | 1 | `user_id` | 5 | FR-ACCT-03 |
+| `account.export` | Export requested | 1 | `export_id` | 2 | FR-ACCT-05 |
 
 † Proposed defaults, configurable by env.
 

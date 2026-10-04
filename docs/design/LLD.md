@@ -27,6 +27,7 @@ erDiagram
   users ||--o{ push_targets : registers
   users ||--o{ notification_prefs : sets
   users ||--o{ audit_log : acts
+  users ||--o{ exports : requests
   uploads }o--|| users : by
 ```
 
@@ -212,6 +213,14 @@ erDiagram
 - `created_at`
 - Index (`created_at` DESC), (`actor_id`), (`action`). The table is append-only: the application role has no UPDATE or DELETE grant except for the 365-day purge job.
 
+**`exports`** (FR-ACCT-05, WF-ACCT-4)
+- `id` PK, `user_id` FK CASCADE
+- `include_media` boolean NOT NULL
+- `state` text NOT NULL, CHECK in (`queued`, `building`, `ready`, `failed`, `expired`)
+- `object_key` text NULL (`exports/{user_id}/{id}.zip` once ready), `bytes` bigint NULL, `error` text NULL
+- `created_at`, `ready_at` NULL, `expires_at` NULL (ready + 7 days)
+- Index (`user_id`, `created_at` DESC). At most one row per user in `queued`/`building` (partial unique index).
+
 pg-boss manages its own `pgboss.*` schema.
 
 ### Key queries
@@ -259,6 +268,9 @@ LIMIT :n + 1;
 | `POST /me/password` | M | `{current_password, new_password}` → 204 | `invalid_credentials` | ACCT-02 |
 | `DELETE /me` | M | `{password}` → 202 | `last_admin`, `invalid_credentials` | ACCT-03 |
 | `GET /me/sessions`, `DELETE /me/sessions/{id}` | M | list / revoke | – | ACCT-04 |
+| `POST /me/exports` | M | `{include_media}` → 202 `{export}`; one in progress, 3 per 24 h | `export_in_progress`, `rate_limited` | ACCT-05 |
+| `GET /me/exports` | M | → `{items: Export[]}` newest first | – | ACCT-05 |
+| `GET /me/exports/{id}/download` | M | → 302 to a signed URL (≤ 15 min) while ready; owner only | 404 | ACCT-05 |
 | `POST /invites`, `GET /invites`, `DELETE /invites/{id}` | M/A | `{max_uses?, expires_in_days?, auto_friend?}` → `{invite, code, join_url}` (code returned once) | `forbidden` if members cannot invite | INV-01..03 |
 | `GET /users?q=` | M | → `{items:[{user:{id, username, display_name, avatar_url}, state, since}]}`; `state` ∈ `none`, `friends`, `request_sent`, `request_received`, `blocked` | `query_too_short` | FRND-01 |
 | `GET /friends`, `GET /friends/requests?direction=in\|out`, `GET /blocks` | M | lists | – | FRND-05 |

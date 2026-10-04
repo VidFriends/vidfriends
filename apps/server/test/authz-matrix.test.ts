@@ -33,6 +33,7 @@ import {
   createInvite,
   declineFriendRequest,
   defineRoute,
+  downloadExport,
   getAvatar,
   getAvatarUrl,
   previewInvite,
@@ -42,6 +43,9 @@ import {
   unblockUser,
 } from '@vidfriends/contracts';
 import sharp from 'sharp';
+import { exports } from '../src/db/schema.js';
+import { DAY } from '../src/infra/clock.js';
+import { newId } from '../src/infra/ids.js';
 import { hasS3 } from './support/s3.js';
 import { setRelationship } from './support/world.js';
 import { idemKey, makeVideo, registerMember } from './support/factories.js';
@@ -426,6 +430,38 @@ function cases(): MatrixCase[] {
         return { params: { id: invite.id } };
       },
       expect: OWNER_OR_ADMIN,
+    }),
+    matrixCase({
+      route: downloadExport,
+      // Only the member who requested an export can download it, admins included (FR-ACCT-05).
+      prepare: async () => {
+        const id = newId();
+        const now = server.clock.now();
+        await server.deps.db.insert(exports).values({
+          id,
+          userId: owner(),
+          includeMedia: false,
+          state: 'ready',
+          objectKey: `exports/${owner()}/${id}.zip`,
+          bytes: 1,
+          createdAt: now,
+          readyAt: now,
+          expiresAt: new Date(now.getTime() + DAY),
+        });
+        return { params: { id } };
+      },
+      expect: hasS3
+        ? only(['owner'], 302)
+        : {
+            owner: 503,
+            participant: 503,
+            friend: 503,
+            stranger: 503,
+            blocked: 503,
+            suspended: 401,
+            admin: 503,
+            anonymous: 401,
+          },
     }),
     matrixCase({
       route: previewInvite,

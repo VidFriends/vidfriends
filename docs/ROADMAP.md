@@ -245,7 +245,7 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 | M5-T6 Fresh-VM deploy | Runbook from a blank VM to a claimed instance in ≤ 30 min (BO-4) | Executed and timed by someone (or an agent) following only the docs <br>**🟡** Executed by an agent from the docs: 28 s to a claimed instance excluding Docker install and image pulls ([RUNBOOK §7](../deploy/RUNBOOK.md#7-records)). Repeat on a real blank VM with released images during M5-T9. |
 | M5-T7 Load and security review | k6 at 50 VUs (NFR-PERF-01); threat-model review against TDD §5; dependency audit | Report committed under `docs/reports/`; issues fixed or accepted in an ADR <br>**✅** [Report](reports/2026-10-04-m5-load-and-security-review.md) (p95 20.9 ms at 50 VUs; findings F-1..F-6 fixed); residual risks accepted in [ADR-0016](adr/0016-accepted-residual-security-risks-v0-1.md) |
 | M5-T8 Operator and user guides | Self-hosting guide, privacy disclosure, member help pages | Docs reviewed against the deployed alpha <br>**🟡** [Self-hosting guide](guides/self-hosting.md), in-app `/privacy` and `/help` (`e2e/tests/docs.spec.ts`), [runbook](../deploy/RUNBOOK.md). Reviewed against the E2E deployment; the review against the owner's alpha happens in M5-T9. |
-| M5-T9 Alpha release v0.1.0 | Owner's private self-hosted instance live; alpha group onboarded; BO metrics collection plan (manual, privacy-preserving) | Owner sign-off <br>**⛔** Owner action: run the instance, onboard the alpha group, sign off. |
+| M5-T9 Alpha release v0.1.0 | Owner's private self-hosted instance live; alpha group onboarded; BO metrics collection plan (manual, privacy-preserving) | Owner sign-off <br>**⏸** Postponed by the owner (multiple-choice answer, 2026-10-04). M4-T6, M5-T6 and M5-T8 checks that depend on it wait with it. |
 
 ### M6: Mobile apps (Expo) 🟡 (in progress; store builds blocked on accounts)
 
@@ -262,20 +262,27 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 | M6-T5 Share intent and push | `expo-share-intent` (iOS extension, Android `text/*` and `video/*`) opens Send; Expo push tokens registered as push targets; server Expo push channel with gone-token cleanup; taps open the share | FR-MOB-02, FR-NOTIF-03, ADR-0011, BR-NOT-3/6 | Server unit test `apps/server/test/push-expo.test.ts`; mobile `push-target.test.ts`; device runbook (share from TikTok/YouTube/Instagram, real push) during the alpha |
 | M6-T6 Android E2E and accessibility | Release APK built from the Expo project in CI; stack in its emulator HTTP variant; Maestro flows J-2..J-5 on an Android 14 emulator; accessibility review (labels, roles, font scaling, reduced motion) | NFR-A11Y-02, NFR-COMPAT-02, TDD §7 | `mobile.yml` android-e2e job green; review notes in the PR |
 | M6-T7 Store builds | EAS project, signing, TestFlight and Play internal track; iOS build and Maestro on macOS runners | BC-7 | ⛔ Owner: Apple and Google developer accounts |
+| M6-T8 Sideloadable Android APK | Owner choice (2026-10-04) while store accounts are missing: the release workflow builds a universal release APK, signed with the project's upload key from repository secrets, attaches it to the GitHub release with its SHA-256, and the help pages explain sideloading. iOS waits for M6-T7 | FR-MOB-01, BC-7 | A dispatched release has an `.apk` asset that installs on the CI emulator (`release.yml` android job) |
 
 **Exit:** Maestro suites green; TestFlight and Play internal builds installed by the alpha group; share-to-send works from TikTok, YouTube and Instagram on both platforms (runbook).
 
 ### v1.0
 M5 and M6 are complete, and every Must requirement in the SRS has passing verification (PRD §6).
 
-### M7: Post-v1 backlog 💤
+### M7: Post-v1 backlog 🟡 (data export scheduled by the owner, 2026-10-04)
 
-Not scheduled. Each item needs a PRD update and, where architectural, an ADR before work starts.
+Each item needs a PRD update and, where architectural, an ADR before work starts. The owner chose data export as the first item (multiple-choice answer, 2026-10-04); PRD CAP-18 and SRS FR-ACCT-05 now describe it.
+
+| Task | Objective | References | Completion check |
+|---|---|---|---|
+| M7-T1 Data export | A member requests a ZIP of their data (profile, friends, sent and received shares with notes, reactions and conversations, videos added, security log, avatar, optional media under 4 GiB); built by the `account.export` job; signed download for 7 days; one in progress, 3 per day; removed with the account; Settings card on the web | FR-ACCT-05, WF-ACCT-4, LLD §2 `exports`, §3 | `apps/server/test/exports.test.ts`; authz matrix `downloadExport`; Playwright `e2e/tests/export.spec.ts` |
+| M7-T2 Data export on mobile | The same card in the app's Settings, opening the download in the browser | FR-ACCT-05, FR-MOB-01 | Maestro flow requests an export and sees it ready |
+
+Remaining backlog (not scheduled):
 
 | Item | Source |
 |---|---|
 | Passkeys (CAP-16) | Owner-era 2025 Worker |
-| Data export (CAP-18) | 2026 FAQ |
 | Collections (CAP-14) | 2026 web/backend |
 | Offline downloads on mobile (CAP-15) | 2026 iOS/Android |
 | Realtime (SSE) (CAP-19) | 2026 backend |
