@@ -44,7 +44,7 @@ async function upload(
   });
   const put = await fetch(slot.put_url, {
     method: 'PUT',
-    body: bytes,
+    body: new Uint8Array(bytes),
     headers: { 'content-type': contentType },
   });
   expect(put.status).toBe(200);
