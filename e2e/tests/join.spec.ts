@@ -21,7 +21,7 @@ test('friend registers through the join link, then logs out and in', async ({ pa
   await page.getByRole('button', { name: 'Create account' }).click();
 
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole('heading', { name: 'Welcome, Sam!' })).toBeVisible();
+  await expect(page.getByText('Signed in as Sam')).toBeVisible();
   await expectAccessible(page, 'home');
 
   // The invite carried auto_friend, so Sam and the inviter are friends (checked via the API).
@@ -37,7 +37,7 @@ test('friend registers through the join link, then logs out and in', async ({ pa
   await page.getByLabel('Username').fill(username);
   await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
   await page.getByRole('button', { name: 'Log in' }).click();
-  await expect(page.getByRole('heading', { name: 'Welcome, Sam!' })).toBeVisible();
+  await expect(page.getByText('Signed in as Sam')).toBeVisible();
 
   // A reused or invalid join link shows a clear error.
   await page.goto('/join/not-a-real-code');

@@ -14,10 +14,16 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as SetupRouteImport } from './routes/setup'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppFriendsRouteImport } from './routes/_app/friends'
+import { Route as AppHistoryRouteImport } from './routes/_app/history'
+import { Route as AppInboxRouteImport } from './routes/_app/inbox'
 import { Route as AppInvitesRouteImport } from './routes/_app/invites'
+import { Route as AppNotificationsRouteImport } from './routes/_app/notifications'
+import { Route as AppSavedRouteImport } from './routes/_app/saved'
 import { Route as AppSendRouteImport } from './routes/_app/send'
+import { Route as AppSentRouteImport } from './routes/_app/sent'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as JoinCodeRouteImport } from './routes/join.$code'
+import { Route as AppSharesIdRouteImport } from './routes/_app/shares.$id'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -43,14 +49,39 @@ const AppFriendsRoute = AppFriendsRouteImport.update({
   path: '/friends',
   getParentRoute: () => AppRoute,
 } as any)
+const AppHistoryRoute = AppHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInboxRoute = AppInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppInvitesRoute = AppInvitesRouteImport.update({
   id: '/invites',
   path: '/invites',
   getParentRoute: () => AppRoute,
 } as any)
+const AppNotificationsRoute = AppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSavedRoute = AppSavedRouteImport.update({
+  id: '/saved',
+  path: '/saved',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSendRoute = AppSendRouteImport.update({
   id: '/send',
   path: '/send',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSentRoute = AppSentRouteImport.update({
+  id: '/sent',
+  path: '/sent',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -63,26 +94,43 @@ const JoinCodeRoute = JoinCodeRouteImport.update({
   path: '/join/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppSharesIdRoute = AppSharesIdRouteImport.update({
+  id: '/shares/$id',
+  path: '/shares/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/setup': typeof SetupRoute
   '/friends': typeof AppFriendsRoute
+  '/history': typeof AppHistoryRoute
+  '/inbox': typeof AppInboxRoute
   '/invites': typeof AppInvitesRoute
+  '/notifications': typeof AppNotificationsRoute
+  '/saved': typeof AppSavedRoute
   '/send': typeof AppSendRoute
+  '/sent': typeof AppSentRoute
   '/settings': typeof AppSettingsRoute
   '/join/$code': typeof JoinCodeRoute
+  '/shares/$id': typeof AppSharesIdRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/setup': typeof SetupRoute
   '/friends': typeof AppFriendsRoute
+  '/history': typeof AppHistoryRoute
+  '/inbox': typeof AppInboxRoute
   '/invites': typeof AppInvitesRoute
+  '/notifications': typeof AppNotificationsRoute
+  '/saved': typeof AppSavedRoute
   '/send': typeof AppSendRoute
+  '/sent': typeof AppSentRoute
   '/settings': typeof AppSettingsRoute
   '/join/$code': typeof JoinCodeRoute
   '/': typeof AppIndexRoute
+  '/shares/$id': typeof AppSharesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -90,11 +138,17 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/setup': typeof SetupRoute
   '/_app/friends': typeof AppFriendsRoute
+  '/_app/history': typeof AppHistoryRoute
+  '/_app/inbox': typeof AppInboxRoute
   '/_app/invites': typeof AppInvitesRoute
+  '/_app/notifications': typeof AppNotificationsRoute
+  '/_app/saved': typeof AppSavedRoute
   '/_app/send': typeof AppSendRoute
+  '/_app/sent': typeof AppSentRoute
   '/_app/settings': typeof AppSettingsRoute
   '/join/$code': typeof JoinCodeRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/shares/$id': typeof AppSharesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -103,31 +157,49 @@ export interface FileRouteTypes {
     | '/login'
     | '/setup'
     | '/friends'
+    | '/history'
+    | '/inbox'
     | '/invites'
+    | '/notifications'
+    | '/saved'
     | '/send'
+    | '/sent'
     | '/settings'
     | '/join/$code'
+    | '/shares/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
     | '/setup'
     | '/friends'
+    | '/history'
+    | '/inbox'
     | '/invites'
+    | '/notifications'
+    | '/saved'
     | '/send'
+    | '/sent'
     | '/settings'
     | '/join/$code'
     | '/'
+    | '/shares/$id'
   id:
     | '__root__'
     | '/_app'
     | '/login'
     | '/setup'
     | '/_app/friends'
+    | '/_app/history'
+    | '/_app/inbox'
     | '/_app/invites'
+    | '/_app/notifications'
+    | '/_app/saved'
     | '/_app/send'
+    | '/_app/sent'
     | '/_app/settings'
     | '/join/$code'
     | '/_app/'
+    | '/_app/shares/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -174,6 +246,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFriendsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/history': {
+      id: '/_app/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AppHistoryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/inbox': {
+      id: '/_app/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof AppInboxRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/invites': {
       id: '/_app/invites'
       path: '/invites'
@@ -181,11 +267,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInvitesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/notifications': {
+      id: '/_app/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AppNotificationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/saved': {
+      id: '/_app/saved'
+      path: '/saved'
+      fullPath: '/saved'
+      preLoaderRoute: typeof AppSavedRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/send': {
       id: '/_app/send'
       path: '/send'
       fullPath: '/send'
       preLoaderRoute: typeof AppSendRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/sent': {
+      id: '/_app/sent'
+      path: '/sent'
+      fullPath: '/sent'
+      preLoaderRoute: typeof AppSentRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/settings': {
@@ -202,23 +309,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/shares/$id': {
+      id: '/_app/shares/$id'
+      path: '/shares/$id'
+      fullPath: '/shares/$id'
+      preLoaderRoute: typeof AppSharesIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
   AppFriendsRoute: typeof AppFriendsRoute
+  AppHistoryRoute: typeof AppHistoryRoute
+  AppInboxRoute: typeof AppInboxRoute
   AppInvitesRoute: typeof AppInvitesRoute
+  AppNotificationsRoute: typeof AppNotificationsRoute
+  AppSavedRoute: typeof AppSavedRoute
   AppSendRoute: typeof AppSendRoute
+  AppSentRoute: typeof AppSentRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppSharesIdRoute: typeof AppSharesIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppFriendsRoute: AppFriendsRoute,
+  AppHistoryRoute: AppHistoryRoute,
+  AppInboxRoute: AppInboxRoute,
   AppInvitesRoute: AppInvitesRoute,
+  AppNotificationsRoute: AppNotificationsRoute,
+  AppSavedRoute: AppSavedRoute,
   AppSendRoute: AppSendRoute,
+  AppSentRoute: AppSentRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
+  AppSharesIdRoute: AppSharesIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

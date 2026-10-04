@@ -12,7 +12,14 @@
     "logout": "Log out",
     "account": "Signed in as {{name}}",
     "friends": "Friends",
-    "send": "Send"
+    "send": "Send",
+    "inbox": "Inbox",
+    "saved": "Saved",
+    "history": "History",
+    "sent": "Sent",
+    "notifications": "Notifications",
+    "notificationsCount": "Notifications ({{count}} unread)",
+    "more": "More"
   },
   "common": {
     "loading": "Loading…",
@@ -55,7 +62,10 @@
     "url_not_allowed": "That link isn't from a supported site, or it isn't a public web address.",
     "quota_exceeded": "You've used all your storage. Ask your server admin for more.",
     "storage_full": "This server is out of storage space.",
-    "not_playable": "This video isn't ready yet."
+    "not_playable": "This video isn't ready yet.",
+    "already_watched": "Your friend already watched this, so it can't be unsent.",
+    "video_not_found": "That video isn't available.",
+    "invalid_reaction": "Pick one of the reactions."
   },
   "fieldErrors": {
     "required": "Required.",
@@ -251,5 +261,130 @@
     "openOriginal": "Open original",
     "another": "Add another video",
     "notAVideo": "That file isn't a video we can use."
+  },
+  "feed": {
+    "title": "Your feed",
+    "label": "Videos from your friends",
+    "empty": "Nothing here yet. When friends send you videos, they show up here.",
+    "caughtUp": "You're all caught up",
+    "caughtUpHelp": "Keep scrolling for videos you watched recently.",
+    "from": "From {{name}}",
+    "alsoSentBy": "Also sent by {{names}}",
+    "newVideos": "New videos — show them",
+    "unmute": "Unmute",
+    "mute": "Mute",
+    "play": "Play",
+    "pause": "Pause",
+    "save": "Save",
+    "saved": "Saved",
+    "openOriginal": "Open original",
+    "linkOnly": "This video is only available on the original site.",
+    "expired": "This video's file has expired.",
+    "position": "Video {{index}} of {{total}}",
+    "keyboardHelp": "Use ↑ and ↓ (or j and k) to move, Space to play or pause, m to mute.",
+    "loadingMore": "Loading more…",
+    "conversation_one": "Conversation ({{count}} reply)",
+    "conversation_other": "Conversation ({{count}} replies)"
+  },
+  "reactions": {
+    "label": "React",
+    "clear": "Remove reaction",
+    "👍": "Thumbs up",
+    "❤️": "Love",
+    "😂": "Laugh",
+    "😮": "Wow",
+    "😢": "Sad",
+    "🔥": "Fire"
+  },
+  "lists": {
+    "inboxTitle": "Inbox",
+    "inboxEmpty": "Your inbox is empty.",
+    "savedTitle": "Saved",
+    "savedEmpty": "Nothing saved yet. Save videos from the feed to find them here.",
+    "historyTitle": "History",
+    "historyEmpty": "No watched videos.",
+    "historyFilterTitle": "Search titles",
+    "historyFilterSender": "Sender",
+    "anySender": "Anyone",
+    "sentTitle": "Sent",
+    "sentEmpty": "You haven't sent anything yet.",
+    "unwatched": "New",
+    "watchedAt": "Watched {{when}}",
+    "sentAt": "Sent {{when}}",
+    "status": {
+      "processing": "Processing",
+      "delivered": "Delivered",
+      "watched": "Watched"
+    },
+    "lastReply": "Last reply: {{text}}",
+    "replyDeleted": "Reply deleted",
+    "unsend": "Unsend",
+    "unsendConfirm": "Unsend this video? Your friend won't see it any more.",
+    "unsent": "Unsent.",
+    "hide": "Remove from inbox",
+    "unhide": "Restore",
+    "open": "Open",
+    "replies_one": "{{count}} reply",
+    "replies_other": "{{count}} replies"
+  },
+  "share": {
+    "title": "Conversation",
+    "with": "With {{name}}",
+    "note": "Note from {{name}}",
+    "replyLabel": "Write a reply",
+    "replyPlaceholder": "Say something…",
+    "send": "Send",
+    "deleteReply": "Delete reply",
+    "replyDeleted": "Reply deleted",
+    "noReplies": "No replies yet.",
+    "private": "Only you and {{name}} can see this conversation.",
+    "you": "You"
+  },
+  "sendStep2": {
+    "title": "Send to friends",
+    "chooseFriends": "Choose friends",
+    "noFriends": "You don't have friends here yet. Add some on the Friends page.",
+    "note": "Note",
+    "noteHelp": "Optional, up to 500 characters.",
+    "send": "Send",
+    "sending": "Sending…",
+    "resultSent": "Sent to {{name}}",
+    "resultAlready": "Already sent to {{name}}",
+    "resultNotAllowed": "Couldn't send to {{name}}",
+    "pendingNote": "It will reach them as soon as the video is ready."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications.",
+    "markAll": "Mark all as read",
+    "types": {
+      "share_received": "{{name}} sent you a video",
+      "reaction_received": "{{name}} reacted {{emoji}} to your video",
+      "reply_received": "{{name}} replied",
+      "friend_request_received": "{{name}} wants to be friends",
+      "friend_request_accepted": "{{name}} accepted your friend request",
+      "share_watched": "{{name}} watched your video"
+    },
+    "someone": "Someone",
+    "unread": "Unread"
+  },
+  "push": {
+    "title": "Notifications on this device",
+    "help": "Get a notification when friends send videos, react or reply. Messages show only the sender's name, never the content.",
+    "enable": "Turn on notifications",
+    "disable": "Turn off on this device",
+    "enabled": "Notifications are on for this device.",
+    "unsupported": "This browser doesn't support push notifications.",
+    "denied": "Notifications are blocked in your browser settings.",
+    "privatePreviews": "Private previews (hide the sender's name)",
+    "prefsTitle": "Notify me about",
+    "types": {
+      "share_received": "New videos",
+      "reaction_received": "Reactions",
+      "reply_received": "Replies",
+      "friend_request_received": "Friend requests",
+      "friend_request_accepted": "Accepted requests",
+      "share_watched": "When friends watch what I sent"
+    }
   }
 }

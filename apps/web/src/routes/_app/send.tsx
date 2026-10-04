@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { SendToFriends } from '@/features/send/send-to-friends';
 import { useVideoProgress, VideoStatus } from '@/features/send/video-status';
 import { errorMessage, fieldMessage } from '@/lib/errors';
 import { uploadContentType, uploadVideo } from '@/lib/upload';
@@ -57,6 +58,7 @@ function AddedVideo({ video, onReset }: { video: Video; onReset: () => void }) {
   return (
     <Card className="grid gap-4">
       <VideoStatus video={current} />
+      <SendToFriends video={current} />
       <div>
         <Button variant="outline" onClick={onReset}>
           {t('send.another')}

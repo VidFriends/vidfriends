@@ -1,7 +1,21 @@
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from '@tanstack/react-router';
 import { useApiMutation } from '@vidfriends/api-client/react';
 import { logout } from '@vidfriends/contracts';
-import { Home, LogOut, Send, Settings, UserPlus, Users } from 'lucide-react';
+import {
+  Bell,
+  Bookmark,
+  History,
+  Home,
+  Inbox,
+  LogOut,
+  Send,
+  SendHorizontal,
+  Settings,
+  UserPlus,
+  Users,
+} from 'lucide-react';
+import { unreadCount } from '@vidfriends/contracts';
+import { useApiQuery } from '@vidfriends/api-client/react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { currentUser, meQuery } from '@/lib/session';
@@ -14,6 +28,19 @@ export const Route = createFileRoute('/_app')({
   },
   component: AppLayout,
 });
+
+const NAV = [
+  { to: '/', label: 'nav.home', icon: Home },
+  { to: '/inbox', label: 'nav.inbox', icon: Inbox },
+  { to: '/send', label: 'nav.send', icon: Send },
+  { to: '/friends', label: 'nav.friends', icon: Users },
+  { to: '/sent', label: 'nav.sent', icon: SendHorizontal, iconOnlyOnSmall: true },
+  { to: '/saved', label: 'nav.saved', icon: Bookmark, iconOnlyOnSmall: true },
+  { to: '/history', label: 'nav.history', icon: History, iconOnlyOnSmall: true },
+  { to: '/notifications', label: 'nav.notifications', icon: Bell, iconOnlyOnSmall: true },
+  { to: '/invites', label: 'nav.invites', icon: UserPlus, invite: true, iconOnlyOnSmall: true },
+  { to: '/settings', label: 'nav.settings', icon: Settings, iconOnlyOnSmall: true },
+] as const;
 
 const navLink =
   'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
@@ -31,6 +58,13 @@ function AppLayout() {
     },
   });
   const user = me.data?.user;
+  // FR-NOTIF-05: unread badge refreshes on focus and at least every 60 s.
+  const unreadQuery = useApiQuery(
+    unreadCount,
+    {},
+    { refetchInterval: 60_000, refetchOnWindowFocus: true },
+  );
+  const unread = unreadQuery.data?.count ?? 0;
   return (
     <div className="flex min-h-full flex-col">
       <a
@@ -48,33 +82,36 @@ function AppLayout() {
             aria-label={t('nav.main')}
             className="flex flex-1 items-center gap-1 overflow-x-auto"
           >
-            <Link
-              to="/"
-              className={navLink}
-              activeProps={activeLink}
-              activeOptions={{ exact: true }}
-            >
-              <Home className="size-4" aria-hidden />
-              <span>{t('nav.home')}</span>
-            </Link>
-            <Link to="/send" className={navLink} activeProps={activeLink}>
-              <Send className="size-4" aria-hidden />
-              <span>{t('nav.send')}</span>
-            </Link>
-            <Link to="/friends" className={navLink} activeProps={activeLink}>
-              <Users className="size-4" aria-hidden />
-              <span>{t('nav.friends')}</span>
-            </Link>
-            {me.data?.settings_summary.can_invite && (
-              <Link to="/invites" className={navLink} activeProps={activeLink}>
-                <UserPlus className="size-4" aria-hidden />
-                <span>{t('nav.invites')}</span>
-              </Link>
+            {NAV.map((item) =>
+              'invite' in item && !me.data?.settings_summary.can_invite ? null : (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={navLink}
+                  activeProps={activeLink}
+                  activeOptions={{ exact: item.to === '/' }}
+                  aria-label={
+                    item.to === '/notifications' && unread
+                      ? t('nav.notificationsCount', { count: unread })
+                      : undefined
+                  }
+                >
+                  <item.icon className="size-4" aria-hidden />
+                  <span className={'iconOnlyOnSmall' in item ? 'sr-only md:not-sr-only' : ''}>
+                    {t(item.label)}
+                  </span>
+                  {item.to === '/notifications' && unread > 0 && (
+                    <span
+                      className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground"
+                      aria-hidden
+                      data-testid="unread-badge"
+                    >
+                      {unread > 99 ? '99+' : unread}
+                    </span>
+                  )}
+                </Link>
+              ),
             )}
-            <Link to="/settings" className={navLink} activeProps={activeLink}>
-              <Settings className="size-4" aria-hidden />
-              <span>{t('nav.settings')}</span>
-            </Link>
           </nav>
           {user && (
             <span className="hidden text-sm text-muted-foreground sm:inline">

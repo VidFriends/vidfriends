@@ -8,7 +8,7 @@ async function loginAs(page: Page, username: string) {
   await page.getByLabel('Username').fill(username);
   await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
   await page.getByRole('button', { name: 'Log in' }).click();
-  await expect(page.getByRole('heading', { name: /Welcome/ })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
 }
 
 test('two members become friends, part ways, block and unblock', async ({ browser, baseURL }) => {

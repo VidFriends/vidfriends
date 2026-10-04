@@ -6,11 +6,13 @@ import { createRoot } from 'react-dom/client';
 import './i18n';
 import './styles.css';
 import { api, queryClient, setSessionExpiredHandler } from './lib/api';
+import { registerServiceWorker } from './lib/pwa';
 import { applyTheme, watchSystemTheme } from './lib/theme';
 import { routeTree } from './routeTree.gen';
 
 applyTheme();
 watchSystemTheme();
+registerServiceWorker();
 
 const router = createRouter({
   routeTree,
