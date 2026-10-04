@@ -137,13 +137,13 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 
 ---
 
-### M0: Consolidation and plan 🟡
+### M0: Consolidation and plan ✅
 
 | Task | Status | Evidence / completion check |
 |---|---|---|
 | M0-T1 Transfer `vidshare` and `vidfriends` into the `VidFriends` org | ✅ | `gh repo list VidFriends` shows both (2026-10-03) |
 | M0-T2 Merge all seven histories into this repo, tag `legacy-code-snapshot`, remove code, write docs | ✅ | Tag `legacy-code-snapshot`; this document set; [ADR-0002](adr/0002-consolidate-repos-and-greenfield-reset.md) |
-| M0-T3 **Owner:** decommission any running legacy deployment (2025 Worker, 2026 compose stacks) and never reuse the committed VAPID key ([AUDIT §5](legacy/AUDIT.md#5-security-follow-ups-that-apply-outside-this-repository)) | ⬜ | Owner confirms no legacy service is reachable |
+| M0-T3 **Owner:** decommission any running legacy deployment (2025 Worker, 2026 compose stacks) and never reuse the committed VAPID key ([AUDIT §5](legacy/AUDIT.md#5-security-follow-ups-that-apply-outside-this-repository)) | ✅ | Owner confirmed on 2026-10-04 (multiple-choice answer: "Yes, all shut down") that no legacy service is reachable and the old VAPID key is retired. |
 | M0-T4 Archive the six superseded repos (`vidshare`, `vidfriends-backend`, `-web`, `-ios`, `-android`, `VidFriends-iOS-Android`); close the 35 obsolete Dependabot PRs; reduce this repo to the single branch `main` | ✅ | Done 2026-10-03 at the owner's request. `gh repo list VidFriends` shows all six `archived=true`; only `main` remains here. Human-authored PR vidfriends-android#2 was left open in the archive, and its work is tagged `legacy/vidfriends-android-2026/vid-503-fix`. | `gh repo view … --json isArchived` returns true for each |
 | M0-T5 Owner answers OQ-1..OQ-4 and reviews provisional decisions | ✅ | BRD §7 answers; ADR-0014; ADR-0005/0009/0013 status lines updated |
 
@@ -307,5 +307,6 @@ Not scheduled. Each item needs a PRD update and, where architectural, an ADR bef
 
 | Date | Change |
 |---|---|
+| 2026-10-04 | Owner answers (multiple choice): agents may merge their own PRs when CI is green; legacy deployments are shut down (M0-T3 ✅, so M0 is complete); agents should enable branch protection on `main`; no Apple or Google developer accounts yet, so M6 store submission is blocked (⛔) and the rest of M6 proceeds. AGENTS.md rule 11: blockers are asked as multiple-choice questions. |
 | 2026-10-03 | Owner decisions recorded (OQ-1..4 → ADR-0014, MIT); old repos archived; Dependabot PRs closed; single `main` branch (M0-T4/T5 ✅). |
 | 2026-10-03 | Roadmap created during the consolidation of seven legacy repos (M0). No previous authoritative roadmap existed ([AUDIT §2](legacy/AUDIT.md#2-what-each-attempt-contributes)). |
