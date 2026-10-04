@@ -19,6 +19,7 @@ import { Alert } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { formatDateTime } from '@/i18n';
+import { AddToCollection } from '@/features/collections/add-to-collection';
 import { ReactionBar } from '@/features/shares/reaction-bar';
 import { errorMessage } from '@/lib/errors';
 import { reportProgress } from '@/lib/progress';
@@ -111,9 +112,14 @@ function SharePage() {
           </p>
         )}
         {isRecipient ? (
-          <div className="rounded-md bg-neutral-900 p-2">
-            <ReactionBar shareId={id} initial={s.reaction} />
-          </div>
+          <>
+            <div className="rounded-md bg-neutral-900 p-2">
+              <ReactionBar shareId={id} initial={s.reaction} />
+            </div>
+            <div>
+              <AddToCollection shareId={id} />
+            </div>
+          </>
         ) : (
           s.reaction && (
             <p aria-label={t(`reactions.${s.reaction}`)} className="text-2xl">

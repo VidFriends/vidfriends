@@ -19,6 +19,12 @@ import {
   createFriendGroup,
   updateFriendGroup,
   deleteFriendGroup,
+  addToCollection,
+  createCollection,
+  deleteCollection,
+  getCollection,
+  removeFromCollection,
+  updateCollection,
   deleteReply,
   getShare,
   getShareMedia,
@@ -144,6 +150,21 @@ function cases(): MatrixCase[] {
       },
     });
     return res.results[0]!.share_id!;
+  };
+  /** A collection of the owner's holding a share the owner received (BR-COL-2). */
+  const ownerCollection = async () => {
+    const res = await world.members.participant.client.ok(sendShares, {
+      body: {
+        video_id: await makeVideo(server, world.members.participant.user.id),
+        recipient_ids: [owner()],
+        idempotency_key: idemKey(),
+      },
+    });
+    const shareId = res.results[0]!.share_id!;
+    const { collection } = await world.members.owner.client.ok(createCollection, {
+      body: { name: `c${Math.random().toString(36).slice(2, 10)}`, share_id: shareId },
+    });
+    return { id: collection.id, shareId };
   };
   const both = (ok: number) => only(['owner', 'participant'], ok);
   /** Admin-only routes: members get 403 at the route guard, no session gets 401. */
@@ -375,6 +396,43 @@ function cases(): MatrixCase[] {
         return { params: { id: group.id } };
       },
       expect: only(['owner'], 204),
+    }),
+    matrixCase({
+      route: getCollection,
+      prepare: async () => ({ params: { id: (await ownerCollection()).id }, query: {} }),
+      expect: only(['owner'], 200),
+    }),
+    matrixCase({
+      route: updateCollection,
+      prepare: async () => ({
+        params: { id: (await ownerCollection()).id },
+        body: { name: `r${Math.random().toString(36).slice(2, 10)}` },
+      }),
+      expect: only(['owner'], 200),
+    }),
+    matrixCase({
+      route: deleteCollection,
+      prepare: async () => ({ params: { id: (await ownerCollection()).id } }),
+      expect: only(['owner'], 204),
+    }),
+    matrixCase({
+      route: addToCollection,
+      prepare: async () => {
+        const c = await ownerCollection();
+        await world.members.owner.client.ok(removeFromCollection, {
+          params: { id: c.id, share_id: c.shareId },
+        });
+        return { params: { id: c.id, share_id: c.shareId } };
+      },
+      expect: only(['owner'], 200),
+    }),
+    matrixCase({
+      route: removeFromCollection,
+      prepare: async () => {
+        const c = await ownerCollection();
+        return { params: { id: c.id, share_id: c.shareId } };
+      },
+      expect: only(['owner'], 200),
     }),
     matrixCase({
       route: getVideo,

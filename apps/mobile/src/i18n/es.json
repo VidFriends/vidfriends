@@ -1,6 +1,8 @@
 {
   "common": {
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "cancel": "Cancelar",
+    "loadMore": "Cargar más"
   },
   "errors": {
     "validation_failed": "Revisa los campos marcados.",
@@ -33,7 +35,10 @@
     "generic": "Algo salió mal. Inténtalo de nuevo.",
     "unsupported_type": "Ese tipo de archivo no es compatible. Usa MP4, MOV o WebM.",
     "export_in_progress": "Tus datos ya se están preparando.",
-    "code_invalid": "El inicio de sesión caducó o ya se usó. Inténtalo de nuevo."
+    "code_invalid": "El inicio de sesión caducó o ya se usó. Inténtalo de nuevo.",
+    "too_many_collections": "Ya tienes 50 colecciones. Elimina una primero.",
+    "collection_name_taken": "Ya tienes una colección con este nombre.",
+    "collection_full": "Esta colección está llena (500 vídeos). Quita uno primero."
   },
   "nav": {
     "home": "Inicio",
@@ -291,5 +296,23 @@
     "add_one": "Grupo: {{name}} ({{count}} amigo)",
     "add_other": "Grupo: {{name}} ({{count}} amigos)",
     "add_many": "Grupo: {{name}} ({{count}} amigos)"
+  },
+  "collections": {
+    "title": "Colecciones",
+    "help": "Guarda vídeos en listas con nombre. Los vídeos de una colección siguen guardados.",
+    "count_one": "{{count}} vídeo",
+    "count_other": "{{count}} vídeos",
+    "count_many": "{{count}} vídeos",
+    "newName": "Nueva colección",
+    "create": "Crear",
+    "name": "Nombre",
+    "save": "Guardar",
+    "rename": "Cambiar nombre",
+    "delete": "Eliminar colección",
+    "deleteTitle": "¿Eliminar «{{name}}»?",
+    "deleteHelp": "Los vídeos siguen en Guardados.",
+    "empty": "Aún no hay vídeos en esta colección. Añádelos desde la página de un vídeo.",
+    "add": "Añadir a una colección",
+    "addHelp": "Marca las colecciones en las que va este vídeo o crea una nueva. También se guarda."
   }
 }

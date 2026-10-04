@@ -153,6 +153,14 @@ erDiagram
 - `created_at`
 - PK (`sender_id`, `idempotency_key`). Purged after 24 h.
 
+**`collections`** (BR-COL-1, migration 0009)
+- `id` PK, `owner_id` FK users CASCADE, `name` text (1–60), `created_at`
+- UNIQUE (`owner_id`, lower(`name`))
+
+**`collection_items`** (BR-COL-2/3)
+- `collection_id` FK collections CASCADE, `share_id` FK shares CASCADE, `added_at`; PK (`collection_id`, `share_id`)
+- INDEX (`collection_id`, `added_at` DESC, `share_id` DESC) for the list; INDEX (`share_id`) so unsaving can clear a share from every collection
+
 **`replies`**
 - `id` PK
 - `share_id` FK shares CASCADE
@@ -333,6 +341,7 @@ LIMIT :n + 1;
 | `PUT /shares/{id}/reaction`, `DELETE …/reaction` | M (recipient) | `{emoji}` → `{share}` | `invalid_reaction` | ENG-01 |
 | `GET /shares/{id}/replies`, `POST …/replies`, `DELETE /replies/{id}` | M (participant / author) | `{body}` → `{reply}` | `rate_limited` | ENG-02 |
 | `GET /feed`, `GET /inbox`, `GET /saved`, `GET /history?sender=&q=`, `GET /sent` | M | paginated share lists (BR-FEED-*) | – | FEED-01,02; SHR-05 |
+| `GET /collections?share_id=`, `POST /collections`, `GET /collections/{id}?cursor=`, `PATCH /collections/{id}`, `DELETE /collections/{id}`, `PUT`/`DELETE /collections/{id}/items/{share_id}` | M (owner only; items must be shares the caller received) | list → `{items: Collection[]}` (`id, name, item_count, contains` — `contains` is set only with `share_id`); create `{name, share_id?}` → 201 `{collection}`; get → `{collection, items: ReceivedShare[], next_cursor}` newest added first; rename `{name}` → `{collection}`; delete → 204; put/delete item → `{collection}` (put also saves the share) | `validation_failed`, `too_many_collections`, `collection_name_taken`, `collection_full`, 404 | FEED-07 |
 | `GET /notifications`, `POST /notifications/read` `{ids? \| all}` , `GET /notifications/unread-count` | M | list / mark / count | – | NOTIF-01,05 |
 | `GET /events` | M | → `text/event-stream`: `event: ready` first, then `data: RealtimeEvent` (`{type:'notification', notification_type, share_id}` or `{type:'notifications_read'}`), a `: ping` comment every 25 s; ends after 30 min or when the session stops being valid (ADR-0019). Fan-out: `pg_notify('vf_events', {u, e})` in the writing transaction, one `LISTEN` connection per API process | `rate_limited` (more than 5 open streams) | NOTIF-06 |
 | `GET /notification-prefs`, `PUT /notification-prefs` | M | matrix of type × channel | – | NOTIF-04 |

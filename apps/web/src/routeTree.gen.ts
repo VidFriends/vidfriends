@@ -34,6 +34,7 @@ import { Route as AppAdminInvitesRouteImport } from './routes/_app/admin/invites
 import { Route as AppAdminSettingsRouteImport } from './routes/_app/admin/settings'
 import { Route as AppAdminStorageRouteImport } from './routes/_app/admin/storage'
 import { Route as AppAdminUsersRouteImport } from './routes/_app/admin/users'
+import { Route as AppCollectionsIdRouteImport } from './routes/_app/collections.$id'
 import { Route as AppSharesIdRouteImport } from './routes/_app/shares.$id'
 
 const AppRoute = AppRouteImport.update({
@@ -160,6 +161,11 @@ const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppCollectionsIdRoute = AppCollectionsIdRouteImport.update({
+  id: '/collections/$id',
+  path: '/collections/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSharesIdRoute = AppSharesIdRouteImport.update({
   id: '/shares/$id',
   path: '/shares/$id',
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AppAdminSettingsRoute
   '/admin/storage': typeof AppAdminStorageRoute
   '/admin/users': typeof AppAdminUsersRoute
+  '/collections/$id': typeof AppCollectionsIdRoute
   '/shares/$id': typeof AppSharesIdRoute
   '/admin/': typeof AppAdminIndexRoute
 }
@@ -216,6 +223,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AppAdminSettingsRoute
   '/admin/storage': typeof AppAdminStorageRoute
   '/admin/users': typeof AppAdminUsersRoute
+  '/collections/$id': typeof AppCollectionsIdRoute
   '/shares/$id': typeof AppSharesIdRoute
   '/admin': typeof AppAdminIndexRoute
 }
@@ -245,6 +253,7 @@ export interface FileRoutesById {
   '/_app/admin/settings': typeof AppAdminSettingsRoute
   '/_app/admin/storage': typeof AppAdminStorageRoute
   '/_app/admin/users': typeof AppAdminUsersRoute
+  '/_app/collections/$id': typeof AppCollectionsIdRoute
   '/_app/shares/$id': typeof AppSharesIdRoute
   '/_app/admin/': typeof AppAdminIndexRoute
 }
@@ -274,6 +283,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/storage'
     | '/admin/users'
+    | '/collections/$id'
     | '/shares/$id'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -300,6 +310,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/storage'
     | '/admin/users'
+    | '/collections/$id'
     | '/shares/$id'
     | '/admin'
   id:
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/_app/admin/settings'
     | '/_app/admin/storage'
     | '/_app/admin/users'
+    | '/_app/collections/$id'
     | '/_app/shares/$id'
     | '/_app/admin/'
   fileRoutesById: FileRoutesById
@@ -520,6 +532,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminUsersRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/_app/collections/$id': {
+      id: '/_app/collections/$id'
+      path: '/collections/$id'
+      fullPath: '/collections/$id'
+      preLoaderRoute: typeof AppCollectionsIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/shares/$id': {
       id: '/_app/shares/$id'
       path: '/shares/$id'
@@ -564,6 +583,7 @@ interface AppRouteChildren {
   AppSentRoute: typeof AppSentRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppCollectionsIdRoute: typeof AppCollectionsIdRoute
   AppSharesIdRoute: typeof AppSharesIdRoute
 }
 
@@ -579,6 +599,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSentRoute: AppSentRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
+  AppCollectionsIdRoute: AppCollectionsIdRoute,
   AppSharesIdRoute: AppSharesIdRoute,
 }
 

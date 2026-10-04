@@ -1,8 +1,11 @@
 // FR-ACCT-05 / WF-ACCT-4: data export (CAP-18).
 import {
+  createCollection,
   createExport,
+  createFriendGroup,
   deleteMe,
   downloadExport,
+  getInbox,
   getExportUrl,
   listExports,
   sendShares,
@@ -87,6 +90,10 @@ describe.skipIf(!hasS3)('FR-ACCT-05 data export', () => {
       body: { video_id: toA, recipient_ids: [a.user.id], idempotency_key: idemKey() },
     });
 
+    const { items: inbox } = await a.client.ok(getInbox, { query: {} });
+    await a.client.ok(createCollection, { body: { name: 'Keep', share_id: inbox[0]!.id } });
+    await a.client.ok(createFriendGroup, { body: { name: 'Pals', member_ids: [b.user.id] } });
+
     const { export: requested } = await a.client.ok(createExport, { body: {} });
     expect(requested).toMatchObject({ state: 'queued', include_media: false });
     const done = await ready(a, requested.id);
@@ -98,7 +105,9 @@ describe.skipIf(!hasS3)('FR-ACCT-05 data export', () => {
     expect(names).toEqual(
       [
         'README.txt',
+        'collections.json',
         'friends.json',
+        'groups.json',
         'profile.json',
         'received.json',
         'security.json',
@@ -109,6 +118,15 @@ describe.skipIf(!hasS3)('FR-ACCT-05 data export', () => {
     expect(json(files, 'profile.json')).toMatchObject({ username: a.user.username });
     expect(json(files, 'sent.json')).toEqual([expect.objectContaining({ note: 'watch this' })]);
     expect(json(files, 'received.json')).toHaveLength(1);
+    expect(json(files, 'collections.json')).toEqual([
+      expect.objectContaining({
+        name: 'Keep',
+        items: [expect.objectContaining({ video: expect.objectContaining({ title: 'For Ada' }) })],
+      }),
+    ]);
+    expect(json(files, 'groups.json')).toEqual([
+      { name: 'Pals', members: [{ username: b.user.username, display_name: 'Bo' }] },
+    ]);
     expect(json(files, 'videos.json')).toEqual([
       expect.objectContaining({ id: toB, title: 'For Bo', file_in_export: false }),
     ]);
