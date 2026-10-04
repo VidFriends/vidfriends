@@ -3,9 +3,11 @@ export * from './route.js';
 export * from './settings.js';
 export * from './routes/accounts.js';
 export * from './routes/invites.js';
+export * from './routes/friends.js';
 
 import * as accounts from './routes/accounts.js';
 import * as invites from './routes/invites.js';
+import * as friends from './routes/friends.js';
 import type { RouteDef } from './route.js';
 
 function collect(...modules: Record<string, unknown>[]): RouteDef[] {
@@ -27,4 +29,4 @@ function collect(...modules: Record<string, unknown>[]): RouteDef[] {
 }
 
 /** Every API route, in a stable order. The server must register exactly these. */
-export const allRoutes: readonly RouteDef[] = collect(accounts, invites);
+export const allRoutes: readonly RouteDef[] = collect(accounts, invites, friends);

@@ -32,9 +32,14 @@ export class Reply<T> {
   ) {}
 }
 
+/** A redirect result for routes with `status: 302`. */
+export class Redirect {
+  constructor(readonly location: string) {}
+}
+
 type ResponseIn<R extends RouteDef> = [ResS<R>] extends [z.ZodType] ? z.input<ResS<R>> : void;
 
-export type HandlerResult<R extends RouteDef> = ResponseIn<R> | Reply<ResponseIn<R>>;
+export type HandlerResult<R extends RouteDef> = ResponseIn<R> | Reply<ResponseIn<R>> | Redirect;
 
 export interface RouteHandler<R extends RouteDef = RouteDef> {
   route: R;
@@ -117,6 +122,7 @@ export function registerRoutes(
         body: (route.body ? req.valid('json') : undefined) as never,
         ip: c.get('clientIp'),
       });
+      if (result instanceof Redirect) return c.redirect(result.location, 302);
       let status: number = route.status;
       let body: unknown = result;
       if (result instanceof Reply) {

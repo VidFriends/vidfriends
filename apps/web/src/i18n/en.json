@@ -10,7 +10,8 @@
     "invites": "Invites",
     "settings": "Settings",
     "logout": "Log out",
-    "account": "Signed in as {{name}}"
+    "account": "Signed in as {{name}}",
+    "friends": "Friends"
   },
   "common": {
     "loading": "Loading…",
@@ -44,7 +45,12 @@
     "rate_limited": "Too many attempts. Wait a minute and try again.",
     "network_error": "Could not reach the server. Check your connection.",
     "internal_error": "Something went wrong on the server. Please try again.",
-    "unavailable": "The server is temporarily unavailable."
+    "unavailable": "The server is temporarily unavailable.",
+    "cooldown": "You can send another request to this person later.",
+    "already_friends": "You are already friends.",
+    "query_too_short": "Type at least 2 characters.",
+    "too_large": "That file is too large.",
+    "upload_incomplete": "The upload did not finish. Please try again."
   },
   "fieldErrors": {
     "required": "Required.",
@@ -56,7 +62,8 @@
     "password_mismatch": "The passwords do not match.",
     "too_long": "Too long.",
     "invalid": "Invalid value.",
-    "username_taken": "That username is taken."
+    "username_taken": "That username is taken.",
+    "not_an_image": "That file is not an image we can use."
   },
   "setup": {
     "title": "Set up your VidFriends server",
@@ -112,7 +119,18 @@
     "sessionsTitle": "Sessions",
     "logoutEverywhere": "Log out everywhere",
     "logoutEverywhereHelp": "Ends every session on every device, including this one.",
-    "appearanceTitle": "Appearance"
+    "appearanceTitle": "Appearance",
+    "profileTitle": "Profile",
+    "displayName": "Display name",
+    "displayNameHelp": "What your friends see. Up to 50 characters.",
+    "saveProfile": "Save",
+    "profileSaved": "Profile saved.",
+    "avatar": "Profile picture",
+    "avatarHelp": "An image up to 2 MB. It's cropped to a square.",
+    "avatarChoose": "Choose a picture",
+    "avatarRemove": "Remove picture",
+    "avatarSaved": "Profile picture updated.",
+    "username": "Username: {{username}}"
   },
   "invites": {
     "title": "Invites",
@@ -148,5 +166,49 @@
   "notFound": {
     "title": "Page not found",
     "home": "Go home"
+  },
+  "friends": {
+    "title": "Friends",
+    "intro": "Friends are people who can send you videos and receive yours. Friendship needs both of you to agree.",
+    "searchLabel": "Find people on this server",
+    "searchPlaceholder": "Search by username or name",
+    "searchHelp": "Type at least 2 characters.",
+    "searchEmpty": "Nobody found.",
+    "incoming": "Requests for you",
+    "outgoing": "Requests you sent",
+    "friendsList": "Your friends",
+    "blocked": "Blocked",
+    "noFriends": "No friends yet. Search above or send someone an invite.",
+    "noIncoming": "No pending requests.",
+    "noOutgoing": "No requests waiting.",
+    "noBlocked": "You haven't blocked anyone.",
+    "add": "Add friend",
+    "accept": "Accept",
+    "decline": "Decline",
+    "cancel": "Cancel request",
+    "remove": "Remove",
+    "block": "Block",
+    "unblock": "Unblock",
+    "state": {
+      "none": "",
+      "friends": "Friends",
+      "request_sent": "Request sent",
+      "request_received": "Wants to be friends",
+      "blocked": "Blocked"
+    },
+    "blockConfirmTitle": "Block {{name}}?",
+    "blockConfirm": "They won't be able to find you, send you videos or ask to be friends. Videos between you are deleted. You can unblock later, but the friendship won't come back automatically.",
+    "removeConfirmTitle": "Remove {{name}}?",
+    "removeConfirm": "You will stop seeing each other as friends. You can ask again later.",
+    "cooldown": "You can ask again later.",
+    "done": {
+      "request": "Friend request sent.",
+      "accept": "You are now friends.",
+      "decline": "Request declined.",
+      "cancel": "Request cancelled.",
+      "remove": "Friend removed.",
+      "block": "Blocked.",
+      "unblock": "Unblocked."
+    }
   }
 }

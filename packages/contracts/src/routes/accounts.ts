@@ -161,4 +161,68 @@ export const changePassword = defineRoute({
   errors: ['invalid_credentials', 'rate_limited'],
 });
 
+export const updateMe = defineRoute({
+  id: 'updateMe',
+  method: 'patch',
+  path: '/me',
+  auth: 'member',
+  tag: 'me',
+  summary: 'Edit display name (FR-ACCT-01)',
+  body: z.object({ display_name: DisplayName }),
+  status: 200,
+  response: z.object({ user: SelfUser }),
+});
+
+/** BR-ACCT-3: avatars are at most 2 MB before server-side re-encoding. */
+export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+export const AvatarContentType = z.enum([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/heic',
+  'image/heif',
+  'image/avif',
+]);
+
+export const createAvatarUpload = defineRoute({
+  id: 'createAvatarUpload',
+  method: 'post',
+  path: '/me/avatar/upload',
+  auth: 'member',
+  tag: 'me',
+  summary: 'Get a presigned PUT URL for a new avatar (step 1 of 2)',
+  body: z.object({
+    bytes: z.number().int().min(1).max(AVATAR_MAX_BYTES, 'too_large'),
+    content_type: AvatarContentType,
+  }),
+  status: 201,
+  response: z.object({ upload_id: z.string(), put_url: z.string(), expires_at: Timestamp }),
+  errors: ['too_large'],
+});
+
+export const setAvatar = defineRoute({
+  id: 'setAvatar',
+  method: 'put',
+  path: '/me/avatar',
+  auth: 'member',
+  tag: 'me',
+  summary: 'Use an uploaded image as avatar; re-encoded to 256×256 WebP (step 2 of 2)',
+  body: z.object({ upload_id: z.string().min(10).max(100) }),
+  status: 200,
+  response: z.object({ user: SelfUser }),
+  errors: ['upload_incomplete', 'too_large'],
+});
+
+export const deleteAvatar = defineRoute({
+  id: 'deleteAvatar',
+  method: 'delete',
+  path: '/me/avatar',
+  auth: 'member',
+  tag: 'me',
+  summary: 'Remove the avatar',
+  status: 200,
+  response: z.object({ user: SelfUser }),
+});
+
 export { Empty };

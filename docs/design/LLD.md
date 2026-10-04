@@ -77,7 +77,7 @@ erDiagram
 
 **`relationships`** (one row per pair, BR-FRND-2)
 - `user_low`, `user_high`: FK users CASCADE, CHECK `user_low < user_high`, PK (`user_low`, `user_high`)
-- `state` text CHECK in (`pending`, `accepted`, `blocked`)
+- `state` text CHECK in (`none`, `pending`, `accepted`, `blocked`). `none` is a tombstone that only carries a decline cooldown (BR-FRND-4): `requested_by` then names the declined requester and `cooldown_until` when they may ask again. Migration 0001.
 - `requested_by` uuid NULL (set when `pending`)
 - `blocked_by` uuid NULL (set when `blocked`)
 - `cooldown_until` timestamptz NULL (decline cooldown, BR-FRND-4)
@@ -245,12 +245,13 @@ LIMIT :n + 1;
 | `POST /auth/logout` | M | `{all?: bool}` → 204 | – | AUTH-04 |
 | `GET /me` | M | → `{user, settings_summary}` | – | – |
 | `PATCH /me` | M | `{display_name?}` → `{user}` | – | ACCT-01 |
-| `PUT /me/avatar` | M | presigned flow like uploads → `{user}` | `too_large` | ACCT-01 |
+| `POST /me/avatar/upload`, `PUT /me/avatar`, `DELETE /me/avatar` | M | `{bytes, content_type}` → `{upload_id, put_url, expires_at}` (presigned PUT to `tmp/avatars/<user>/<upload_id>`, ≤ 2 MB); then `{upload_id}` → `{user}` after re-encoding to a 256×256 WebP; delete → `{user}` | `too_large`, `upload_incomplete`, `validation_failed` (`not_an_image`) | ACCT-01 |
+| `GET /users/{user_id}/avatar` | M | → 302 to a signed URL (≤ 15 min). 404 when the viewer is blocked by, or blocking, the user | 404 | ACCT-01 |
 | `POST /me/password` | M | `{current_password, new_password}` → 204 | `invalid_credentials` | ACCT-02 |
 | `DELETE /me` | M | `{password}` → 202 | `last_admin`, `invalid_credentials` | ACCT-03 |
 | `GET /me/sessions`, `DELETE /me/sessions/{id}` | M | list / revoke | – | ACCT-04 |
 | `POST /invites`, `GET /invites`, `DELETE /invites/{id}` | M/A | `{max_uses?, expires_in_days?, auto_friend?}` → `{invite, code, join_url}` (code returned once) | `forbidden` if members cannot invite | INV-01..03 |
-| `GET /users?q=` | M | → `{items:[{id, username, display_name, avatar_url, relationship}]}` | `query_too_short` | FRND-01 |
+| `GET /users?q=` | M | → `{items:[{user:{id, username, display_name, avatar_url}, state, since}]}`; `state` ∈ `none`, `friends`, `request_sent`, `request_received`, `blocked` | `query_too_short` | FRND-01 |
 | `GET /friends`, `GET /friends/requests?direction=in\|out`, `GET /blocks` | M | lists | – | FRND-05 |
 | `POST /friends/requests` | M | `{user_id}` → `{relationship}` | `cooldown`, `blocked` (as 404), `already_friends`, `rate_limited` | FRND-02,04 |
 | `POST /friends/requests/{user_id}/accept` / `…/decline` / `DELETE /friends/requests/{user_id}` (cancel) | M | → `{relationship}` / 204 | `not_found` | FRND-02 |

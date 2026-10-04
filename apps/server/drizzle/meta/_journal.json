@@ -8,6 +8,13 @@
       "when": 1791090630401,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791092232588,
+      "tag": "0001_relationship_cooldown",
+      "breakpoints": true
     }
   ]
 }
