@@ -7,6 +7,8 @@ import { allHandlers } from './http/handlers.js';
 import { createDatabase } from './infra/db.js';
 import { createLogger } from './infra/logger.js';
 import { createQueue } from './infra/queue.js';
+import { registerGauge, startMetricsServer } from './infra/metrics.js';
+import { sql } from 'drizzle-orm';
 import { QUEUES } from './jobs/worker.js';
 import { buildDeps, initSetupToken } from './bootstrap.js';
 import { SERVER_VERSION } from './version.js';
@@ -42,6 +44,32 @@ async function main(): Promise<void> {
     });
   } else if (env.NODE_ENV !== 'test') {
     log.warn('S3 storage is not configured; media features are unavailable');
+  }
+
+  if (env.METRICS_PORT > 0) {
+    const metricsServer = startMetricsServer(env.METRICS_PORT);
+    registerGauge(
+      'vidfriends_storage_bytes',
+      'Bytes of stored media attributed to members',
+      async () => {
+        const r = await deps.db.execute<{ n: string }>(
+          sql`select coalesce(sum(storage_bytes), 0) as n from users`,
+        );
+        return Number(r.rows[0]?.n ?? 0);
+      },
+    );
+    registerGauge(
+      'vidfriends_queue_depth',
+      'Queued jobs by queue',
+      async () => {
+        const r = await deps.db.execute<{ name: string; n: number }>(
+          sql`select name, count(*)::int as n from pgboss.job where state in ('created', 'retry') group by name`,
+        );
+        return Object.fromEntries(r.rows.map((row) => [row.name, row.n]));
+      },
+      'queue',
+    );
+    shutdownTasks.push(() => new Promise<void>((resolve) => metricsServer.close(() => resolve())));
   }
 
   // Both roles enqueue jobs; only the worker role processes them (SDD §4).

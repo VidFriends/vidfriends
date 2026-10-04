@@ -7,6 +7,7 @@ export * from './routes/friends.js';
 export * from './routes/videos.js';
 export * from './routes/shares.js';
 export * from './routes/notifications.js';
+export * from './routes/admin.js';
 
 import * as accounts from './routes/accounts.js';
 import * as invites from './routes/invites.js';
@@ -14,6 +15,7 @@ import * as friends from './routes/friends.js';
 import * as videos from './routes/videos.js';
 import * as shares from './routes/shares.js';
 import * as notifications from './routes/notifications.js';
+import * as admin from './routes/admin.js';
 import type { RouteDef } from './route.js';
 
 function collect(...modules: Record<string, unknown>[]): RouteDef[] {
@@ -42,4 +44,5 @@ export const allRoutes: readonly RouteDef[] = collect(
   videos,
   shares,
   notifications,
+  admin,
 );

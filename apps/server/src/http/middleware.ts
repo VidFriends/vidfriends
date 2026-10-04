@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import type { MiddlewareHandler } from 'hono';
 import { matchedRoutes } from 'hono/route';
 import { resolveClientIp } from '../infra/ip.js';
+import { httpDuration } from '../infra/metrics.js';
 import type { AppEnv } from './context.js';
 import type { Deps } from './deps.js';
 import { ApiError } from './errors.js';
@@ -37,6 +38,10 @@ export function requestLogger(deps: Deps): MiddlewareHandler<AppEnv> {
     if (!route) {
       route = c.req.path.startsWith('/api/') ? '(unmatched api)' : '(web)';
     }
+    httpDuration.observe(
+      { method: c.req.method, route, status: String(c.res.status) },
+      (performance.now() - start) / 1000,
+    );
     log.info(
       {
         method: c.req.method,

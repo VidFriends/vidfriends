@@ -25,6 +25,10 @@ export const ENV_SPEC = {
   },
   HOST: { schema: z.string().default('0.0.0.0'), description: 'HTTP bind address.' },
   PORT: { schema: int(1, 65535).default(8080), description: 'HTTP port.' },
+  METRICS_PORT: {
+    schema: int(0, 65535).default(9464),
+    description: 'Internal Prometheus `/metrics` port (0 disables). Never publish it.',
+  },
   PUBLIC_URL: {
     schema: z.url().transform((u) => u.replace(/\/+$/, '')),
     description:

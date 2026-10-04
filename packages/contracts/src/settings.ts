@@ -58,4 +58,19 @@ export const InstanceSettings = z.object({
   session_absolute_days: z.number().int().min(1).max(3650).default(180),
 });
 export type InstanceSettings = z.infer<typeof InstanceSettings>;
-export const InstanceSettingsPatch = InstanceSettings.partial();
+/**
+ * PATCH body: every key optional and **without** defaults (`.partial()` would fill in defaults and
+ * silently reset settings the admin did not send).
+ */
+type Shape = typeof InstanceSettings.shape;
+export const InstanceSettingsPatch = z
+  .object(
+    Object.fromEntries(
+      Object.entries(InstanceSettings.shape).map(([k, v]) => [
+        k,
+        (v as z.ZodDefault<z.ZodType>).unwrap().optional(),
+      ]),
+    ) as { [K in keyof Shape]: z.ZodOptional<ReturnType<Shape[K]['unwrap']>> },
+  )
+  .strict();
+export type InstanceSettingsPatch = z.infer<typeof InstanceSettingsPatch>;

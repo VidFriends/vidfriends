@@ -4,6 +4,7 @@
 import { PgBoss, type Job, type SendOptions } from 'pg-boss';
 import type { DbOrTx } from './db.js';
 import type { Logger } from './logger.js';
+import { jobDuration, jobsTotal } from './metrics.js';
 
 export interface QueueDefinition {
   name: string;
@@ -79,7 +80,18 @@ export async function createQueue(
         name,
         { localConcurrency: concurrency, batchSize: 1, pollingIntervalSeconds: 1 },
         async (jobs) => {
-          for (const job of jobs) await handler(job);
+          for (const job of jobs) {
+            const end = jobDuration.startTimer({ queue: name });
+            try {
+              await handler(job);
+              jobsTotal.inc({ queue: name, outcome: 'completed' });
+            } catch (err) {
+              jobsTotal.inc({ queue: name, outcome: 'failed' });
+              throw err;
+            } finally {
+              end();
+            }
+          }
         },
       );
     },
