@@ -1,0 +1,12 @@
+# Scrapes the internal metrics port (METRICS_PORT, default 9464) on the compose network.
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+
+scrape_configs:
+  - job_name: vidfriends-api
+    static_configs:
+      - targets: ['server:9464']
+  - job_name: vidfriends-worker
+    static_configs:
+      - targets: ['worker:9464']
