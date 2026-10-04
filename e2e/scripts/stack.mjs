@@ -31,7 +31,7 @@ const compose = (...args) =>
 
 const cmd = process.argv[2];
 if ((cmd === 'down' || cmd === 'logs') && !existsSync(envFile)) {
-  console.log('no E2E stack was started; nothing to do');
+  console.warn('no E2E stack was started; nothing to do');
   process.exit(0);
 }
 if (cmd === 'up') {
