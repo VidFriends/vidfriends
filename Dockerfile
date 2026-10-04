@@ -4,7 +4,11 @@
 
 ARG NODE_IMAGE=node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1
 
-FROM ${NODE_IMAGE} AS build
+# The build stage runs on the build machine's platform: Node under QEMU emulation crashed
+# intermittently with SIGILL in arm64 release builds. It produces only JavaScript, plus the
+# prebuilt native packages (sharp, @node-rs/argon2) of the *target* platform, chosen at deploy time.
+FROM --platform=$BUILDPLATFORM ${NODE_IMAGE} AS build
+ARG TARGETARCH
 COPY deploy/docker/with-extra-ca.sh /usr/local/bin/with-extra-ca
 RUN corepack enable
 WORKDIR /src
@@ -24,7 +28,9 @@ ARG VIDFRIENDS_VERSION=0.1.0-dev
 RUN pnpm turbo run build --filter=@vidfriends/server --filter=@vidfriends/web
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     --mount=type=secret,id=extra_ca,required=false \
-    with-extra-ca pnpm --filter @vidfriends/server deploy --prod --legacy /out \
+    case "${TARGETARCH:-$(uname -m)}" in amd64|x86_64) cpu=x64 ;; arm64|aarch64) cpu=arm64 ;; *) exit 1 ;; esac \
+    && with-extra-ca pnpm --filter @vidfriends/server deploy --prod --legacy \
+      --os=linux --cpu="$cpu" --libc=musl /out \
     && cp -r apps/web/dist /out/web
 
 FROM ${NODE_IMAGE} AS server
