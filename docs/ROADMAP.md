@@ -229,7 +229,7 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 
 **Exit:** the web MVP is usable by an invited group on a dev or staging deployment.
 
-### M5: Admin, operations, alpha 🟡 (T1–T3, T5, T7 done; T4/T6/T8 await a published tag or the alpha; T9 is the owner's)
+### M5: Admin, operations, alpha 🟡 (T1–T5, T7 done; T6/T8 final checks and T9 wait for the alpha, postponed by the owner)
 
 **Goal:** an operator can run the instance safely. The owner's alpha group uses it.
 **Requirements:** FR-ACCT-03, 04(S); FR-VID-06; FR-ADM-01..05 (UI); NFR-REL-04, 05; NFR-DATA-01; NFR-OPS-01, 03 (metrics), 04; NFR-PERF-01.
@@ -240,14 +240,14 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 | M5-T1 Admin console | Users, invites, settings, storage, audit log screens and APIs (WF-ADM-*) | Playwright `admin.spec.ts` (suspend → session rejected; last-admin protection; password-reset link) <br>**✅** `e2e/tests/admin.spec.ts`; APIs in `apps/server/test/admin.test.ts` |
 | M5-T2 Retention and sweeper | `retention.purge`, `storage.sweep`, `session.cleanup` crons, manual run | API time-travel tests; the sweeper finds a planted orphan <br>**✅** `apps/server/test/maintenance.test.ts` |
 | M5-T3 Account deletion | WF-ACCT-3, including media purge | API test verifies no rows or objects remain for the user within the job run <br>**✅** `apps/server/test/admin.test.ts` (account deletion) |
-| M5-T4 Ops hardening | Metrics endpoint, optional monitoring compose, log rotation, release workflow (GHCR multi-arch, SBOM), upgrade doc | A tag on a test repo produces images; the upgrade runbook is executed <br>**🟡** Metrics, monitoring overlay (verified), log rotation, `.github/workflows/release.yml` (multi-arch build verified unpushed on the PR), upgrade runbook executed (M3 → current, [RUNBOOK §7](../deploy/RUNBOOK.md#7-records)). Publishing: the owner chose `v0.1.0-rc.1` (2026-10-04); because agent tooling cannot push tags, the workflow also releases by dispatch on `main` (creates the tag with the release), usable once the M6 PR merges. |
+| M5-T4 Ops hardening | Metrics endpoint, optional monitoring compose, log rotation, release workflow (GHCR multi-arch, SBOM), upgrade doc | A tag on a test repo produces images; the upgrade runbook is executed <br>**✅** [v0.1.0-rc.1](https://github.com/VidFriends/vidfriends/releases/tag/v0.1.0-rc.1) published by `release.yml` dispatched on `main` (multi-arch GHCR images, SPDX SBOMs, provenance; [run](https://github.com/VidFriends/vidfriends/actions/runs/37204500580)). Metrics, monitoring overlay, log rotation and the upgrade runbook as before ([RUNBOOK §7](../deploy/RUNBOOK.md#7-records)); the arm64 image build no longer runs Node under QEMU (SIGILL fix). |
 | M5-T5 Backup and restore | Scripts and runbook for Postgres and object storage | Restore drill recorded (date, RPO and RTO observed) in `deploy/RUNBOOK.md` <br>**✅** `deploy/backup/`, drill in [RUNBOOK §7](../deploy/RUNBOOK.md#7-records); repeated in CI by `e2e/scripts/restore-drill.sh` |
 | M5-T6 Fresh-VM deploy | Runbook from a blank VM to a claimed instance in ≤ 30 min (BO-4) | Executed and timed by someone (or an agent) following only the docs <br>**🟡** Executed by an agent from the docs: 28 s to a claimed instance excluding Docker install and image pulls ([RUNBOOK §7](../deploy/RUNBOOK.md#7-records)). Repeat on a real blank VM with released images during M5-T9. |
 | M5-T7 Load and security review | k6 at 50 VUs (NFR-PERF-01); threat-model review against TDD §5; dependency audit | Report committed under `docs/reports/`; issues fixed or accepted in an ADR <br>**✅** [Report](reports/2026-10-04-m5-load-and-security-review.md) (p95 20.9 ms at 50 VUs; findings F-1..F-6 fixed); residual risks accepted in [ADR-0016](adr/0016-accepted-residual-security-risks-v0-1.md) |
 | M5-T8 Operator and user guides | Self-hosting guide, privacy disclosure, member help pages | Docs reviewed against the deployed alpha <br>**🟡** [Self-hosting guide](guides/self-hosting.md), in-app `/privacy` and `/help` (`e2e/tests/docs.spec.ts`), [runbook](../deploy/RUNBOOK.md). Reviewed against the E2E deployment; the review against the owner's alpha happens in M5-T9. |
 | M5-T9 Alpha release v0.1.0 | Owner's private self-hosted instance live; alpha group onboarded; BO metrics collection plan (manual, privacy-preserving) | Owner sign-off <br>**⏸** Postponed by the owner (multiple-choice answer, 2026-10-04). M4-T6, M5-T6 and M5-T8 checks that depend on it wait with it. |
 
-### M6: Mobile apps (Expo) 🟡 (T1–T4 and T6 done; T5 device checks wait for devices; T7 store builds blocked on accounts; T8 sideload APK in the M7 PR)
+### M6: Mobile apps (Expo) 🟡 (T1–T4 and T6 done; T5 device checks wait for devices; T7 store builds blocked on accounts; T8 built, waits on signing secrets)
 
 **Goal:** iOS and Android apps with share-sheet intake and push.
 **Requirements:** FR-PAIR-03, 04 (app links); FR-NOTIF-03; FR-MOB-01..03; NFR-A11Y-02; NFR-COMPAT-02.
@@ -262,21 +262,21 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 | M6-T5 Share intent and push | `expo-share-intent` (iOS extension, Android `text/*` and `video/*`) opens Send; Expo push tokens registered as push targets; server Expo push channel with gone-token cleanup; taps open the share | FR-MOB-02, FR-NOTIF-03, ADR-0011, BR-NOT-3/6 | Server unit test `apps/server/test/push-expo.test.ts`; mobile `push-target.test.ts`; device runbook (share from TikTok/YouTube/Instagram, real push) during the alpha <br>**🟡** [PR #116](https://github.com/VidFriends/vidfriends/pull/116): server and mobile unit tests green. The device runbook (share sheet from TikTok/YouTube/Instagram, real push) waits for real devices (postponed alpha, M5-T9) |
 | M6-T6 Android E2E and accessibility | Release APK built from the Expo project in CI; stack in its emulator HTTP variant; Maestro flows J-2..J-5 on an Android 14 emulator; accessibility review (labels, roles, font scaling, reduced motion) | NFR-A11Y-02, NFR-COMPAT-02, TDD §7 | `mobile.yml` android-e2e job green; review notes in the PR <br>**✅** [PR #116](https://github.com/VidFriends/vidfriends/pull/116); `mobile.yml` android-e2e green ([Mobile run](https://github.com/VidFriends/vidfriends/actions/runs/37202568887)); accessibility review notes in `apps/mobile/README.md` |
 | M6-T7 Store builds | EAS project, signing, TestFlight and Play internal track; iOS build and Maestro on macOS runners | BC-7 | ⛔ Owner: Apple and Google developer accounts |
-| M6-T8 Sideloadable Android APK | Owner choice (2026-10-04) while store accounts are missing: the release workflow builds a universal release APK, re-signs it with the project's upload key from repository secrets (never committed), attaches it with its SHA-256 to the GitHub release; [sideload guide](guides/android-sideload.md) and the help page explain installing. iOS waits for M6-T7 | FR-MOB-01, BC-7 | `release.yml` `android` job builds and verifies the APK on the PR; a dispatched release has the `.apk` and `.sha256` assets. **Owner action:** add the four `ANDROID_*` signing secrets (guide); without them the APK is built but not attached |
+| M6-T8 Sideloadable Android APK | Owner choice (2026-10-04) while store accounts are missing: the release workflow builds a universal release APK, re-signs it with the project's upload key from repository secrets (never committed), attaches it with its SHA-256 to the GitHub release; [sideload guide](guides/android-sideload.md) and the help page explain installing. iOS waits for M6-T7 | FR-MOB-01, BC-7 | `release.yml` `android` job builds and verifies the APK on the PR; a dispatched release has the `.apk` and `.sha256` assets. **Owner action:** add the four `ANDROID_*` signing secrets (guide); without them the APK is built but not attached <br>**🟡** [PR #117](https://github.com/VidFriends/vidfriends/pull/117): the `android` release job builds, signs-or-skips and verifies the APK (green on the PR). Attaching it to releases waits on the owner adding the signing secrets |
 
 **Exit:** Maestro suites green; TestFlight and Play internal builds installed by the alpha group; share-to-send works from TikTok, YouTube and Instagram on both platforms (runbook).
 
 ### v1.0
 M5 and M6 are complete, and every Must requirement in the SRS has passing verification (PRD §6).
 
-### M7: Post-v1 backlog 🟡 (data export scheduled by the owner, 2026-10-04)
+### M7: Post-v1 backlog 🟡 (data export done; the rest is unscheduled)
 
 Each item needs a PRD update and, where architectural, an ADR before work starts. The owner chose data export as the first item (multiple-choice answer, 2026-10-04); PRD CAP-18 and SRS FR-ACCT-05 now describe it.
 
 | Task | Objective | References | Completion check |
 |---|---|---|---|
-| M7-T1 Data export | A member requests a ZIP of their data (profile, friends, sent and received shares with notes, reactions and conversations, videos added, security log, avatar, optional media under 4 GiB); built by the `account.export` job; signed download for 7 days; one in progress, 3 per day; removed with the account; Settings card on the web | FR-ACCT-05, WF-ACCT-4, LLD §2 `exports`, §3 | `apps/server/test/exports.test.ts`; authz matrix `downloadExport`; Playwright `e2e/tests/export.spec.ts` (passes locally against the compose stack; CI evidence on the M7 PR) |
-| M7-T2 Data export on mobile | The same card in the app's Settings; the app fetches the signed link as data (`GET /me/exports/{id}/download-url`, bearer clients cannot follow the redirect) and opens it in the browser | FR-ACCT-05, FR-MOB-01 | Maestro `apps/mobile/e2e/flows/export.yaml` requests an export and sees it ready; authz matrix `getExportUrl` |
+| M7-T1 Data export | A member requests a ZIP of their data (profile, friends, sent and received shares with notes, reactions and conversations, videos added, security log, avatar, optional media under 4 GiB); built by the `account.export` job; signed download for 7 days; one in progress, 3 per day; removed with the account; Settings card on the web | FR-ACCT-05, WF-ACCT-4, LLD §2 `exports`, §3 | `apps/server/test/exports.test.ts`; authz matrix `downloadExport`; Playwright `e2e/tests/export.spec.ts` <br>**✅** [PR #117](https://github.com/VidFriends/vidfriends/pull/117); CI green on the merged head (API tests, authz matrix, Playwright in "Images, Trivy and E2E") |
+| M7-T2 Data export on mobile | The same card in the app's Settings; the app fetches the signed link as data (`GET /me/exports/{id}/download-url`, bearer clients cannot follow the redirect) and opens it in the browser | FR-ACCT-05, FR-MOB-01 | Maestro `apps/mobile/e2e/flows/export.yaml` requests an export and sees it ready; authz matrix `getExportUrl` <br>**✅** [PR #117](https://github.com/VidFriends/vidfriends/pull/117); Android Maestro run including `export.yaml` green |
 
 Remaining backlog (not scheduled):
 
@@ -307,8 +307,8 @@ Remaining backlog (not scheduled):
 
 ## 7. Next actionable milestone
 
-**M7: data export**, while M6 finishes.
-- **Now (agents):** M6 merged ([PR #116](https://github.com/VidFriends/vidfriends/pull/116)) and `release.yml` dispatched on `main` for `v0.1.0-rc.1`; get the M7 PR (M7-T1/T2 data export, M6-T8 sideload APK) green and merge it.
+**Owner decisions.** Everything an agent can do in M5–M7 is merged; what remains needs the owner (below) or a newly scheduled M7 item.
+- **Now (agents):** nothing unblocked remains in M5–M7. M6 ([PR #116](https://github.com/VidFriends/vidfriends/pull/116)) and M7 data export ([PR #117](https://github.com/VidFriends/vidfriends/pull/117)) are merged and [v0.1.0-rc.1](https://github.com/VidFriends/vidfriends/releases/tag/v0.1.0-rc.1) is published. The next M7 item needs the owner to schedule it (each needs a PRD update first).
 - **Owner:** enable branch protection on `main` (M1-T2); add the Android signing secrets ([guide](guides/android-sideload.md)) so releases carry the APK (M6-T8); Apple and Google developer accounts for store builds (M6-T7). The alpha (M5-T9) is postponed by the owner.
 - **Verification:** each item's completion check in §5, with the CI run or record linked in the task row.
 
@@ -316,6 +316,7 @@ Remaining backlog (not scheduled):
 
 | Date | Change |
 |---|---|
+| 2026-10-04 | [v0.1.0-rc.1](https://github.com/VidFriends/vidfriends/releases/tag/v0.1.0-rc.1) published (M5-T4 ✅). M7-T1/T2 data export and the M6-T8 sideload APK job merged in [PR #117](https://github.com/VidFriends/vidfriends/pull/117). |
 | 2026-10-04 | M6 merged ([PR #116](https://github.com/VidFriends/vidfriends/pull/116)) with the Android Maestro suite green; the emulator run found two app bugs (sign-in navigation race, Hermes `Intl.RelativeTimeFormat` crash) and the arm64 image build moved off QEMU for Node (SIGILL). `v0.1.0-rc.1` dispatched. |
 | 2026-10-04 | Owner answers (multiple choice): alpha (M5-T9) postponed; Android ships as a sideloadable APK until store accounts exist (M6-T8 added); M7 starts with data export (CAP-18 → FR-ACCT-05, WF-ACCT-4; M7-T1 web/API, M7-T2 mobile). BRD BO-5 corrected to match NFR-PRIV-03 (no email). |
 | 2026-10-04 | PR #112 (M1–M5) merged with CI run 193 green. Owner answer (multiple choice): publish `v0.1.0-rc.1` now. M6 detailed tasks written; mobile app, Expo push channel and Android Maestro workflow in the M6 PR; ADR-0017 (one React version). |
