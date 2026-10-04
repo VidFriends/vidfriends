@@ -135,6 +135,8 @@ jobs:
         run: pnpm --filter @vidfriends/e2e e2e
         env:
           E2E_CHROME_CHANNEL: '1'
+      - name: Backup and restore drill (NFR-REL-04)
+        run: e2e/scripts/restore-drill.sh
       - name: Stack logs
         if: failure()
         run: node e2e/scripts/stack.mjs logs
