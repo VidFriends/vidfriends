@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.turbo/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+deploy/.env
+test-results/
+playwright-report/
+blob-report/
+*.tsbuildinfo
+.vite/

@@ -1,0 +1,2 @@
+# sha256 of each applied migration. Never edit a line: migrations are immutable once merged.
+8e0bef162705461b582a0f54234dfdf44629077b41b06eb438231b3dbacbe478  0000_init.sql
