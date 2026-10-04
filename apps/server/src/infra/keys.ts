@@ -3,6 +3,7 @@ export const keys = {
   avatarUpload: (userId: string, uploadId: string) => `tmp/avatars/${userId}/${uploadId}`,
   avatar: (userId: string, version: string) => `avatars/${userId}/${version}.webp`,
   upload: (uploadId: string) => `uploads/${uploadId}`,
+  fetchSource: (videoId: string) => `tmp/fetch/${videoId}`,
   media: (videoId: string, rendition = 'main') => `media/${videoId}/${rendition}.mp4`,
   thumb: (videoId: string) => `thumbs/${videoId}.webp`,
 };

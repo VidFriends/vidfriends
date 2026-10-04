@@ -1,6 +1,11 @@
 // M1-T9 / NFR-SEC-01: object-level authorization for every id-bearing route.
 import {
   acceptFriendRequest,
+  addVideo,
+  completeUpload,
+  createUpload,
+  getVideo,
+  getVideoMedia,
   allRoutes,
   blockUser,
   cancelFriendRequest,
@@ -78,7 +83,38 @@ function only(who: (keyof Expect)[], ok: number): Expect {
 
 function cases(): MatrixCase[] {
   const owner = () => world.members.owner.user.id;
+  let linkSeq = 0;
+  const ownerVideo = async () => {
+    const { video } = await world.members.owner.client.ok(addVideo, {
+      body: { url: `https://youtube.com/watch?v=matrix${++linkSeq}` },
+    });
+    return video.id;
+  };
   return [
+    matrixCase({
+      route: getVideo,
+      // BR-SHR-6: only members who added (or, from M4, were sent) the video can see it.
+      prepare: async () => ({ params: { id: await ownerVideo() } }),
+      expect: only(['owner'], 200),
+    }),
+    matrixCase({
+      route: getVideoMedia,
+      // Still queued, so the owner gets 409 not_playable; nobody else learns it exists.
+      prepare: async () => ({ params: { id: await ownerVideo() } }),
+      expect: only(['owner'], hasS3 ? 409 : 503),
+    }),
+    matrixCase({
+      route: completeUpload,
+      // Nothing was uploaded, so the owner gets 400 upload_incomplete; others 404.
+      prepare: async () => {
+        if (!hasS3) return { params: { id: '01900000-0000-7000-8000-000000000000' }, body: {} };
+        const slot = await world.members.owner.client.ok(createUpload, {
+          body: { bytes: 100, content_type: 'video/mp4' },
+        });
+        return { params: { id: slot.upload_id }, body: {} };
+      },
+      expect: hasS3 ? only(['owner'], 400) : only([], 404),
+    }),
     matrixCase({
       route: getAvatar,
       // Any member who can see the owner gets a redirect; the blocked user gets 404.

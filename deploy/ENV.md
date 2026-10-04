@@ -29,3 +29,11 @@ Product policy (signup mode, quotas, retention, session lifetimes and so on) is 
 | `S3_ACCESS_KEY_ID` | `` | S3 access key id. **Secret.** |
 | `S3_SECRET_ACCESS_KEY` | `` | S3 secret access key. **Secret.** |
 | `S3_FORCE_PATH_STYLE` | `true` | Use path-style S3 URLs (required for SeaweedFS and MinIO). |
+| `WORK_DIR` | `/tmp/vidfriends-work` | Disk-backed directory for per-job temporary files (worker). Each job uses and removes its own subdirectory. |
+| `WORKER_FETCH_CONCURRENCY` | `2` | Concurrent `video.fetch` jobs per worker (NFR-PERF-03). |
+| `WORKER_PROCESS_CONCURRENCY` | `1` | Concurrent `video.process` (transcode) jobs per worker (NFR-PERF-03). |
+| `YTDLP_PATH` | `yt-dlp` | yt-dlp executable. |
+| `FFMPEG_PATH` | `ffmpeg` | ffmpeg executable. |
+| `FFPROBE_PATH` | `ffprobe` | ffprobe executable. |
+| `FETCH_TIMEOUT_SECONDS` | `600` | Wall-clock limit for one yt-dlp run (BR-MED-2). |
+| `PROCESS_TIMEOUT_SECONDS` | `900` | Wall-clock limit for one ffmpeg run. |

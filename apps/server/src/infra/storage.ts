@@ -1,7 +1,11 @@
 // S3-compatible object storage (ADR-0009, ADR-0015): private bucket, short-lived presigned URLs.
 // Keys are opaque and never contain user input (NFR-SEC-08).
 import {
+  AbortMultipartUploadCommand,
+  CompleteMultipartUploadCommand,
   CreateBucketCommand,
+  CreateMultipartUploadCommand,
+  UploadPartCommand,
   DeleteObjectsCommand,
   GetObjectCommand,
   HeadBucketCommand,
@@ -28,7 +32,7 @@ export interface Storage {
     contentType: string,
     contentLength?: number,
   ): Promise<void>;
-  getObject(key: string): Promise<Readable>;
+  getObject(key: string, range?: string): Promise<Readable>;
   headObject(key: string): Promise<{ size: number; contentType: string | undefined } | null>;
   deleteObjects(keys: string[]): Promise<void>;
   listKeys(
@@ -41,6 +45,19 @@ export interface Storage {
     contentLength: number,
     ttlSeconds?: number,
   ): Promise<string>;
+  createMultipart(key: string, contentType: string): Promise<string>;
+  presignPart(
+    key: string,
+    uploadId: string,
+    partNumber: number,
+    ttlSeconds?: number,
+  ): Promise<string>;
+  completeMultipart(
+    key: string,
+    uploadId: string,
+    parts: { partNumber: number; etag: string }[],
+  ): Promise<void>;
+  abortMultipart(key: string, uploadId: string): Promise<void>;
 }
 
 export function createStorage(env: Env): Storage | null {
@@ -93,8 +110,8 @@ export function createStorage(env: Env): Storage | null {
         }),
       );
     },
-    async getObject(key) {
-      const res = await internal.send(new GetObjectCommand({ Bucket, Key: key }));
+    async getObject(key, range) {
+      const res = await internal.send(new GetObjectCommand({ Bucket, Key: key, Range: range }));
       return res.Body as Readable;
     },
     async headObject(key) {
@@ -155,6 +172,40 @@ export function createStorage(env: Env): Storage | null {
           expiresIn: ttl(ttlSeconds),
           signableHeaders: new Set(['content-type', 'content-length']),
         },
+      );
+    },
+    async createMultipart(key, contentType) {
+      const res = await internal.send(
+        new CreateMultipartUploadCommand({ Bucket, Key: key, ContentType: contentType }),
+      );
+      if (!res.UploadId) throw new Error('multipart upload not created');
+      return res.UploadId;
+    },
+    presignPart(key, uploadId, partNumber, ttlSeconds) {
+      return getSignedUrl(
+        presigner,
+        new UploadPartCommand({ Bucket, Key: key, UploadId: uploadId, PartNumber: partNumber }),
+        { expiresIn: ttl(ttlSeconds) },
+      );
+    },
+    async completeMultipart(key, uploadId, parts) {
+      await internal.send(
+        new CompleteMultipartUploadCommand({
+          Bucket,
+          Key: key,
+          UploadId: uploadId,
+          MultipartUpload: {
+            Parts: parts
+              .slice()
+              .sort((a, b) => a.partNumber - b.partNumber)
+              .map((p) => ({ PartNumber: p.partNumber, ETag: p.etag })),
+          },
+        }),
+      );
+    },
+    async abortMultipart(key, uploadId) {
+      await internal.send(
+        new AbortMultipartUploadCommand({ Bucket, Key: key, UploadId: uploadId }),
       );
     },
   };
