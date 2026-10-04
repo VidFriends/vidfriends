@@ -12,7 +12,11 @@ import { Zip, ZipDeflate, ZipPassThrough } from 'fflate';
 import type { Job } from 'pg-boss';
 import {
   auditLog,
+  collectionItems,
+  collections,
   exports,
+  friendGroupMembers,
+  friendGroups,
   relationships,
   replies,
   shares,
@@ -216,6 +220,48 @@ async function collect(deps: Deps, userId: string) {
     return [];
   });
 
+  // Groups (BR-GRP-2) and collections (BR-COL-3) as the app shows them: current friends only,
+  // and only received shares the member can see.
+  const friendIds = new Set(
+    rels
+      .filter((r) => r.state === 'accepted')
+      .map((r) => (r.userLow === userId ? r.userHigh : r.userLow)),
+  );
+  const groupRows = await db
+    .select()
+    .from(friendGroups)
+    .where(eq(friendGroups.ownerId, userId))
+    .orderBy(asc(friendGroups.name));
+  const groupMembers = groupRows.length
+    ? await db
+        .select()
+        .from(friendGroupMembers)
+        .where(
+          inArray(
+            friendGroupMembers.groupId,
+            groupRows.map((g) => g.id),
+          ),
+        )
+    : [];
+  const collectionRows = await db
+    .select()
+    .from(collections)
+    .where(eq(collections.ownerId, userId))
+    .orderBy(asc(collections.name));
+  const itemRows = collectionRows.length
+    ? await db
+        .select()
+        .from(collectionItems)
+        .where(
+          inArray(
+            collectionItems.collectionId,
+            collectionRows.map((c) => c.id),
+          ),
+        )
+        .orderBy(asc(collectionItems.addedAt))
+    : [];
+  const receivedById = new Map(received.map((s) => [s.id, s]));
+
   const security = await db
     .select()
     .from(auditLog)
@@ -254,6 +300,29 @@ async function collect(deps: Deps, userId: string) {
         my_reaction: s.reaction,
         conversation: conversation(s.id),
       })),
+      'groups.json': groupRows.map((g) => ({
+        name: g.name,
+        members: groupMembers
+          .filter((m) => m.groupId === g.id && friendIds.has(m.userId))
+          .map((m) => userRef(person.get(m.userId))),
+      })),
+      'collections.json': collectionRows.map((c) => ({
+        name: c.name,
+        created_at: c.createdAt.toISOString(),
+        items: itemRows.flatMap((i) => {
+          const share = i.collectionId === c.id ? receivedById.get(i.shareId) : undefined;
+          return share
+            ? [
+                {
+                  from: userRef(person.get(share.senderId)),
+                  video: videoRef(share.videoId),
+                  note: share.note,
+                  added_at: i.addedAt.toISOString(),
+                },
+              ]
+            : [];
+        }),
+      })),
       'videos.json': added.map(({ video: v, addedAt }) => ({
         id: v.id,
         title: v.title,
@@ -282,6 +351,8 @@ friends.json    Your friends, friend requests and the people you blocked.
 received.json   Videos friends sent you, with notes, your reaction and the conversation.
 sent.json       Videos you sent, with who watched them, their reaction and the conversation.
 videos.json     Videos you added (links and uploads).
+groups.json     Your groups of friends for sending.
+collections.json  Your collections of videos friends sent you.
 security.json   Your sign-ins and account actions recorded in the server's audit log.
 avatar.webp     Your profile picture, if you have one.
 media/          ${mediaNote}

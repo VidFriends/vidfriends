@@ -97,6 +97,7 @@
 | FR-FEED-04 | Recipients can save, unsave, hide and unhide a share. | M | BR-SHR-2 | LLD §3 | M4 | API |
 | FR-FEED-05 | The vertical player follows the FRD §7 playback UX rules: active-only playback, preload of the next item, muted autoplay with unmute, and reduced-motion handling. | M | FRD §7 | TDD §4 | M4 | E2E, Audit |
 | FR-FEED-06 | Link-only and expired Videos render as a card with title, thumbnail (if any) and "Open original". | M | BR-MED-3,5 | TDD §4 | M4 | E2E |
+| FR-FEED-07 | Members can keep named collections of videos they received, add a share to one or more collections from its page (which also saves it), and view, rename and delete their collections. | S | BR-COL-1..3 | LLD §2, §3 | M7 | API, E2E |
 
 ### 1.8 Engagement (FR-ENG)
 
@@ -229,6 +230,6 @@ The tables above are the trace matrix: each row links a requirement to its PRD c
 | M4 | FR-SHR-01..03,05; FR-FEED-01..06; FR-ENG-01..02; FR-NOTIF-01,04,05; NFR-A11Y-01; NFR-COMPAT-01 |
 | M5 | FR-ACCT-03; FR-VID-06; FR-ADM-01..05 (UI); NFR-REL-04,05; NFR-DATA-01; NFR-OPS-01,03(metrics),04 |
 | M6 | FR-PAIR-03,04(in-app); FR-NOTIF-03; FR-MOB-01..03; NFR-A11Y-02; NFR-COMPAT-02 |
-| M7 | Passkey-only sign-in (ADR-0018): FR-AUTH-01..04, FR-ACCT-02,03, FR-ADM-03, FR-PAIR-03 (https-only), NFR-SEC-02 change their mechanism; FR-ACCT-05 (S) data export; FR-NOTIF-06 (S) realtime updates (ADR-0019); FR-NOTIF-07 (S) ntfy and Gotify push (ADR-0020); FR-MOB-04 (S) offline downloads; NFR-I18N-01 Spanish; FR-FRND-06 (S) groups of friends |
+| M7 | Passkey-only sign-in (ADR-0018): FR-AUTH-01..04, FR-ACCT-02,03, FR-ADM-03, FR-PAIR-03 (https-only), NFR-SEC-02 change their mechanism; FR-ACCT-05 (S) data export; FR-NOTIF-06 (S) realtime updates (ADR-0019); FR-NOTIF-07 (S) ntfy and Gotify push (ADR-0020); FR-MOB-04 (S) offline downloads; NFR-I18N-01 Spanish; FR-FRND-06 (S) groups of friends; FR-FEED-07 (S) collections |
 
 Every Must requirement appears in exactly one delivery milestone (or is split explicitly by layer); the M7 row lists requirements whose mechanism M7 replaced. NFR-MAINT-03 applies to every milestone.

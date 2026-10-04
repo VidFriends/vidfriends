@@ -1,4 +1,4 @@
-// Shared paginated list for Inbox, Saved and History (BR-FEED-2..4).
+// Shared paginated list for Inbox, Saved, History and collections (BR-FEED-2..4, BR-COL-3).
 import { useApiInfiniteQuery } from '@vidfriends/api-client/react';
 import type { ReceivedShare, RouteDef } from '@vidfriends/contracts';
 import type { ReactNode } from 'react';
@@ -10,12 +10,14 @@ import { ShareCard } from './share-card';
 
 export function ReceivedList({
   route,
+  params,
   query,
   label,
   empty,
   actions,
 }: {
   route: RouteDef;
+  params?: Record<string, string>;
   query?: Record<string, string | number | undefined>;
   label: string;
   empty: string;
@@ -24,7 +26,7 @@ export function ReceivedList({
   const { t } = useTranslation();
   const list = useApiInfiniteQuery(
     route,
-    { query: { limit: 20, ...(query ?? {}) } as never },
+    { params: params as never, query: { limit: 20, ...(query ?? {}) } as never },
     { refetchInterval: 60_000 },
   );
   const items = (list.data?.pages ?? []).flatMap((p) => p.items as ReceivedShare[]);

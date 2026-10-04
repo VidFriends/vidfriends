@@ -64,6 +64,13 @@
       "when": 1791143034556,
       "tag": "0008_friend_groups",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791145887384,
+      "tag": "0009_collections",
+      "breakpoints": true
     }
   ]
 }

@@ -10,7 +10,7 @@ import {
 } from '@vidfriends/contracts';
 import { and, asc, eq, gt, inArray, isNull, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import { replies, sendRequests, shares, users, videos } from '../../db/schema.js';
+import { collectionItems, replies, sendRequests, shares, users, videos } from '../../db/schema.js';
 import { DAY, HOUR, MINUTE } from '../../infra/clock.js';
 import type { DbOrTx } from '../../infra/db.js';
 import { newId } from '../../infra/ids.js';
@@ -39,7 +39,7 @@ const recipient = alias(users, 'recipient');
 const replyCount = sql<number>`(select count(*)::int from replies r where r.share_id = ${shares.id} and r.deleted_at is null)`;
 
 /** Shares joined with their video and both users; `where` must include the participant predicate. */
-function shareQuery(db: DbOrTx) {
+export function shareQuery(db: DbOrTx) {
   return db
     .select({ share: shares, video: videos, sender, recipient, replyCount })
     .from(shares)
@@ -48,7 +48,25 @@ function shareQuery(db: DbOrTx) {
     .innerJoin(recipient, eq(recipient.id, shares.recipientId));
 }
 
-interface Joined {
+/** Shares in a collection with the time each was added (BR-COL-3). */
+export function collectionShareQuery(db: DbOrTx) {
+  return db
+    .select({
+      share: shares,
+      video: videos,
+      sender,
+      recipient,
+      replyCount,
+      addedAt: collectionItems.addedAt,
+    })
+    .from(collectionItems)
+    .innerJoin(shares, eq(shares.id, collectionItems.shareId))
+    .innerJoin(videos, eq(videos.id, shares.videoId))
+    .innerJoin(sender, eq(sender.id, shares.senderId))
+    .innerJoin(recipient, eq(recipient.id, shares.recipientId));
+}
+
+export interface Joined {
   share: ShareRow;
   video: VideoRow;
   sender: UserRow;
@@ -56,7 +74,7 @@ interface Joined {
   replyCount: number;
 }
 
-function toReceived(r: Joined): ReceivedShare {
+export function toReceived(r: Joined): ReceivedShare {
   return {
     id: r.share.id,
     video: toVideo(r.video),
@@ -362,7 +380,13 @@ export async function updateRecipientState(
     set.savedAt = patch.saved ? now : null;
   }
   if (patch.hidden !== undefined) set.hidden = patch.hidden;
-  if (Object.keys(set).length) await deps.db.update(shares).set(set).where(eq(shares.id, id));
+  if (Object.keys(set).length)
+    await deps.db.transaction(async (tx) => {
+      await tx.update(shares).set(set).where(eq(shares.id, id));
+      // BR-COL-2: a share in a collection is saved; unsaving takes it out of every collection.
+      if (patch.saved === false)
+        await tx.delete(collectionItems).where(eq(collectionItems.shareId, id));
+    });
   return toDetail(await participantShare(deps, viewer, id, 'recipient'), viewer.id);
 }
 
@@ -466,7 +490,7 @@ export async function deleteReply(deps: Deps, viewer: Viewer, replyId: string) {
 // Lists (BR-FEED-1..6)
 
 /** Received shares the viewer may see in their lists (BR-SHR-5: sender active). */
-function receivedVisible(viewerId: string) {
+export function receivedVisible(viewerId: string) {
   return and(
     eq(shares.recipientId, viewerId),
     sql`${shares.deliveredAt} is not null`,
@@ -481,7 +505,7 @@ async function loadReceived(deps: Deps, ids: string[]): Promise<Map<string, Join
   return new Map(rows.map((r) => [r.share.id, r]));
 }
 
-function tsCursor(values: CursorValue[] | null): { ts: Date; id: string } | null {
+export function tsCursor(values: CursorValue[] | null): { ts: Date; id: string } | null {
   return values ? { ts: new Date(values[0] as string), id: values[1] as string } : null;
 }
 

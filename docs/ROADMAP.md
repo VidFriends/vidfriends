@@ -75,6 +75,7 @@ The numbering is kept stable. A-1 (licence) and A-4 (default instance) were reso
 - **A-3:** Scale is ≤ 50 users per instance. All performance numbers marked † are proposals.
 - **A-5:** Expo push relay is acceptable (BC-6 exception).
 - **A-6:** The M5 load test capped the `server` and `postgres` containers at 1 vCPU / 2 GB each as a stand-in for the 2 vCPU / 4 GB reference host (NFR-PERF-01); repeat on the alpha VM if it differs.
+- **A-8:** Collections are capped at 50 per member with 500 videos each (BR-COL-1), and adding a video to a collection saves it so retention keeps it (BR-COL-2); the limits are a conservative default sized for A-3.
 
 ### 3.4 Open questions
 **None open.** The owner resolved OQ-1..OQ-4 on 2026-10-03 ([BRD §7](requirements/BRD.md#7-open-questions-all-resolved-2026-10-03)):
@@ -292,12 +293,12 @@ Each item needs a PRD update and, where architectural, an ADR before work starts
 | M7-T14 Spanish (web and app) | Spanish catalogs for the web app and the mobile app; language from the browser or phone, override in Settings (per device); `lang` on the web document; a parity test keeps keys and placeholders identical | NFR-I18N-01, owner answer 2026-10-04 | `apps/web/src/i18n/catalog.test.ts`, `apps/mobile/src/i18n/catalog.test.ts` green; Playwright `e2e/tests/language.spec.ts` (Spanish browser, switch in Settings, back to following the browser) |
 | M7-T15 Push titles in the member's language | `users.language` (migration `0007_user_language`), `PATCH /me {language}` and `SelfUser.language`; web and app report the language in use; Web Push, Expo, ntfy and Gotify titles (and the private-previews and test titles) in English or Spanish | NFR-I18N-01, owner answer 2026-10-04 | `apps/server/test/push-servers.test.ts` (Spanish titles through ntfy); Playwright `language.spec.ts` checks the account records Spanish |
 | M7-T16 Groups of friends (group sends) | `friend_groups` and `friend_group_members` (migration `0008_friend_groups`), CRUD API (owner-only, authz matrix), Friends → Groups card on the web, group buttons on Send (web and app) that select the members; one share per recipient as before (ADR-0010) | FR-FRND-06, BR-GRP-1..3, owner answer 2026-10-04 | `apps/server/test/groups.test.ts`; authz matrix `updateFriendGroup`/`deleteFriendGroup`; Playwright `e2e/tests/groups.spec.ts` |
+| M7-T17 Collections | `collections` and `collection_items` (migration `0009_collections`); owner-only API (`/collections`, items by share id, authz matrix); adding a share saves it, unsaving takes it out of every collection; web: Saved → Collections card, collection page (rename, delete, remove), "Add to collection" on a received share; app: More → Collections, collection screen, picker from the share screen; collections and groups in the data export | FR-FEED-07, BR-COL-1..3, CAP-14, owner answer 2026-10-04 | `apps/server/test/collections.test.ts`; authz matrix `getCollection`/`updateCollection`/`deleteCollection`/`addToCollection`/`removeFromCollection`; `apps/server/test/exports.test.ts` (`collections.json`, `groups.json`); Playwright `e2e/tests/collections.spec.ts` |
 
-Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7..T9, offline downloads to M7-T13):
+Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7..T9, offline downloads to M7-T13, collections to M7-T17):
 
 | Item | Source |
 |---|---|
-| Collections (CAP-14) | 2026 web/backend |
 | UnifiedPush channel (needs a native connector in the app; ADR-0020) | ADR-0011 |
 | Perceptual dedup | 2026 backend, redesigned per L-19 |
 | More languages | NFR-I18N-01 |
@@ -319,7 +320,7 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7
 ## 7. Next actionable milestone
 
 **M7: post-v1 backlog.** Data export and passkey-only sign-in are done; realtime updates (M7-T7..T9) are next, chosen by the owner on 2026-10-04.
-- **Now (agents):** M7-T16 groups of friends (owner's choice, 2026-10-04; M7-T14/T15 are done); then the next backlog item the owner schedules.
+- **Now (agents):** M7-T17 collections (owner's choice, 2026-10-04; M7-T14..T16 are done); then the next backlog item the owner schedules.
 - **Owner:** check passkey sign-in on a real Android phone and iPhone against an HTTPS instance (M7-T6); enable branch protection on `main` (M1-T2); Apple and Google developer accounts for store builds (M6-T7). The alpha (M5-T9) is postponed by the owner.
 - **Verification:** each item's completion check in §5, with the CI run or record linked in the task row.
 
@@ -327,6 +328,8 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6, realtime to M7-T7
 
 | Date | Change |
 |---|---|
+| 2026-10-04 | M7-T16 groups of friends ✅, merged in [PR #126](https://github.com/VidFriends/vidfriends/pull/126) with CI green, including Playwright `groups.spec.ts` and the Android Maestro suite. |
+| 2026-10-04 | Owner answer (multiple choice): next, **collections** (M7-T17, CAP-14, FR-FEED-07, BR-COL-1..3): named lists of received videos; adding one also saves it. Assumption: limits of 50 collections of 500 videos each, and the data export gains `collections.json` and `groups.json` (groups were missing from it). |
 | 2026-10-04 | M7-T14 Spanish and M7-T15 push titles in the member's language ✅, merged in [PR #125](https://github.com/VidFriends/vidfriends/pull/125) with CI green, including Playwright `language.spec.ts` and the Android Maestro suite. |
 | 2026-10-04 | M7-T7..T9 realtime updates ✅, merged in [PR #122](https://github.com/VidFriends/vidfriends/pull/122) with CI green, including the Android Maestro suite. |
 | 2026-10-04 | Owner answer (multiple choice): next, **group sends**: named groups of friends picked on Send (M7-T16, FR-FRND-06, BR-GRP-1..3); still one share per recipient. |

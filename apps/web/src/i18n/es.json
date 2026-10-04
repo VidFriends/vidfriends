@@ -77,7 +77,10 @@
     "too_many_passkeys": "Ya tienes 10 llaves de acceso. Primero elimina una.",
     "too_many_push_targets": "Ya tienes 5 destinos de ntfy o Gotify. Primero elimina uno.",
     "too_many_groups": "Ya tienes 20 grupos. Elimina uno primero.",
-    "group_name_taken": "Ya tienes un grupo con este nombre."
+    "group_name_taken": "Ya tienes un grupo con este nombre.",
+    "too_many_collections": "Ya tienes 50 colecciones. Elimina una primero.",
+    "collection_name_taken": "Ya tienes una colección con este nombre.",
+    "collection_full": "Esta colección está llena (500 vídeos). Quita uno primero."
   },
   "fieldErrors": {
     "required": "Obligatorio.",
@@ -719,5 +722,30 @@
     "add_one": "{{name}} ({{count}} amigo)",
     "add_other": "{{name}} ({{count}} amigos)",
     "add_many": "{{name}} ({{count}} amigos)"
+  },
+  "collections": {
+    "title": "Colecciones",
+    "help": "Guarda vídeos en listas con nombre. Los vídeos de una colección siguen guardados.",
+    "count_one": "{{count}} vídeo",
+    "count_other": "{{count}} vídeos",
+    "count_many": "{{count}} vídeos",
+    "newName": "Nueva colección",
+    "namePlaceholder": "Nombre, p. ej. Recetas",
+    "create": "Crear",
+    "name": "Nombre",
+    "save": "Guardar",
+    "rename": "Cambiar nombre",
+    "delete": "Eliminar colección",
+    "deleteTitle": "¿Eliminar «{{name}}»?",
+    "deleteHelp": "Los vídeos siguen en Guardados.",
+    "deleted": "Colección eliminada",
+    "empty": "Aún no hay vídeos en esta colección. Añádelos desde la página de un vídeo.",
+    "back": "← Guardados",
+    "remove": "Quitar",
+    "removeOne": "Quitar «{{title}}» de esta colección",
+    "removed": "Quitado de la colección",
+    "add": "Añadir a una colección",
+    "addTitle": "Añadir a una colección",
+    "addHelp": "Marca las colecciones en las que va este vídeo o crea una nueva. También se guarda."
   }
 }

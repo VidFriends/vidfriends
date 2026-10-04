@@ -13,6 +13,7 @@ export default function More() {
       '/notifications',
     ],
     [t('lists.saved'), '/saved'],
+    [t('collections.title'), '/collections'],
     [t('lists.history'), '/history'],
     [t('lists.sent'), '/sent'],
     [t('offline.title'), '/downloads'],

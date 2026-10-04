@@ -46,6 +46,9 @@ function Screens() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="share/[id]" options={{ title: t('share.title') }} />
       <Stack.Screen name="saved" options={{ title: t('lists.saved') }} />
+      <Stack.Screen name="collections/index" options={{ title: t('collections.title') }} />
+      <Stack.Screen name="collections/[id]" options={{ title: t('collections.title') }} />
+      <Stack.Screen name="collections/pick" options={{ title: t('collections.add') }} />
       <Stack.Screen name="history" options={{ title: t('lists.history') }} />
       <Stack.Screen name="sent" options={{ title: t('lists.sent') }} />
       <Stack.Screen name="notifications" options={{ title: t('notifications.title') }} />
