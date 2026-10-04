@@ -77,7 +77,10 @@
     "too_many_passkeys": "You already have 10 passkeys. Remove one first.",
     "too_many_push_targets": "You already have 5 ntfy or Gotify targets. Remove one first.",
     "too_many_groups": "You already have 20 groups. Delete one first.",
-    "group_name_taken": "You already have a group with this name."
+    "group_name_taken": "You already have a group with this name.",
+    "too_many_collections": "You already have 50 collections. Delete one first.",
+    "collection_name_taken": "You already have a collection with this name.",
+    "collection_full": "This collection is full (500 videos). Remove one first."
   },
   "fieldErrors": {
     "required": "Required.",
@@ -716,5 +719,29 @@
     "deleted": "Group deleted.",
     "add_one": "{{name}} ({{count}} friend)",
     "add_other": "{{name}} ({{count}} friends)"
+  },
+  "collections": {
+    "title": "Collections",
+    "help": "Keep saved videos in named lists. Videos in a collection stay saved.",
+    "count_one": "{{count}} video",
+    "count_other": "{{count}} videos",
+    "newName": "New collection",
+    "namePlaceholder": "Name, e.g. Recipes",
+    "create": "Create",
+    "name": "Name",
+    "save": "Save",
+    "rename": "Rename",
+    "delete": "Delete collection",
+    "deleteTitle": "Delete “{{name}}”?",
+    "deleteHelp": "The videos stay in Saved.",
+    "deleted": "Collection deleted",
+    "empty": "No videos in this collection yet. Add them from a video's page.",
+    "back": "← Saved",
+    "remove": "Remove",
+    "removeOne": "Remove “{{title}}” from this collection",
+    "removed": "Removed from the collection",
+    "add": "Add to collection",
+    "addTitle": "Add to collection",
+    "addHelp": "Tick the collections this video belongs in, or make a new one. It is saved too."
   }
 }

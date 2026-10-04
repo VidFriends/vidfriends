@@ -105,7 +105,7 @@ Settings → Passkeys lists the member's passkeys with name, creation and last-u
 
 ### WF-ACCT-4 Export my data
 - **Request:** a member asks for an export, optionally including media. At most one export is in progress per member, and at most 3 can be requested per 24 hours (429 `rate_limited`).
-- **Build** (background job): a ZIP with `README.txt`, `profile.json`, `friends.json` (friends, requests in and out, blocks), `received.json` and `sent.json` (each share with its video's title, original link and platform, the note, delivery and watch times, saved and hidden for received shares, the reaction and the whole conversation), `videos.json` (videos the member added), `security.json` (the member's own audit entries: action, time, network address) and the avatar. With media, the stored files of videos the member added are included under `media/` while their total stays under 4 GiB; beyond that the README says which were left out.
+- **Build** (background job): a ZIP with `README.txt`, `profile.json`, `friends.json` (friends, requests in and out, blocks), `received.json` and `sent.json` (each share with its video's title, original link and platform, the note, delivery and watch times, saved and hidden for received shares, the reaction and the whole conversation), `videos.json` (videos the member added), `groups.json` (groups of friends, current friends only, BR-GRP-2), `collections.json` (collections and the received shares in them the member can see, BR-COL-3), `security.json` (the member's own audit entries: action, time, network address) and the avatar. With media, the stored files of videos the member added are included under `media/` while their total stays under 4 GiB; beyond that the README says which were left out.
 - **Contents rule:** the export holds only what the member could already see in the app. Other members appear by username and display name; their replies are included only inside the member's own conversations.
 - **Download:** a short-lived signed link, available for 7 days after the export is ready. Then the file is deleted and the export shows as expired.
 - **Failure:** the export shows as failed and no partial file is kept. A build still unfinished after 2 hours (for example because the worker stopped) is marked failed by the cleanup job, so the member can request again.
@@ -235,6 +235,14 @@ The sender may delete a share while `watched_at` is null. The recipient's notifi
 | BR-FEED-5 | **Sent** | Shares sent by the caller, grouped by Video and send time, showing per-recipient state (BR-SHR-4). |
 | BR-FEED-6 | Pagination | Cursor-based keyset pagination on `(sort_key, id)` at full timestamp precision. Page size is 20 by default and 50 at most ([legacy cursor bug](../legacy/audits/2026-backend.md)). |
 | BR-FEED-7 | Duplicate awareness | If the same Video was shared to the recipient by several friends, the feed shows **one** item with "also sent by …". Watching it marks all of those shares watched. Each conversation remains separate. |
+
+**Collections** (FR-FEED-07)
+
+| ID | Rule |
+|---|---|
+| BR-COL-1 | A member can keep up to 50 named collections (names of 1–60 characters, unique per member regardless of case) of up to 500 shares each. Collections are private to their owner; nobody else, including the sender, learns that a share is in one. |
+| BR-COL-2 | Only shares the member **received** can go into a collection. Putting a share into a collection also saves it (BR-FEED-3), so retention keeps its media (BR-MED-5). Taking it out of a collection, or deleting the collection, leaves it saved; unsaving it takes it out of every collection. A share that is deleted (unsent, or its sender's account deleted) leaves its collections. |
+| BR-COL-3 | A collection lists its shares newest added first, with keyset pagination (BR-FEED-6). Like Saved, it shows only shares the member can currently see: shares from a suspended sender are left out (and not counted) until the suspension is lifted (BR-SHR-5). |
 
 **Playback UX rules** (client): vertical full-screen swipe; only the active item plays; the next item is preloaded; web autoplay starts muted with a persistent unmute toggle that is remembered for the session; respect `prefers-reduced-motion` (no autoplay; tap to play).
 

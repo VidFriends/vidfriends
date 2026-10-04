@@ -156,6 +156,14 @@ export default function ShareScreen() {
             onPress={() => update.mutate({ params: { id }, body: { hidden: !s.hidden } })}
           />
         </View>
+      ) : null}
+      {s.role === 'recipient' ? (
+        <Button
+          label={t('collections.add')}
+          variant="secondary"
+          testID="add-to-collection"
+          onPress={() => router.push({ pathname: '/collections/pick', params: { share: id } })}
+        />
       ) : !s.watched_at ? (
         <Button
           label={t('share.unsend')}

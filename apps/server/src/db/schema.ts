@@ -460,6 +460,41 @@ export const sendRequests = pgTable(
   (t) => [primaryKey({ columns: [t.senderId, t.idempotencyKey] })],
 );
 
+/** Collections (FR-FEED-07, BR-COL-1..3): a member's named lists of shares they received. */
+export const collections = pgTable(
+  'collections',
+  {
+    id: uuid('id').primaryKey(),
+    ownerId: uuid('owner_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('collections_owner_name_key').on(t.ownerId, sql`lower(${t.name})`),
+    check('collections_name_length', sql`char_length(${t.name}) between 1 and 60`),
+  ],
+);
+
+export const collectionItems = pgTable(
+  'collection_items',
+  {
+    collectionId: uuid('collection_id')
+      .notNull()
+      .references(() => collections.id, { onDelete: 'cascade' }),
+    shareId: uuid('share_id')
+      .notNull()
+      .references(() => shares.id, { onDelete: 'cascade' }),
+    addedAt: tstz('added_at').notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.collectionId, t.shareId] }),
+    index('collection_items_order_idx').on(t.collectionId, t.addedAt.desc(), t.shareId.desc()),
+    index('collection_items_share_idx').on(t.shareId),
+  ],
+);
+
 export const replies = pgTable(
   'replies',
   {

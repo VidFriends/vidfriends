@@ -1,6 +1,8 @@
 {
   "common": {
-    "retry": "Try again"
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "loadMore": "Load more"
   },
   "errors": {
     "validation_failed": "Please check the highlighted fields.",
@@ -33,7 +35,10 @@
     "generic": "Something went wrong. Please try again.",
     "unsupported_type": "That file type isn't supported. Use MP4, MOV or WebM.",
     "export_in_progress": "Your data is already being prepared.",
-    "code_invalid": "The sign-in expired or was already used. Please try again."
+    "code_invalid": "The sign-in expired or was already used. Please try again.",
+    "too_many_collections": "You already have 50 collections. Delete one first.",
+    "collection_name_taken": "You already have a collection with this name.",
+    "collection_full": "This collection is full (500 videos). Remove one first."
   },
   "nav": {
     "home": "Home",
@@ -284,5 +289,22 @@
   "groups": {
     "add_one": "Group: {{name}} ({{count}} friend)",
     "add_other": "Group: {{name}} ({{count}} friends)"
+  },
+  "collections": {
+    "title": "Collections",
+    "help": "Keep saved videos in named lists. Videos in a collection stay saved.",
+    "count_one": "{{count}} video",
+    "count_other": "{{count}} videos",
+    "newName": "New collection",
+    "create": "Create",
+    "name": "Name",
+    "save": "Save",
+    "rename": "Rename",
+    "delete": "Delete collection",
+    "deleteTitle": "Delete “{{name}}”?",
+    "deleteHelp": "The videos stay in Saved.",
+    "empty": "No videos in this collection yet. Add them from a video's page.",
+    "add": "Add to collection",
+    "addHelp": "Tick the collections this video belongs in, or make a new one. It is saved too."
   }
 }

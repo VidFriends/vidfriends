@@ -10,6 +10,7 @@ export * from './routes/notifications.js';
 export * from './routes/admin.js';
 export * from './routes/exports.js';
 export * from './routes/passkeys.js';
+export * from './routes/collections.js';
 
 import * as accounts from './routes/accounts.js';
 import * as invites from './routes/invites.js';
@@ -20,6 +21,7 @@ import * as notifications from './routes/notifications.js';
 import * as admin from './routes/admin.js';
 import * as exportsRoutes from './routes/exports.js';
 import * as passkeys from './routes/passkeys.js';
+import * as collections from './routes/collections.js';
 import type { RouteDef } from './route.js';
 
 function collect(...modules: Record<string, unknown>[]): RouteDef[] {
@@ -51,4 +53,5 @@ export const allRoutes: readonly RouteDef[] = collect(
   admin,
   exportsRoutes,
   passkeys,
+  collections,
 );
