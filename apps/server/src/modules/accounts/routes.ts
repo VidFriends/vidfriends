@@ -2,6 +2,7 @@ import {
   createAvatarUpload,
   deleteAvatar,
   getAvatar,
+  getAvatarUrl,
   setAvatar,
   updateMe,
 } from '@vidfriends/contracts';
@@ -26,4 +27,10 @@ export const accountHandlers = [
     c.header('Cache-Control', 'private, max-age=600');
     return new Redirect(await profile.avatarRedirect(deps, viewer, params.user_id));
   }),
+  // Bearer clients must not follow the redirect with their Authorization header (SigV4 would
+  // reject the request), so they fetch the signed URL as data instead.
+  handler(getAvatarUrl, async ({ deps, viewer, params }) => ({
+    url: await profile.avatarRedirect(deps, viewer, params.user_id),
+    expires_at: new Date(deps.clock.now().getTime() + 15 * 60_000).toISOString(),
+  })),
 ];

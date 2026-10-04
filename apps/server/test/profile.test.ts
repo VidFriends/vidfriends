@@ -4,6 +4,7 @@ import {
   createAvatarUpload,
   deleteAvatar,
   getAvatar,
+  getAvatarUrl,
   getMe,
   setAvatar,
   updateMe,
@@ -44,7 +45,7 @@ async function upload(
   });
   const put = await fetch(slot.put_url, {
     method: 'PUT',
-    body: bytes,
+    body: new Uint8Array(bytes),
     headers: { 'content-type': contentType },
   });
   expect(put.status).toBe(200);
@@ -67,6 +68,23 @@ describe.skipIf(!hasS3)('avatar', () => {
     const img = await fetch(redirect.headers.get('location') as string);
     const meta = await sharp(Buffer.from(await img.arrayBuffer())).metadata();
     expect(meta).toMatchObject({ format: 'webp', width: 256, height: 256 });
+  });
+
+  it('gives bearer clients the same signed URL as data (FR-MOB-01)', async () => {
+    const m = await registerMember(server, admin);
+    const png = await sharp({
+      create: { width: 300, height: 300, channels: 3, background: '#0ea5e9' },
+    })
+      .png()
+      .toBuffer();
+    await m.client.ok(setAvatar, { body: { upload_id: await upload(m, png) } });
+    const { url, expires_at } = await admin.client.ok(getAvatarUrl, {
+      params: { user_id: m.user.id },
+    });
+    expect(new Date(expires_at).getTime()).toBeGreaterThan(Date.now());
+    const img = await fetch(url);
+    expect(img.status).toBe(200);
+    expect((await sharp(Buffer.from(await img.arrayBuffer())).metadata()).format).toBe('webp');
   });
 
   it('rejects a non-image disguised as an image (NFR-SEC-08)', async () => {

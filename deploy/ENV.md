@@ -33,6 +33,7 @@ Product policy (signup mode, quotas, retention, session lifetimes and so on) is 
 | `WORK_DIR` | `/tmp/vidfriends-work` | Disk-backed directory for per-job temporary files (worker). Each job uses and removes its own subdirectory. |
 | `WORKER_FETCH_CONCURRENCY` | `2` | Concurrent `video.fetch` jobs per worker (NFR-PERF-03). |
 | `WORKER_PROCESS_CONCURRENCY` | `1` | Concurrent `video.process` (transcode) jobs per worker (NFR-PERF-03). |
+| `EXPO_ACCESS_TOKEN` | (unset) | Optional Expo access token, needed only if the Expo project behind your mobile app build enforces push security (FR-NOTIF-03). **Secret.** |
 | `YTDLP_PATH` | `yt-dlp` | yt-dlp executable. |
 | `FETCH_PROXY_URL` | (unset) | Optional HTTP(S) proxy for every yt-dlp request, including redirects. Point it at a filtering egress proxy that refuses private and link-local addresses to close the redirect residual risk (TDD §5). |
 | `FFMPEG_PATH` | `ffmpeg` | ffmpeg executable. |

@@ -34,6 +34,7 @@ import {
   declineFriendRequest,
   defineRoute,
   getAvatar,
+  getAvatarUrl,
   previewInvite,
   removeFriend,
   revokeInvite,
@@ -302,6 +303,32 @@ function cases(): MatrixCase[] {
             blocked: 404,
             suspended: 401,
             admin: 302,
+            anonymous: 401,
+          }
+        : {
+            owner: 503,
+            participant: 503,
+            friend: 503,
+            stranger: 503,
+            blocked: 503,
+            suspended: 401,
+            admin: 503,
+            anonymous: 401,
+          },
+    }),
+    matrixCase({
+      route: getAvatarUrl,
+      // Same visibility as getAvatar, as JSON for bearer clients.
+      prepare: async () => ({ params: { user_id: owner() } }),
+      expect: hasS3
+        ? {
+            owner: 200,
+            participant: 200,
+            friend: 200,
+            stranger: 200,
+            blocked: 404,
+            suspended: 401,
+            admin: 200,
             anonymous: 401,
           }
         : {

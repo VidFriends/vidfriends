@@ -8,3 +8,6 @@ AGENTS.md
 CLAUDE.md
 README.md
 deploy/ENV.md
+apps/mobile/android
+apps/mobile/ios
+apps/mobile/.expo

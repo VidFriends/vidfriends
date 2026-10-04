@@ -76,7 +76,8 @@ Target: from a blank VM to a claimed instance in 30 minutes or less (BO-4, M5-T6
 ## 2. Upgrade
 
 Releases are tagged `vX.Y.Z` and published as multi-arch images with SBOMs
-(`.github/workflows/release.yml`). Migrations are backward-compatible for one minor version
+(`.github/workflows/release.yml`; maintainers either push the tag or dispatch the workflow on
+`main` with the version, which creates the tag with the release). Migrations are backward-compatible for one minor version
 (expand/contract), so you can roll back by redeploying the previous image.
 
 1. Read the release notes for anything marked **operator action**.

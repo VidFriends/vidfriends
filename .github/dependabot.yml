@@ -9,6 +9,16 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+    # ADR-0017: React follows the Expo SDK; Expo packages move together with `npx expo install`.
+    ignore:
+      - dependency-name: 'react'
+      - dependency-name: 'react-dom'
+      - dependency-name: '@types/react'
+      - dependency-name: '@types/react-dom'
+      - dependency-name: 'react-native'
+      - dependency-name: 'expo'
+      - dependency-name: 'expo-*'
+      - dependency-name: '@expo/*'
   - package-ecosystem: github-actions
     directory: /
     schedule:

@@ -1,4 +1,4 @@
-// Push channels (ADR-0011). The dispatcher talks to this interface; Web Push now, Expo in M6.
+// Push channels (ADR-0011): Web Push for browsers, Expo Push for the mobile apps.
 import webpush from 'web-push';
 import type { Db } from '../db.js';
 import { getOrCreateSecret } from '../secrets.js';
@@ -80,6 +80,55 @@ export function createWebPushSender(keys: VapidKeys, subject: string): PushSende
         const status = (err as { statusCode?: number }).statusCode;
         // BR-NOT-6: the subscription is gone.
         if (status === 404 || status === 410) return 'gone';
+        return 'error';
+      }
+    },
+  };
+}
+
+export const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
+const EXPO_TOKEN = /^Expo(nent)?PushToken\[[A-Za-z0-9_-]{10,100}\]$/;
+
+/**
+ * Expo Push for the mobile apps (FR-NOTIF-03, ADR-0011): one fixed HTTPS endpoint; payloads hold
+ * the same generic title and opaque ids as Web Push (BR-NOT-3). `DeviceNotRegistered` means the
+ * token is gone (BR-NOT-6). `accessToken` is needed only when the Expo project enforces push
+ * security.
+ */
+export function createExpoPushSender(options: {
+  fetch?: typeof fetch;
+  accessToken?: string | undefined;
+}): PushSender {
+  const doFetch = options.fetch ?? fetch;
+  return {
+    async send(target, payload) {
+      if (target.kind !== 'expo' || !EXPO_TOKEN.test(target.endpoint)) return 'gone';
+      try {
+        const res = await doFetch(EXPO_PUSH_URL, {
+          method: 'POST',
+          headers: {
+            accept: 'application/json',
+            'content-type': 'application/json',
+            ...(options.accessToken ? { authorization: `Bearer ${options.accessToken}` } : {}),
+          },
+          body: JSON.stringify({
+            to: target.endpoint,
+            title: payload.title,
+            data: payload.data,
+            channelId: 'default',
+            priority: 'high',
+            ttl: 24 * 3600,
+          }),
+          signal: AbortSignal.timeout(10_000),
+        });
+        if (!res.ok) return 'error';
+        const json = (await res.json()) as {
+          data?: { status?: string; details?: { error?: string } };
+        };
+        if (json.data?.status === 'ok') return 'ok';
+        if (json.data?.details?.error === 'DeviceNotRegistered') return 'gone';
+        return 'error';
+      } catch {
         return 'error';
       }
     },

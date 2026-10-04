@@ -255,6 +255,7 @@ LIMIT :n + 1;
 | `PATCH /me` | M | `{display_name?}` → `{user}` | – | ACCT-01 |
 | `POST /me/avatar/upload`, `PUT /me/avatar`, `DELETE /me/avatar` | M | `{bytes, content_type}` → `{upload_id, put_url, expires_at}` (presigned PUT to `tmp/avatars/<user>/<upload_id>`, ≤ 2 MB); then `{upload_id}` → `{user}` after re-encoding to a 256×256 WebP; delete → `{user}` | `too_large`, `upload_incomplete`, `validation_failed` (`not_an_image`) | ACCT-01 |
 | `GET /users/{user_id}/avatar` | M | → 302 to a signed URL (≤ 15 min). 404 when the viewer is blocked by, or blocking, the user | 404 | ACCT-01 |
+| `GET /users/{user_id}/avatar-url` | M | → `{url, expires_at}`: the same signed URL as data, for bearer clients (the redirect would carry their `Authorization` header to the store). Same visibility as `/avatar` | 404 | ACCT-01, MOB-01 |
 | `POST /me/password` | M | `{current_password, new_password}` → 204 | `invalid_credentials` | ACCT-02 |
 | `DELETE /me` | M | `{password}` → 202 | `last_admin`, `invalid_credentials` | ACCT-03 |
 | `GET /me/sessions`, `DELETE /me/sessions/{id}` | M | list / revoke | – | ACCT-04 |
