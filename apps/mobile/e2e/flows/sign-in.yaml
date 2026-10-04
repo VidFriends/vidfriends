@@ -1,0 +1,10 @@
+# WF-AUTH-5 in E2E: the browser hand-off returns a code to vidfriends://auth. The emulator
+# cannot run the passkey page, so a code is minted for TOKEN's account (see seed.mjs) and
+# delivered as the same deep link; the app exchanges it like a real one.
+appId: io.github.vidfriends.app
+---
+- runScript:
+    file: ../scripts/mint-code.js
+    env:
+      TOKEN: ${TOKEN}
+- openLink: vidfriends://auth?code=${output.code}&state=e2e

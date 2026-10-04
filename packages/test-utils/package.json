@@ -7,6 +7,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./authenticator": {
+      "types": "./dist/authenticator.d.ts",
+      "default": "./dist/authenticator.js"
     }
   },
   "scripts": {

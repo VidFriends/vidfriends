@@ -58,7 +58,6 @@ export default function Settings() {
             url: session.instance?.baseUrl ?? '',
           })}
         </Body>
-        {session.instance?.insecure ? <Body muted>{t('pair.insecureWarning')}</Body> : null}
       </Card>
       <Card>
         <View

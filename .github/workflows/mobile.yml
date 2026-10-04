@@ -81,9 +81,15 @@ jobs:
           CI: '1'
       # The Gradle project exists only after prebuild, so caching is set up here.
       - uses: gradle/actions/setup-gradle@v4
+      # E2E builds only: a per-run PKCE verifier the app accepts for the `e2e` hand-off state, so
+      # Maestro can sign in without a browser passkey (seed.mjs, ADR-0018). Releases never set it.
+      - name: E2E hand-off verifier
+        run: echo "E2E_HANDOFF_VERIFIER=$(openssl rand -base64 48 | tr '+/' '-_' | tr -d '=\n')" >> "$GITHUB_ENV"
       - name: Build the release APK (x86_64 for the emulator)
         working-directory: apps/mobile/android
         run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon
+        env:
+          EXPO_PUBLIC_E2E_HANDOFF_VERIFIER: ${{ env.E2E_HANDOFF_VERIFIER }}
       - name: Keep the APK, drop the Gradle build outputs
         run: |
           cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/vidfriends.apk"
@@ -104,14 +110,17 @@ jobs:
           load: true
           tags: vidfriends-worker:local
           cache-from: type=gha,scope=worker
-      - name: Start the stack (emulator HTTP variant)
+      # Plain http only on loopback (WF-PAIR-3): the emulator reaches it through `adb reverse`.
+      - name: Start the stack (loopback HTTP variant)
         run: node e2e/scripts/stack.mjs up
         env:
-          E2E_DOMAIN: http://10.0.2.2
-          E2E_PUBLIC_URL: http://10.0.2.2:8880
+          E2E_DOMAIN: http://localhost
+          E2E_PUBLIC_URL: http://localhost:8880
           E2E_HTTP_PORT: '8880'
       - name: Seed
-        run: node apps/mobile/e2e/seed.mjs >> "$GITHUB_ENV"
+        run: |
+          pnpm --filter @vidfriends/test-utils build
+          node apps/mobile/e2e/seed.mjs >> "$GITHUB_ENV"
       - name: Install Maestro
         run: |
           curl -fsSL "https://get.maestro.mobile.dev" | MAESTRO_VERSION="$MAESTRO_VERSION" bash
@@ -131,7 +140,8 @@ jobs:
           emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: |
             adb install -r "$RUNNER_TEMP/vidfriends.apk"
-            maestro test apps/mobile/e2e/main.yaml -e JOIN_URL="$JOIN_URL" -e ADMIN_USER="$ADMIN_USER" -e ADMIN_PASSWORD="$ADMIN_PASSWORD" -e VIDEO_URL="https://www.youtube.com/watch?v=ok&e2e=mobile" --format junit --output maestro-report.xml --debug-output maestro-debug --flatten-debug-output --test-output-dir maestro-debug || { adb exec-out screencap -p > maestro-debug/failure.png; maestro hierarchy > maestro-debug/hierarchy.json; exit 1; }
+            adb reverse tcp:8880 tcp:8880
+            maestro test apps/mobile/e2e/main.yaml -e SERVER_URL="$SERVER_URL" -e JOIN_URL="$JOIN_URL" -e HANDOFF_CHALLENGE="$HANDOFF_CHALLENGE" -e MIA_TOKEN="$MIA_TOKEN" -e ADMIN_TOKEN="$ADMIN_TOKEN" -e VIDEO_URL="https://www.youtube.com/watch?v=ok&e2e=mobile" --format junit --output maestro-report.xml --debug-output maestro-debug --flatten-debug-output --test-output-dir maestro-debug || { adb exec-out screencap -p > maestro-debug/failure.png; maestro hierarchy > maestro-debug/hierarchy.json; exit 1; }
       - name: Stack logs
         if: failure()
         run: node e2e/scripts/stack.mjs logs

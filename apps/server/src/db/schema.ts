@@ -36,7 +36,8 @@ export const users = pgTable(
     username: text('username').notNull(),
     displayName: text('display_name').notNull().default(''),
     avatarKey: text('avatar_key'),
-    passwordHash: text('password_hash').notNull(),
+    /** WebAuthn user handle: 32 random bytes, never the database id (ADR-0018). */
+    webauthnUserId: bytea('webauthn_user_id'),
     role: text('role', { enum: ['member', 'admin'] })
       .notNull()
       .default('member'),
@@ -51,6 +52,7 @@ export const users = pgTable(
   },
   (t) => [
     uniqueIndex('users_username_key').on(t.username),
+    uniqueIndex('users_webauthn_user_id_key').on(t.webauthnUserId),
     index('users_display_name_trgm').using('gin', sql`${t.displayName} gin_trgm_ops`),
     check('users_username_format', sql`${t.username} ~ '^[a-z0-9][a-z0-9_.]{2,29}$'`),
     check('users_role_check', sql`${t.role} in ('member','admin')`),
@@ -73,6 +75,10 @@ export const sessions = pgTable(
     lastSeenAt: tstz('last_seen_at').notNull().defaultNow(),
     idleExpiresAt: tstz('idle_expires_at').notNull(),
     absoluteExpiresAt: tstz('absolute_expires_at').notNull(),
+    /** The passkey that created the session; removing it revokes the session (FR-ACCT-02). */
+    passkeyId: uuid('passkey_id').references(() => passkeys.id, { onDelete: 'cascade' }),
+    /** Last passkey confirmation, for sensitive actions within 5 minutes (WF-ACCT-2/3). */
+    reauthAt: tstz('reauth_at'),
   },
   (t) => [
     index('sessions_user_id_idx').on(t.userId),
@@ -160,8 +166,9 @@ export const instanceSettings = pgTable('instance_settings', {
   updatedAt: tstz('updated_at').notNull().defaultNow(),
 });
 
-export const passwordResets = pgTable(
-  'password_resets',
+/** Recovery links (WF-ADM-4, ADR-0018); `created_by` is null when the server command made it. */
+export const recoveryTokens = pgTable(
+  'recovery_tokens',
   {
     tokenHash: bytea('token_hash').primaryKey(),
     userId: uuid('user_id')
@@ -172,7 +179,73 @@ export const passwordResets = pgTable(
     usedAt: tstz('used_at'),
     createdAt: createdAt(),
   },
-  (t) => [index('password_resets_user_idx').on(t.userId)],
+  (t) => [index('recovery_tokens_user_idx').on(t.userId)],
+);
+
+/** Passkeys (WebAuthn discoverable credentials), the only credential (ADR-0018). */
+export const passkeys = pgTable(
+  'passkeys',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    credentialId: text('credential_id').notNull(),
+    publicKey: bytea('public_key').notNull(),
+    counter: bigint('counter', { mode: 'number' }).notNull().default(0),
+    transports: text('transports')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    backedUp: boolean('backed_up').notNull().default(false),
+    name: text('name').notNull(),
+    createdAt: createdAt(),
+    lastUsedAt: tstz('last_used_at'),
+  },
+  (t) => [
+    uniqueIndex('passkeys_credential_id_key').on(t.credentialId),
+    index('passkeys_user_idx').on(t.userId),
+  ],
+);
+
+/** Single-use WebAuthn challenges, 5 minutes (ADR-0018). */
+export const webauthnChallenges = pgTable(
+  'webauthn_challenges',
+  {
+    id: uuid('id').primaryKey(),
+    challenge: text('challenge').notNull(),
+    purpose: text('purpose', {
+      enum: ['setup', 'register', 'recover', 'add', 'signin', 'reauth'],
+    }).notNull(),
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+    context: jsonb('context').notNull().default({}),
+    expiresAt: tstz('expires_at').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('webauthn_challenges_expires_idx').on(t.expiresAt),
+    check(
+      'webauthn_challenges_purpose_check',
+      sql`${t.purpose} in ('setup','register','recover','add','signin','reauth')`,
+    ),
+  ],
+);
+
+/** Browser hand-off codes for the mobile app (WF-AUTH-5): 60 seconds, single use, PKCE-bound. */
+export const mobileAuthCodes = pgTable(
+  'mobile_auth_codes',
+  {
+    codeHash: bytea('code_hash').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    passkeyId: uuid('passkey_id').references(() => passkeys.id, { onDelete: 'cascade' }),
+    codeChallenge: text('code_challenge').notNull(),
+    expiresAt: tstz('expires_at').notNull(),
+    usedAt: tstz('used_at'),
+    createdAt: createdAt(),
+  },
+  (t) => [index('mobile_auth_codes_expires_idx').on(t.expiresAt)],
 );
 
 /** Append-only (enforced by a trigger, see migration 0000); no FK so entries survive deletion. */

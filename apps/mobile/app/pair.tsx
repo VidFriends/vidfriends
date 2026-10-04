@@ -28,10 +28,7 @@ export default function Pair() {
       setError(t(`pair.errors.${result.reason}`));
       return;
     }
-    await session.pair(
-      { baseUrl: parsed.baseUrl, name: result.info.name, insecure: parsed.insecure },
-      parsed.inviteCode,
-    );
+    await session.pair({ baseUrl: parsed.baseUrl, name: result.info.name }, parsed.inviteCode);
     router.replace(parsed.inviteCode ? '/join' : '/login');
   }
 

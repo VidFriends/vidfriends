@@ -36,6 +36,13 @@
       "when": 1791105015173,
       "tag": "0004_exports",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791128234180,
+      "tag": "0005_passkeys",
+      "breakpoints": true
     }
   ]
 }

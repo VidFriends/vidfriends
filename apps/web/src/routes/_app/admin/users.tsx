@@ -4,7 +4,7 @@ import { useApiInfiniteQuery, useApiMutation } from '@vidfriends/api-client/reac
 import {
   adminDeleteUser,
   adminListUsers,
-  adminPasswordReset,
+  adminRecoveryLink,
   adminUpdateUser,
   type AdminUser,
 } from '@vidfriends/contracts';
@@ -125,8 +125,8 @@ function UserRow({ user }: { user: AdminUser }) {
     },
     onError,
   });
-  const resetLink = useApiMutation(adminPasswordReset, {
-    onSuccess: (res) => setReset({ url: res.reset_url, expires: res.expires_at }),
+  const resetLink = useApiMutation(adminRecoveryLink, {
+    onSuccess: (res) => setReset({ url: res.url, expires: res.expires_at }),
     onError,
   });
   const params = { id: user.id };

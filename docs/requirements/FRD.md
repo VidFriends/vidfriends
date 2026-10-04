@@ -33,38 +33,49 @@
 
 ### WF-AUTH-1 Bootstrap (claim instance)
 1. On startup, if no user has role `admin`, the server generates a one-time **setup token**. It logs the token at WARN level along with the `/setup` URL. The token is valid until it is used and is regenerated on each restart while unclaimed.
-2. `/setup` asks for the token, the instance name, and the admin username and password. On success the account is created as `admin` and the token is invalidated.
+2. `/setup` asks for the token, the instance name, and the admin's username and display name, then registers a passkey ([ADR-0018](../adr/0018-passkey-only-sign-in.md)). On success the account is created as `admin`, the token is invalidated and the admin is signed in.
 3. **Failure paths:** a wrong token returns 401 and counts toward the auth rate limit. If an admin already exists, `/setup` returns 404.
 
 ### WF-AUTH-2 Register
 - **Preconditions:** `signup_mode = invite_only` plus a valid invite code, **or** `signup_mode = open`.
-- **Inputs:** username, password, optional display name, invite code.
+- **Inputs:** username, optional display name, invite code, and a passkey registration (WF-AUTH-4).
 - **Steps:**
   1. Validate the inputs (BR-ACCT-1..3).
   2. Lock the invite row (BR-INV-2).
   3. Create the user.
   4. Consume one use of the invite.
   5. If the invite has `auto_friend = true`, create an `accepted` friendship with the invite creator.
-  6. Create a session, which logs the user in.
+  6. Store the passkey and create a session, which signs the user in.
 - **Failures:**
   - Invalid, expired, revoked or exhausted invite: 400 `invite_invalid`. The response gives one generic reason and never says which condition failed.
   - Username taken: 409 `username_taken`.
   - Validation errors: 400 with per-field messages.
 
-### WF-AUTH-3 Log in / log out
-- **Login** takes username (case-insensitive) and password.
-  - If the account is `suspended`, the response is 403 `account_suspended`, but only after the password has verified. Otherwise it is the generic 401 `invalid_credentials`.
-  - On success, a session is created ([ADR-0008](../adr/0008-authentication-sessions.md)):
-    - The web client gets an httpOnly cookie.
-    - The mobile client gets a bearer token in the response body. Mobile clients identify themselves via `client: "mobile"`.
+### WF-AUTH-3 Sign in / log out
+- **Sign in** uses a passkey; no username is typed ([ADR-0018](../adr/0018-passkey-only-sign-in.md)).
+  1. The client asks for sign-in options; the server returns a single-use challenge (5 minutes).
+  2. The browser shows this server's passkeys on the device; the member confirms with their screen lock or biometrics.
+  3. The server verifies the assertion and its counter against the stored credential. Unknown or invalid credentials get the generic 401 `invalid_credentials`. A `suspended` account gets 403 `account_suspended`, but only after the assertion verified.
+  4. A session is created ([ADR-0008](../adr/0008-authentication-sessions.md)): the web client gets an httpOnly cookie. The mobile app signs in through the browser hand-off (WF-AUTH-5) and receives a bearer token.
 - **Logout** revokes the current session server-side. "Log out everywhere" revokes all of the user's sessions.
 
+### WF-AUTH-4 Register a passkey
+Used by setup, join, recovery and "add a passkey".
+1. The server returns registration options with a single-use challenge (5 minutes), the account's user handle, and the existing credential ids to exclude. It requires a discoverable credential and user verification.
+2. The browser creates the passkey; the client sends the attestation with an optional name (default: the device or password manager name the browser reports, else "Passkey").
+3. The server verifies origin, relying party (the `PUBLIC_URL` host) and challenge, then stores the credential id, public key, counter and transports.
+
+### WF-AUTH-5 Mobile sign-in by browser hand-off
+1. The app creates a random `state` and a PKCE verifier, and opens `PUBLIC_URL/app-auth?mode=signin|join&state=…&code_challenge=…` (S256) in the system's secure browser sheet. For a join link, the invite code is passed too.
+2. The page runs WF-AUTH-3 or WF-AUTH-2 in the browser.
+3. The server issues a one-time code (60 seconds, stored as a hash, bound to the challenge) and redirects only to `vidfriends://auth?code=…&state=…`.
+4. The app checks `state` and exchanges code and verifier for a bearer session (`client: "mobile"`). A wrong verifier, a reused or expired code gets 400 `code_invalid`.
 ### Session rules
 
 | ID | Rule |
 |---|---|
 | BR-SES-1 | A session expires after **30 days of inactivity** (sliding) and, in any case, **180 days** after creation. These are proposed defaults and can be configured per instance. |
-| BR-SES-2 | All sessions of a user are revoked on: password change (except the current one), suspension, role change, account deletion, and admin password reset. |
+| BR-SES-2 | All sessions of a user are revoked on: suspension, role change, account deletion and recovery (WF-ADM-4). Removing a passkey revokes the sessions that passkey created. |
 | BR-SES-3 | Every authenticated request re-checks session validity and account status, so a suspension takes effect on the next request. |
 
 ### Account rules
@@ -72,18 +83,18 @@
 | ID | Rule |
 |---|---|
 | BR-ACCT-1 | **Username:** 3–30 characters from `[a-z0-9_.]`, must start with a letter or digit, and is stored lower-case. Uniqueness is case-insensitive. Usernames cannot be changed in v1. |
-| BR-ACCT-2 | **Password:** 10–128 characters with no composition rules. It must not appear on a bundled list of common passwords and must not equal the username. Stored as an argon2id hash ([LLD §5](../design/LLD.md#5-security-mechanisms)). |
+| BR-ACCT-2 | **Passkeys:** the only credential ([ADR-0018](../adr/0018-passkey-only-sign-in.md)); there are no passwords. A member holds 1–10 passkeys with names of up to 50 characters, and cannot remove the last one. Sign-in, passkey removal and account deletion require user verification. |
 | BR-ACCT-3 | **Display name:** 0–50 characters, trimmed. **Avatar:** an image upload of at most 2 MB, re-encoded server-side to a 256×256 WebP. |
-| BR-ACCT-4 | No email address is collected in v1 (BO-5). Password recovery is admin-assisted (WF-ADM-4). |
+| BR-ACCT-4 | No email address is collected in v1 (BO-5). Recovery after losing every passkey is admin-assisted (WF-ADM-4). |
 
 ### WF-ACCT-1 Edit profile
 A member can change their display name and avatar. Changes are visible to their friends.
 
-### WF-ACCT-2 Change password
-Requires the current password. Revokes the user's other sessions (BR-SES-2).
+### WF-ACCT-2 Manage passkeys
+Settings → Passkeys lists the member's passkeys with name, creation and last-use time. A member can add one (WF-AUTH-4), rename one, or remove one after confirming with a passkey (WF-AUTH-3 assertion within the last 5 minutes). The last passkey cannot be removed (409 `last_passkey`). Removing a passkey revokes the sessions it created.
 
 ### WF-ACCT-3 Delete account
-- **Precondition:** the user re-enters their password. Rate limit: 3 attempts per hour.
+- **Precondition:** the user confirms with a passkey (an assertion within the last 5 minutes). Rate limit: 3 attempts per hour.
 - **Effect** (hard delete, executed in a transaction plus asynchronous media cleanup):
   1. Delete the user's sessions, push subscriptions, invites, friendships and blocks.
   2. Delete the shares they **sent** and the shares they **received**, which cascades to the reactions and replies in those conversations.
@@ -244,12 +255,12 @@ The sender may delete a share while `watched_at` is null. The recipient's notifi
 
 | Workflow | Behaviour |
 |---|---|
-| WF-ADM-1 Users | List and search users with status, role, created and last-active dates, and storage used. Actions: suspend, unsuspend, promote, demote (never the last admin), delete (WF-ACCT-3 semantics), generate a password-reset link. |
+| WF-ADM-1 Users | List and search users with status, role, created and last-active dates, and storage used. Actions: suspend, unsuspend, promote, demote (never the last admin), delete (WF-ACCT-3 semantics), generate a recovery link (WF-ADM-4). |
 | WF-ADM-2 Invites | Create (with `max_uses`, expiry and `auto_friend`), list, revoke. Show the join URL and QR code. |
 | WF-ADM-3 Settings | Settings: `instance_name`, `signup_mode` (`invite_only`\|`open`, default `invite_only`), `members_can_invite` (default true), `link_download_enabled`, `platform_allowlist`, `max_media_bytes`, `max_duration_seconds`, `per_user_quota_bytes`, `instance_storage_cap_bytes`, `retention_days`, session lifetimes. Every change is audited. |
-| WF-ADM-4 Password reset | The admin generates a single-use reset link valid for 24 h and gives it to the user out of band. Using it sets a new password and revokes all of that user's sessions. |
+| WF-ADM-4 Recovery link | The admin generates a single-use recovery link valid for 24 h and gives it to the member out of band. Opening it registers a new passkey (WF-AUTH-4), then **removes the member's other passkeys and revokes all their sessions** (the usual cause is a lost device). For a locked-out admin, the operator runs `node dist/main.js recovery-link <username>` in the server container, which prints such a link to the terminal and writes an audit entry. |
 | WF-ADM-5 Storage | Shows total bytes, bytes per user, counts by video state, and the next retention run. "Run retention now" enqueues the job. |
-| WF-ADM-6 Audit log | Append-only. Records admin actions, logins (success and failure, without the password), session revocations, account deletions, setting changes, invite creation and use. Filterable by actor, action and date. Retained for 365 days. IP addresses come from the trusted-proxy-aware client IP (NFR-SEC-06). |
+| WF-ADM-6 Audit log | Append-only. Records admin actions, sign-ins (success and failure), session revocations, account deletions, setting changes, invite creation and use. Filterable by actor, action and date. Retained for 365 days. IP addresses come from the trusted-proxy-aware client IP (NFR-SEC-06). |
 
 | ID | Rule |
 |---|---|
@@ -262,5 +273,5 @@ The sender may delete a share while `watched_at` is null. The recipient's notifi
 |---|---|
 | WF-PAIR-1 | The mobile app's first screen offers: scan QR, or paste a join or instance URL. There is no default instance ([ADR-0014](../adr/0014-self-host-only-no-public-instance.md)). The app calls `GET /api/v1/instance` to verify that the server is VidFriends, has a compatible API major version, and to read its name and signup mode. Only then does it persist the base URL ([ADR-0013](../adr/0013-instance-pairing-and-join-links.md)). |
 | WF-PAIR-2 | The app persists the base URL and applies it on every launch ([L-16](../legacy/AUDIT.md#4-lessons-referenced-by-id-from-the-design-docs)). The user can switch servers only by signing out. |
-| WF-PAIR-3 | Plain `http://` base URLs are allowed only when the host is a private-network address, and the app shows a "not encrypted" warning. Android's network security config cannot list hosts chosen at runtime. The Android build therefore permits cleartext at the platform level, and the app itself enforces the private-address rule before making any request. See [TDD §4](../design/TDD.md#4-client-engineering). |
+| WF-PAIR-3 | Only `https://` base URLs are accepted ([ADR-0018](../adr/0018-passkey-only-sign-in.md): passkeys need HTTPS on a domain name). A plain `http://` link is refused with a message that the server must use HTTPS. Exception: the device's own loopback address (`localhost`, `127.0.0.1`, `::1`), which browsers also treat as secure, for development and the emulator E2E. The Android build permits cleartext traffic only to loopback. |
 | WF-PAIR-4 | The web client is served by the instance itself, so it never asks for a server. |

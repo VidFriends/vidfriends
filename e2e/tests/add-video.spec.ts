@@ -2,13 +2,11 @@
 // The worker runs the deterministic fake yt-dlp (e2e/compose.e2e.yml): no real platform is used.
 import { expect, test } from '@playwright/test';
 import { expectAccessible } from '../support/a11y';
-import { ADMIN } from '../support/api';
+import { adminAuthenticator } from '../support/passkeys';
+import { loginPage } from '../support/people';
 
-test('a pasted link is fetched, processed and plays with seeking', async ({ page }) => {
-  await page.goto('/login');
-  await page.getByLabel('Username').fill(ADMIN.username);
-  await page.getByLabel('Password', { exact: true }).fill(ADMIN.password);
-  await page.getByRole('button', { name: 'Log in' }).click();
+test('a pasted link is fetched, processed and plays with seeking', async ({ page, baseURL }) => {
+  await loginPage(page, { auth: adminAuthenticator(baseURL as string) });
   await page.getByRole('link', { name: 'Send', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Send a video' })).toBeVisible();
   await expectAccessible(page, '/send');

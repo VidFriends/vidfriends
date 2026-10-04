@@ -1,10 +1,16 @@
-// J-1: an operator claims the instance and creates an invite (FR-AUTH-01, FR-INV-01/03, FR-PAIR-02).
+// J-1: an operator claims the instance with a passkey and creates an invite (FR-AUTH-01, FR-INV-01/03, FR-PAIR-02).
 import { expect, test } from '@playwright/test';
 import { expectAccessible } from '../support/a11y';
 import { ADMIN } from '../support/api';
+import { authenticator, saveAdminPasskey, usePasskeys } from '../support/passkeys';
 import { setupTokenFromLogs } from '../support/stack';
 
-test('operator claims the instance and creates an invite with link and QR', async ({ page }) => {
+test('operator claims the instance with a passkey and creates an invite with link and QR', async ({
+  page,
+  baseURL,
+}) => {
+  const auth = authenticator(baseURL as string);
+  await usePasskeys(page, auth);
   await page.goto('/');
   await expect(page).toHaveURL(/\/setup$/);
   await expect(page.getByRole('heading', { name: 'Set up your VidFriends server' })).toBeVisible();
@@ -13,10 +19,12 @@ test('operator claims the instance and creates an invite with link and QR', asyn
   await page.getByLabel('Setup token').fill(setupTokenFromLogs());
   await page.getByLabel('Server name').fill('The Smiths');
   await page.getByLabel('Admin username').fill(ADMIN.username);
-  await page.getByLabel('Admin password').fill(ADMIN.password);
   await page.getByRole('button', { name: 'Claim server' }).click();
 
   await expect(page).toHaveURL(/\/invites$/);
+  // The passkey the browser created is the admin's sign-in from now on (FR-AUTH-01).
+  expect(auth.credentials).toHaveLength(1);
+  saveAdminPasskey(auth);
   await expect(page.getByRole('heading', { name: 'Invites', level: 1 })).toBeVisible();
   await expectAccessible(page, '/invites');
 

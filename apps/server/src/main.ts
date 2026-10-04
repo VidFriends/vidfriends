@@ -1,4 +1,4 @@
-// Entrypoint: `node dist/main.js [migrate]`. ROLE selects api | worker | all (SDD §1).
+// Entrypoint: `node dist/main.js [migrate | recovery-link <username>]`. ROLE selects api | worker | all (SDD §1).
 import { serve } from '@hono/node-server';
 import { ConfigError, loadEnv } from './config/env.js';
 import { runMigrations } from './db/migrate.js';
@@ -8,7 +8,9 @@ import { createDatabase } from './infra/db.js';
 import { createLogger } from './infra/logger.js';
 import { createQueue } from './infra/queue.js';
 import { registerGauge, startMetricsServer } from './infra/metrics.js';
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
+import { users } from './db/schema.js';
+import { createRecoveryLink } from './modules/auth/service.js';
 import { QUEUES } from './jobs/worker.js';
 import { buildDeps, initSetupToken } from './bootstrap.js';
 import { SERVER_VERSION } from './version.js';
@@ -31,6 +33,32 @@ async function main(): Promise<void> {
     await runMigrations(database);
     await database.close();
     log.info('migrations applied');
+    return;
+  }
+
+  if (process.argv[2] === 'recovery-link') {
+    // FR-ADM-03: the operator recovers any member, including a locked-out admin. The link goes
+    // to the terminal only, never to the log.
+    const username = (process.argv[3] ?? '').trim().toLowerCase();
+    const deps = buildDeps(env, log);
+    try {
+      const [user] = await deps.db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.username, username))
+        .limit(1);
+      if (!user) {
+        process.stderr.write(`No member named "${username}".\n`);
+        process.exitCode = 1;
+        return;
+      }
+      const link = await createRecoveryLink(deps, { userId: user.id, actorId: null, ip: null });
+      process.stdout.write(
+        `Recovery link for ${username} (single use, valid until ${link.expires_at}):\n${link.url}\n`,
+      );
+    } finally {
+      await deps.database.close();
+    }
     return;
   }
 
