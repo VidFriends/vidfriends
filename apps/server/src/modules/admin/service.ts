@@ -2,10 +2,11 @@
 // Admin queries only ever return counts about members' activity, never content (BR-ADM-1).
 import type { AdminUser, InstanceSettings, InstanceSettingsPatch } from '@vidfriends/contracts';
 import { InstanceSettings as SettingsSchema } from '@vidfriends/contracts';
-import { and, desc, eq, lt, or, sql } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, lt, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import {
   auditLog,
+  exports,
   passwordResets,
   sessions,
   uploads,
@@ -168,7 +169,15 @@ export async function deleteAccount(
       .select({ key: uploads.objectKey })
       .from(uploads)
       .where(and(eq(uploads.userId, userId), eq(uploads.state, 'pending')));
-    const keys = [...(user.avatarKey ? [user.avatarKey] : []), ...pending.map((p) => p.key)];
+    const exportFiles = await tx
+      .select({ key: exports.objectKey })
+      .from(exports)
+      .where(and(eq(exports.userId, userId), isNotNull(exports.objectKey)));
+    const keys = [
+      ...(user.avatarKey ? [user.avatarKey] : []),
+      ...pending.map((p) => p.key),
+      ...exportFiles.map((e) => e.key as string),
+    ];
     await tx.delete(users).where(eq(users.id, userId));
     await audit(tx, {
       actorId: actorId === userId ? null : actorId,

@@ -2,12 +2,21 @@
 // session.cleanup (hourly housekeeping) and account.purge_media (after deletion).
 import { and, eq, inArray, lt, sql } from 'drizzle-orm';
 import type { Job } from 'pg-boss';
-import { auditLog, notifications, sendRequests, uploads, users, videos } from '../db/schema.js';
+import {
+  auditLog,
+  exports,
+  notifications,
+  sendRequests,
+  uploads,
+  users,
+  videos,
+} from '../db/schema.js';
 import { DAY, HOUR } from '../infra/clock.js';
 import { KEY_PREFIXES } from '../infra/keys.js';
 import type { Deps } from '../http/deps.js';
 import { purgeResets } from '../modules/admin/service.js';
 import { deleteExpiredSessions } from '../modules/auth/sessions.js';
+import { expireExports } from '../modules/exports/service.js';
 import { getSettings } from '../modules/settings/service.js';
 
 export const JOB_SWEEP = 'storage.sweep';
@@ -97,6 +106,8 @@ export async function runSweep(deps: Deps): Promise<{ scanned: number; deleted: 
   }
   for (const u of await deps.db.select({ a: users.avatarKey }).from(users))
     if (u.a) referenced.add(u.a);
+  for (const e of await deps.db.select({ k: exports.objectKey }).from(exports))
+    if (e.k) referenced.add(e.k);
   for (const u of await deps.db
     .select({ k: uploads.objectKey })
     .from(uploads)
@@ -127,7 +138,10 @@ export async function runSweep(deps: Deps): Promise<{ scanned: number; deleted: 
   return { scanned, deleted: orphans };
 }
 
-/** Hourly housekeeping: expired sessions and reset links, send-idempotency records, stale uploads. */
+/**
+ * Hourly housekeeping: expired sessions and reset links, send-idempotency records, stale uploads,
+ * and data exports past their 7 days (FR-ACCT-05).
+ */
 export async function runCleanup(deps: Deps) {
   const now = deps.clock.now();
   const sessionsDeleted = await deleteExpiredSessions(deps.db, now);
@@ -145,7 +159,8 @@ export async function runCleanup(deps: Deps) {
       if (s.multipartId) await deps.storage.abortMultipart(s.key, s.multipartId).catch(() => {});
     await deps.storage.deleteObjects(stale.map((s) => s.key)).catch(() => {});
   }
-  return { sessions: sessionsDeleted, uploads: stale.length };
+  const exportsExpired = await expireExports(deps, now);
+  return { sessions: sessionsDeleted, uploads: stale.length, exports: exportsExpired };
 }
 
 /**

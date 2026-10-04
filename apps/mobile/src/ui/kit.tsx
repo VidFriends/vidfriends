@@ -48,9 +48,21 @@ export function Title({ children }: { children: ReactNode }) {
   );
 }
 
-export function Body({ children, muted }: { children: ReactNode; muted?: boolean }) {
+export function Body({
+  children,
+  muted,
+  testID,
+}: {
+  children: ReactNode;
+  muted?: boolean;
+  testID?: string;
+}) {
   const t = useTheme();
-  return <Text style={[styles.body, { color: muted ? t.muted : t.text }]}>{children}</Text>;
+  return (
+    <Text testID={testID} style={[styles.body, { color: muted ? t.muted : t.text }]}>
+      {children}
+    </Text>
+  );
 }
 
 export function Button({

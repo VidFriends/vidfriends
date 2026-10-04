@@ -447,3 +447,34 @@ export const instanceSecrets = pgTable('instance_secrets', {
   ciphertext: bytea('ciphertext').notNull(),
   createdAt: createdAt(),
 });
+
+/** Self-service data exports (FR-ACCT-05, WF-ACCT-4). */
+export const exports = pgTable(
+  'exports',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    includeMedia: boolean('include_media').notNull(),
+    state: text('state', { enum: ['queued', 'building', 'ready', 'failed', 'expired'] })
+      .notNull()
+      .default('queued'),
+    objectKey: text('object_key'),
+    bytes: bigint('bytes', { mode: 'number' }),
+    error: text('error'),
+    createdAt: createdAt(),
+    readyAt: tstz('ready_at'),
+    expiresAt: tstz('expires_at'),
+  },
+  (t) => [
+    index('exports_user_created_idx').on(t.userId, t.createdAt.desc()),
+    uniqueIndex('exports_one_active_per_user')
+      .on(t.userId)
+      .where(sql`${t.state} in ('queued','building')`),
+    check(
+      'exports_state_check',
+      sql`${t.state} in ('queued','building','ready','failed','expired')`,
+    ),
+  ],
+);

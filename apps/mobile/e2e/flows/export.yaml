@@ -1,0 +1,17 @@
+# M7-T2 / FR-ACCT-05: request a data export from Settings and see it ready (the download opens in
+# the browser and is checked by the API and web tests).
+appId: io.github.vidfriends.app
+---
+- tapOn: 'More'
+- tapOn: 'Settings'
+- scrollUntilVisible:
+    element:
+      id: export-request
+- tapOn:
+    id: export-request
+- extendedWaitUntil:
+    visible: 'Ready.*'
+    timeout: 30000
+- assertVisible:
+    id: export-download
+- back

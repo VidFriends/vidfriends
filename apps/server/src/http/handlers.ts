@@ -7,6 +7,7 @@ import { videoHandlers } from '../modules/videos/routes.js';
 import { shareHandlers } from '../modules/shares/routes.js';
 import { notificationHandlers } from '../modules/notifications/routes.js';
 import { adminHandlers } from '../modules/admin/routes.js';
+import { exportHandlers } from '../modules/exports/routes.js';
 import '../modules/hooks.js';
 import type { RouteHandler } from './register.js';
 
@@ -22,5 +23,6 @@ export function allHandlers(): RouteHandler[] {
     ...shareHandlers,
     ...notificationHandlers,
     ...adminHandlers,
+    ...exportHandlers,
   ] as unknown as RouteHandler[];
 }

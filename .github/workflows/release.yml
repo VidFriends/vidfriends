@@ -5,6 +5,9 @@
 # A manual dispatch on `main` with a version does the same and creates the tag with the release
 # (for maintainers whose tooling cannot push tags; a tag pushed by GITHUB_TOKEN would not trigger
 # this workflow, so the whole release happens in the dispatched run).
+# Until the apps are in the stores (M6-T7), each release also carries a universal Android APK for
+# sideloading (M6-T8), signed with the project's key from repository secrets; see
+# docs/guides/android-sideload.md.
 name: Release
 
 on:
@@ -21,6 +24,7 @@ on:
       - Dockerfile
       - deploy/docker/**
       - deploy/worker/**
+      - docs/guides/android-sideload.md
 
 permissions:
   contents: read
@@ -143,3 +147,89 @@ jobs:
           if [ "$GITHUB_EVENT_NAME" = push ]; then target="--verify-tag"; else target="--target $GITHUB_SHA"; fi
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" $target --generate-notes \
             $prerelease vidfriends-server.spdx.json vidfriends-worker.spdx.json
+
+  android:
+    name: Android APK (sideload)
+    needs: [version, release]
+    # Runs for releases, and on pull requests that change this workflow (built and verified, not
+    # published). `always()` lets pull requests run although the release job is skipped there.
+    if: always() && needs.version.result == 'success' && (needs.release.result == 'success' || github.event_name == 'pull_request')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ needs.version.outputs.tag }}
+      KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      # The key password defaults to the keystore password (keytool's default for PKCS12).
+      KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.ANDROID_KEYSTORE_PASSWORD }}
+    steps:
+      - name: Signing key present?
+        id: key
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No Android signing key in the repository secrets (ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD). The APK is built and checked but not attached; see docs/guides/android-sideload.md."
+          fi
+      - uses: actions/checkout@v5
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost /opt/hostedtoolcache/CodeQL /usr/share/swift
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run build --filter=@vidfriends/mobile^...
+      # Sideloaded updates install only over a higher versionCode signed with the same key.
+      - name: Version the app
+        working-directory: apps/mobile
+        run: |
+          version="${TAG#v}"
+          [ -n "$version" ] || version="0.0.0-pr"
+          node -e '
+            const fs = require("fs");
+            const app = JSON.parse(fs.readFileSync("app.json", "utf8"));
+            app.expo.version = process.argv[1];
+            app.expo.android.versionCode = Number(process.argv[2]);
+            fs.writeFileSync("app.json", JSON.stringify(app, null, 2) + "\n");
+          ' "$version" "$((1000 + GITHUB_RUN_NUMBER))"
+      - name: Generate the native Android project
+        run: pnpm --filter @vidfriends/mobile exec expo prebuild --platform android --no-install
+        env:
+          CI: '1'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build the universal release APK
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleRelease --no-daemon
+      - name: Sign with the project key and verify
+        if: steps.key.outputs.ok == 'true'
+        run: |
+          apksigner="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner"
+          keystore="$RUNNER_TEMP/upload.jks"
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$keystore"
+          out="$RUNNER_TEMP/vidfriends-${TAG:-pr}.apk"
+          # Passwords go through the environment, never the command line (AGENTS.md rule 9).
+          "$apksigner" sign --ks "$keystore" --ks-pass env:KEYSTORE_PASSWORD \
+            --ks-key-alias "$KEY_ALIAS" --key-pass env:KEY_PASSWORD \
+            --out "$out" apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+          rm -f "$keystore"
+          "$apksigner" verify --print-certs "$out" | tee "$RUNNER_TEMP/certs.txt"
+          (cd "$RUNNER_TEMP" && sha256sum "$(basename "$out")" > "$(basename "$out").sha256")
+          echo "APK=$out" >> "$GITHUB_ENV"
+      - name: Check the unsigned build
+        if: steps.key.outputs.ok != 'true'
+        run: ls -l apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+      - name: Attach to the release
+        if: steps.key.outputs.ok == 'true' && needs.version.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" "$APK" "$APK.sha256"
