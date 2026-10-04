@@ -127,6 +127,7 @@ erDiagram
 - `watched_at` NULL
 - `progress_ms` int NOT NULL DEFAULT 0
 - `saved` bool DEFAULT false
+- `saved_at` NULL (orders the Saved view, BR-FEED-3; migration 0003)
 - `hidden` bool DEFAULT false
 - `reaction` text NULL, CHECK in the fixed set
 - `reaction_at` NULL
@@ -161,6 +162,7 @@ erDiagram
 - `share_id` NULL FK shares CASCADE
 - `data` jsonb NOT NULL DEFAULT '{}'. No content; ids only.
 - `read_at` NULL
+- `pushed_at` NULL (set when the dispatcher has handled it; coalescing collects unpushed `share_received` rows from one sender, BR-NOT-4)
 - `created_at`
 - Index (`user_id`, `read_at` NULLS FIRST, `created_at` DESC).
 
@@ -228,7 +230,8 @@ ORDER BY (s.watched_at IS NOT NULL), s.delivered_at, s.id
 LIMIT :n + 1;
 ```
 
-- "Also sent by" grouping (BR-FEED-7) is done in the service over each page by `video_id`.
+- "Also sent by" grouping (BR-FEED-7): the feed picks one share per video (`DISTINCT ON (video_id)`, preferring an unwatched one, then the earliest delivered), and lists the other senders.
+- The feed has two sections, matching BR-FEED-1: unwatched shares by `delivered_at` ascending, then watched shares by `watched_at` descending. The keyset cursor is `(section, timestamp, id)`.
 - Watching one share stamps all unwatched shares of that video for the viewer in one UPDATE.
 
 **Storage accounting.** `users.storage_bytes` is updated in the same transaction as `videos.media_bytes` changes (ready, purge). It is never computed lazily (lesson: legacy drift).
@@ -271,7 +274,7 @@ LIMIT :n + 1;
 | `DELETE /shares/{id}` | M (sender) | → 204 | `already_watched` | SHR-04 |
 | `GET /shares/{id}` | M (participant) | → `{share, video, sender, recipient, reaction, reply_count}` | 404 | – |
 | `GET /shares/{id}/media` | M (participant) | → `{media_url?, thumb_url?, expires_at}` | 404, `not_playable` | VID-05 |
-| `POST /shares/{id}/progress` | M (recipient) | `{position_ms, duration_ms}` → `{watched_at?}` | – | FEED-03 |
+| `POST /shares/{id}/progress` | M (recipient) | `{position_ms, duration_ms?, opened_original?}` → `{watched_at, progress_ms}`. `opened_original` records the link-only "Open original" action (BR-SHR-3). The server's known duration wins over the client's. | – | FEED-03 |
 | `PATCH /shares/{id}` | M (recipient) | `{saved?, hidden?}` → `{share}` | – | FEED-04 |
 | `PUT /shares/{id}/reaction`, `DELETE …/reaction` | M (recipient) | `{emoji}` → `{share}` | `invalid_reaction` | ENG-01 |
 | `GET /shares/{id}/replies`, `POST …/replies`, `DELETE /replies/{id}` | M (participant / author) | `{body}` → `{reply}` | `rate_limited` | ENG-02 |

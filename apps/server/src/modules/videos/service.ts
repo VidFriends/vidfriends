@@ -331,7 +331,11 @@ export async function visibleVideo(deps: Deps, viewer: Viewer, videoId: string):
 
 /** The SQL visibility predicate for `videos` (SDD §3 layer 3). */
 export function videoVisibleSql(viewerId: string) {
-  return sql`exists (select 1 from video_additions va where va.video_id = ${videos.id} and va.user_id = ${viewerId}::uuid)`;
+  return sql`(exists (select 1 from video_additions va where va.video_id = ${videos.id} and va.user_id = ${viewerId}::uuid)
+    or exists (select 1 from shares s join users su on su.id = s.sender_id join users ru on ru.id = s.recipient_id
+      where s.video_id = ${videos.id}
+        and ((s.sender_id = ${viewerId}::uuid and ru.status = 'active')
+          or (s.recipient_id = ${viewerId}::uuid and s.delivered_at is not null and su.status = 'active'))))`;
 }
 
 /** Signed URLs (≤ 15 min) for playable media and thumbnails (BR-MED-7). */

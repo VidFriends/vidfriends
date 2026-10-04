@@ -7,6 +7,7 @@ import { createTrustedProxies } from './infra/ip.js';
 import type { Logger } from './infra/logger.js';
 import { createRateLimiter } from './infra/rate-limit.js';
 import { createStorage } from './infra/storage.js';
+import { createWebPushSender, vapidKeys, type PushSender } from './infra/push/channels.js';
 import { newToken } from './infra/tokens.js';
 import type { Deps } from './http/deps.js';
 import { adminExists } from './modules/auth/service.js';
@@ -19,7 +20,12 @@ export function buildDeps(
   const database = overrides.database ?? createDatabase(env.DATABASE_URL);
   const clock = overrides.clock ?? systemClock;
   const storage = overrides.storage !== undefined ? overrides.storage : createStorage(env);
+  let senders: Promise<Partial<Record<'webpush' | 'expo', PushSender>>> | null = null;
   return {
+    pushSenders: () =>
+      (senders ??= vapidKeys(database.db, env.APP_SECRET).then((keys) => ({
+        webpush: createWebPushSender(keys, env.PUBLIC_URL),
+      }))),
     env,
     database,
     db: database.db,
