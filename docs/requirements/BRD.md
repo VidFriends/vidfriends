@@ -25,7 +25,7 @@ People send each other short-form videos (TikTok, Instagram Reels, YouTube Short
 | BO-2 | Recipients actually watch what friends send | ≥ 80% of shares marked watched within 48 h |
 | BO-3 | Senders get closure: they know it was seen and how it landed | ≥ 30% of watched shares receive a reaction or reply |
 | BO-4 | The service is cheap and simple to operate for one trusted operator | A fresh install works in ≤ 30 min by following the runbook. Steady-state infra cost for a ≤ 50-user instance is ≤ US$10/month, excluding storage growth. Both are proposed targets. |
-| BO-5 | Users' privacy is respected | No third-party analytics or trackers. Only the minimum personal data needed (username, display name, optional profile picture, password hash; no email, per NFR-PRIV-03). Self-service account deletion and data export. |
+| BO-5 | Users' privacy is respected | No third-party analytics or trackers. Only the minimum personal data needed (username, display name, optional profile picture, passkey public keys; no email or password, per NFR-PRIV-03 and ADR-0018). Self-service account deletion and data export. |
 | BO-6 | The project stops restarting | One repository, one roadmap, and milestones closed only by passing E2E acceptance tests ([ADR-0001](../adr/0001-record-architecture-decisions.md), [AUDIT L-04](../legacy/AUDIT.md#4-lessons-referenced-by-id-from-the-design-docs)) |
 
 ## 4. Stakeholders

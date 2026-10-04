@@ -9,6 +9,7 @@ import {
   type ResponseOf,
   type RouteDef,
 } from '@vidfriends/contracts';
+import { SoftAuthenticator } from './authenticator.js';
 
 export type FetchLike = (request: Request) => Promise<Response>;
 
@@ -46,6 +47,8 @@ export class TestClient {
   bearer: string | undefined;
   ip: string;
   origin: string | null;
+  /** This client's passkeys (a software authenticator for the instance's origin). */
+  readonly authenticator: SoftAuthenticator;
 
   constructor(
     private readonly fetchFn: FetchLike,
@@ -54,6 +57,7 @@ export class TestClient {
     this.bearer = options.bearer;
     this.ip = options.ip ?? nextTestIp();
     this.origin = new URL(options.baseUrl).origin;
+    this.authenticator = new SoftAuthenticator(this.origin);
   }
 
   /** A raw request through the app; records Set-Cookie like a browser. */

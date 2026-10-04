@@ -47,6 +47,18 @@ describe('loadEnv', () => {
     expect(problems({ ...good, APP_SECRET: value }).join()).toMatch(/APP_SECRET/);
   });
 
+  it.each([
+    ['plain http', 'http://vf.example.org', /must use https/],
+    ['an IP address', 'https://192.168.1.20', /domain name/],
+    ['a bare host name', 'https://vidfriends', /domain name/],
+  ])('refuses %s as PUBLIC_URL in production (ADR-0018)', (_label, url, message) => {
+    expect(problems({ ...good, PUBLIC_URL: url }).join('\n')).toMatch(message);
+  });
+
+  it('allows localhost over http for trials', () => {
+    expect(problems({ ...good, PUBLIC_URL: 'http://localhost:8080' })).toEqual([]);
+  });
+
   it('refuses default database and storage passwords in production (L-06)', () => {
     expect(
       problems({ ...good, DATABASE_URL: 'postgres://postgres:postgres@db:5432/x' }).join(),

@@ -7,29 +7,29 @@ import { alias } from 'drizzle-orm/pg-core';
 import {
   auditLog,
   exports,
-  passwordResets,
+  mobileAuthCodes,
+  recoveryTokens,
+  webauthnChallenges,
   sessions,
   uploads,
   users,
   VIDEO_STATES,
   videos,
 } from '../../db/schema.js';
-import { DAY } from '../../infra/clock.js';
+
 import type { DbOrTx } from '../../infra/db.js';
-import { hashToken, newToken } from '../../infra/tokens.js';
 import type { Viewer } from '../../http/context.js';
 import type { Deps } from '../../http/deps.js';
 import { ApiError, fieldError, notFound } from '../../http/errors.js';
 import { decodeCursor, encodeCursor } from '../../http/pagination.js';
 import { toPublicUser } from '../accounts/serialize.js';
 import { audit } from '../audit/service.js';
-import { checkPasswordPolicy, hashPassword, verifyPassword } from '../auth/passwords.js';
+import { requireRecentReauth } from '../auth/service.js';
 import { revokeAllSessions } from '../auth/sessions.js';
 import { getSettings, updateSettings } from '../settings/service.js';
 
 export const JOB_PURGE_ACCOUNT_MEDIA = 'account.purge_media';
 export const JOB_RETENTION = 'retention.purge';
-export const RESET_TTL_MS = DAY;
 
 type UserRow = typeof users.$inferSelect;
 
@@ -197,83 +197,17 @@ export async function deleteAccount(
 export async function deleteSelf(
   deps: Deps,
   viewer: Viewer,
-  password: string,
   ip: string,
   c: { header(n: string, v: string): void },
 ) {
-  // WF-ACCT-3: 3 attempts per hour.
+  // WF-ACCT-3: 3 attempts per hour, after a passkey confirmation in the last 5 minutes.
   const limit = deps.rateLimiter.hit(`delete-account:${viewer.id}`, 3, 60 * 60 * 1000);
   if (!limit.allowed) {
     c.header('Retry-After', String(limit.retryAfterSeconds));
     throw new ApiError('rate_limited', 'Too many attempts');
   }
-  const [user] = await deps.db.select().from(users).where(eq(users.id, viewer.id));
-  if (!user || !(await verifyPassword(user.passwordHash, password))) {
-    throw new ApiError('invalid_credentials', 'Wrong password');
-  }
+  requireRecentReauth(deps, viewer);
   await deleteAccount(deps, viewer.id, viewer.id, ip);
-}
-
-/** WF-ADM-4: single-use link, valid 24 h, given to the member out of band. */
-export async function createPasswordReset(deps: Deps, actor: Viewer, id: string, ip: string) {
-  const [user] = await deps.db.select({ id: users.id }).from(users).where(eq(users.id, id));
-  if (!user) throw notFound();
-  const token = newToken();
-  const expiresAt = new Date(deps.clock.now().getTime() + RESET_TTL_MS);
-  await deps.db.insert(passwordResets).values({
-    tokenHash: hashToken(token),
-    userId: id,
-    createdBy: actor.id,
-    expiresAt,
-    createdAt: deps.clock.now(),
-  });
-  await audit(deps.db, {
-    actorId: actor.id,
-    action: 'admin.password_reset_created',
-    targetType: 'user',
-    targetId: id,
-    ip,
-  });
-  return {
-    reset_url: `${deps.env.PUBLIC_URL}/reset/${token}`,
-    expires_at: expiresAt.toISOString(),
-  };
-}
-
-export async function usePasswordReset(deps: Deps, token: string, newPassword: string, ip: string) {
-  await deps.db.transaction(async (tx) => {
-    const now = deps.clock.now();
-    const [reset] = await tx
-      .select({ r: passwordResets, u: users })
-      .from(passwordResets)
-      .innerJoin(users, eq(users.id, passwordResets.userId))
-      .where(eq(passwordResets.tokenHash, hashToken(token)))
-      .for('update');
-    if (!reset || reset.r.usedAt || reset.r.expiresAt <= now) {
-      throw new ApiError(
-        'reset_invalid',
-        'This reset link is not valid. Ask your admin for a new one.',
-      );
-    }
-    checkPasswordPolicy(newPassword, reset.u.username, 'new_password');
-    await tx
-      .update(users)
-      .set({ passwordHash: await hashPassword(newPassword), updatedAt: now })
-      .where(eq(users.id, reset.u.id));
-    await tx
-      .update(passwordResets)
-      .set({ usedAt: now })
-      .where(eq(passwordResets.tokenHash, reset.r.tokenHash));
-    const revoked = await revokeAllSessions(tx, reset.u.id);
-    await audit(tx, {
-      actorId: reset.u.id,
-      action: 'user.password_reset_used',
-      targetType: 'user',
-      targetId: reset.u.id,
-      metadata: { sessions_revoked: revoked },
-      ip,
-    });
-  });
 }
 
 export async function getAdminSettings(deps: Deps): Promise<InstanceSettings> {
@@ -438,9 +372,13 @@ export async function revokeOwnSession(deps: Deps, viewer: Viewer, id: string, i
   });
 }
 
-/** Expired password-reset rows (housekeeping). */
-export async function purgeResets(db: DbOrTx, now: Date) {
+/** Used or expired recovery links, hand-off codes and WebAuthn challenges (housekeeping). */
+export async function purgeAuthTokens(db: DbOrTx, now: Date) {
   await db
-    .delete(passwordResets)
-    .where(or(lt(passwordResets.expiresAt, now), sql`${passwordResets.usedAt} is not null`));
+    .delete(recoveryTokens)
+    .where(or(lt(recoveryTokens.expiresAt, now), sql`${recoveryTokens.usedAt} is not null`));
+  await db
+    .delete(mobileAuthCodes)
+    .where(or(lt(mobileAuthCodes.expiresAt, now), sql`${mobileAuthCodes.usedAt} is not null`));
+  await db.delete(webauthnChallenges).where(lt(webauthnChallenges.expiresAt, now));
 }

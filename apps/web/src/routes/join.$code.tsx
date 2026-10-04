@@ -1,25 +1,33 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useApiMutation, useApiQuery } from '@vidfriends/api-client/react';
-import { DisplayName, Password, previewInvite, register, Username } from '@vidfriends/contracts';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ApiError } from '@vidfriends/api-client';
+import { useApiQuery } from '@vidfriends/api-client/react';
+import {
+  DisplayName,
+  previewInvite,
+  register,
+  registerOptions,
+  Username,
+} from '@vidfriends/contracts';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { AuthShell } from '@/components/auth-shell';
-import { PasswordInput } from '@/components/password-input';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { formatRelative } from '@/i18n';
+import { api } from '@/lib/api';
 import { applyApiError, errorMessage, fieldMessage } from '@/lib/errors';
+import { createPasskey, passkeyErrorMessage } from '@/lib/passkeys';
 import { instanceQuery } from '@/lib/session';
 
 const schema = z.object({
   display_name: DisplayName,
   username: Username,
-  password: Password,
 });
 type Values = z.infer<typeof schema>;
 
@@ -29,30 +37,57 @@ export const Route = createFileRoute('/join/$code')({
 });
 
 function JoinPage() {
-  const { t } = useTranslation();
   const { code } = Route.useParams();
   const instance = Route.useLoaderData();
   const navigate = useNavigate();
-  const queryClient = Route.useRouteContext().queryClient;
+  return (
+    <JoinScreen code={code} instanceName={instance.name} onJoined={() => navigate({ to: '/' })} />
+  );
+}
+
+/** WF-AUTH-2 on the web, also used by the app's browser hand-off (`/app-auth`). */
+export function JoinScreen({
+  code,
+  instanceName,
+  onJoined,
+  showAppHint = true,
+}: {
+  code: string;
+  instanceName: string;
+  onJoined: () => Promise<unknown> | void;
+  showAppHint?: boolean;
+}) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const preview = useApiQuery(previewInvite, { params: { code } }, { retry: false });
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: { display_name: '' },
   });
-  const mutation = useApiMutation(register, {
+  // Check invite and username, then create the member's passkey (ADR-0018).
+  const mutation = useMutation({
+    mutationFn: (v: Values) =>
+      createPasskey(
+        () => api.call(registerOptions, { body: { ...v, invite_code: code } }),
+        (ceremony_id, credential) => api.call(register, { body: { ceremony_id, credential } }),
+      ),
     onSuccess: async () => {
       queryClient.clear();
-      await navigate({ to: '/' });
+      await onJoined();
     },
     onError: (err) =>
-      setFormError(applyApiError(t, err, form.setError, ['display_name', 'username', 'password'])),
+      setFormError(
+        err instanceof ApiError
+          ? applyApiError(t, err, form.setError, ['display_name', 'username'])
+          : passkeyErrorMessage(t, err),
+      ),
   });
   const err = form.formState.errors;
 
   return (
     <AuthShell
-      title={t('join.title', { name: instance.name })}
+      title={t('join.title', { name: instanceName })}
       subtitle={
         preview.data ? (
           <>
@@ -75,7 +110,7 @@ function JoinPage() {
           noValidate
           onSubmit={form.handleSubmit((v) => {
             setFormError(null);
-            mutation.mutate({ body: { ...v, invite_code: code, client: 'web' } });
+            mutation.mutate(v);
           })}
         >
           {formError && <Alert variant="destructive">{formError}</Alert>}
@@ -98,18 +133,12 @@ function JoinPage() {
               {...form.register('username')}
             />
           </Field>
-          <Field
-            label={t('join.password')}
-            help={t('join.passwordHelp')}
-            error={fieldMessage(t, err.password?.message)}
-          >
-            <PasswordInput autoComplete="new-password" {...form.register('password')} />
-          </Field>
+          <p className="text-sm text-muted-foreground">{t('join.passkeyHelp')}</p>
           <p className="text-xs text-muted-foreground">{t('join.trust')}</p>
           <Button type="submit" disabled={mutation.isPending || preview.isPending}>
             {t('join.submit')}
           </Button>
-          <p className="text-xs text-muted-foreground">{t('join.appHint')}</p>
+          {showAppHint && <p className="text-xs text-muted-foreground">{t('join.appHint')}</p>}
           <Link to="/login" className="text-sm underline">
             {t('join.haveAccount')}
           </Link>

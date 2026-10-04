@@ -14,7 +14,7 @@ import {
 import { DAY, HOUR } from '../infra/clock.js';
 import { KEY_PREFIXES } from '../infra/keys.js';
 import type { Deps } from '../http/deps.js';
-import { purgeResets } from '../modules/admin/service.js';
+import { purgeAuthTokens } from '../modules/admin/service.js';
 import { deleteExpiredSessions } from '../modules/auth/sessions.js';
 import { expireExports } from '../modules/exports/service.js';
 import { getSettings } from '../modules/settings/service.js';
@@ -145,7 +145,7 @@ export async function runSweep(deps: Deps): Promise<{ scanned: number; deleted: 
 export async function runCleanup(deps: Deps) {
   const now = deps.clock.now();
   const sessionsDeleted = await deleteExpiredSessions(deps.db, now);
-  await purgeResets(deps.db, now);
+  await purgeAuthTokens(deps.db, now);
   await deps.db
     .delete(sendRequests)
     .where(lt(sendRequests.createdAt, new Date(now.getTime() - DAY)));

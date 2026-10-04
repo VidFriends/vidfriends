@@ -38,7 +38,6 @@ erDiagram
 - `username` text UNIQUE, CHECK `^[a-z0-9][a-z0-9_.]{2,29}$`
 - `display_name` text NOT NULL DEFAULT ''
 - `avatar_key` text NULL
-- `password_hash` text NOT NULL
 - `role` text NOT NULL DEFAULT 'member', CHECK in (`member`, `admin`)
 - `status` text NOT NULL DEFAULT 'active', CHECK in (`active`, `suspended`)
 - `storage_bytes` bigint NOT NULL DEFAULT 0
@@ -196,12 +195,35 @@ erDiagram
 - `ciphertext` bytea (AES-256-GCM with a key derived from `APP_SECRET`)
 - `created_at`
 
-**`password_resets`**
+**`passkeys`** ([ADR-0018](../adr/0018-passkey-only-sign-in.md))
+- `id` PK
+- `user_id` FK CASCADE
+- `credential_id` text UNIQUE (base64url)
+- `public_key` bytea, `counter` bigint, `transports` text[], `backed_up` boolean
+- `name` text NOT NULL (≤ 50)
+- `created_at`, `last_used_at` NULL
+- Index (`user_id`).
+
+**`webauthn_challenges`**
+- `id` PK (the ceremony id returned to the client)
+- `challenge` text (base64url, 32 random bytes)
+- `purpose` text CHECK in (`setup`, `register`, `recover`, `add`, `signin`, `reauth`)
+- `user_id` uuid NULL, `context` jsonb (username, display name, invite or recovery token hash: what the ceremony will create)
+- `expires_at` (5 minutes); deleted when used.
+
+**`recovery_tokens`** (replaces `password_resets`)
 - `token_hash` bytea PK
 - `user_id` FK CASCADE
-- `created_by` FK users
-- `expires_at`
-- `used_at` NULL
+- `created_by` FK users NULL (null when printed by the `recovery-link` server command)
+- `expires_at`, `used_at` NULL
+
+**`mobile_auth_codes`** (browser hand-off, WF-AUTH-5)
+- `code_hash` bytea PK
+- `user_id` FK CASCADE
+- `code_challenge` text (S256)
+- `expires_at` (60 seconds), `used_at` NULL
+
+`sessions` gains `passkey_id` FK NULL (ON DELETE CASCADE: removing a passkey revokes the sessions it created) and `reauth_at` NULL (the last passkey confirmation, for WF-ACCT-2/3).
 
 **`audit_log`**
 - `id` bigserial PK
@@ -255,18 +277,26 @@ LIMIT :n + 1;
 | Method & path | Auth | Request → response (summary) | Notable errors | FR |
 |---|---|---|---|---|
 | `GET /instance` | P | → `{name, version, api_version, signup_mode, setup_complete, retention_days}` | – | PAIR-01 |
-| `POST /setup` | P | `{setup_token, instance_name, username, password}` → `{user}` + session | `setup_invalid`, 404 if complete | AUTH-01 |
+| `POST /setup/options` | P | `{setup_token, instance_name, username, display_name?}` → `{ceremony_id, options}` (WebAuthn creation options) | `setup_invalid`, `validation_failed`, 404 if complete | AUTH-01 |
+| `POST /setup` | P | `{ceremony_id, credential, passkey_name?}` → `{user}` + session | `ceremony_invalid`, `passkey_invalid`, 404 if complete | AUTH-01 |
 | `GET /invites/{code}/preview` | P | → `{inviter_display_name, expires_at}` | `invite_invalid` | PAIR-04 |
-| `POST /auth/register` | P | `{username, password, display_name?, invite_code?, client}` → `{user, token?}` | `invite_invalid`, `username_taken`, `validation_failed` | AUTH-02/03 |
-| `POST /auth/login` | P | `{username, password, client}` → `{user, token?}` (token only for mobile; web gets a cookie) | `invalid_credentials`, `account_suspended`, `rate_limited` | AUTH-04 |
+| `POST /auth/register/options` | P | `{username, display_name?, invite_code?}` → `{ceremony_id, options}` | `invite_invalid`, `username_taken`, `validation_failed` | AUTH-02/03 |
+| `POST /auth/register` | P | `{ceremony_id, credential, passkey_name?}` → `{user}` + cookie session | `ceremony_invalid`, `passkey_invalid`, `invite_invalid`, `username_taken` | AUTH-02/03 |
+| `POST /auth/signin/options` | P | `{}` → `{ceremony_id, options}` (discoverable: no allow-list) | `rate_limited` | AUTH-04 |
+| `POST /auth/signin` | P | `{ceremony_id, credential}` → `{user}` + cookie session | `invalid_credentials`, `account_suspended`, `rate_limited` | AUTH-04 |
 | `POST /auth/logout` | M | `{all?: bool}` → 204 | – | AUTH-04 |
 | `GET /me` | M | → `{user, settings_summary}` | – | – |
 | `PATCH /me` | M | `{display_name?}` → `{user}` | – | ACCT-01 |
 | `POST /me/avatar/upload`, `PUT /me/avatar`, `DELETE /me/avatar` | M | `{bytes, content_type}` → `{upload_id, put_url, expires_at}` (presigned PUT to `tmp/avatars/<user>/<upload_id>`, ≤ 2 MB); then `{upload_id}` → `{user}` after re-encoding to a 256×256 WebP; delete → `{user}` | `too_large`, `upload_incomplete`, `validation_failed` (`not_an_image`) | ACCT-01 |
 | `GET /users/{user_id}/avatar` | M | → 302 to a signed URL (≤ 15 min). 404 when the viewer is blocked by, or blocking, the user | 404 | ACCT-01 |
 | `GET /users/{user_id}/avatar-url` | M | → `{url, expires_at}`: the same signed URL as data, for bearer clients (the redirect would carry their `Authorization` header to the store). Same visibility as `/avatar` | 404 | ACCT-01, MOB-01 |
-| `POST /me/password` | M | `{current_password, new_password}` → 204 | `invalid_credentials` | ACCT-02 |
-| `DELETE /me` | M | `{password}` → 202 | `last_admin`, `invalid_credentials` | ACCT-03 |
+| `POST /auth/mobile/code` | M (cookie) | `{code_challenge}` → `{code}`: single-use, 60 s; the `/app-auth` page then redirects to `vidfriends://auth?code=…&state=…` and logs its web session out | `validation_failed` | AUTH-04 |
+| `POST /auth/mobile/token` | P | `{code, code_verifier}` → `{user, token}` (bearer session, `client: mobile`) | `code_invalid`, `account_suspended` | AUTH-04 |
+| `GET /me/passkeys` | M | → `{items: Passkey[]}` (`id, name, created_at, last_used_at, backed_up, current`) | – | ACCT-02 |
+| `POST /me/passkeys/options`, `POST /me/passkeys` | M | `{}` → `{ceremony_id, options}`; `{ceremony_id, credential, name?}` → `{passkey}` | `ceremony_invalid`, `passkey_invalid`, `too_many_passkeys` | ACCT-02 |
+| `PATCH /me/passkeys/{id}`, `DELETE /me/passkeys/{id}` | M | `{name}` → `{passkey}`; delete → 204 (needs `reauth_at` within 5 min) | `reauth_required`, `last_passkey`, 404 | ACCT-02 |
+| `POST /me/reauth/options`, `POST /me/reauth` | M | `{}` → `{ceremony_id, options}` (the user's own passkeys); `{ceremony_id, credential}` → 204, sets `reauth_at` | `ceremony_invalid`, `invalid_credentials` | ACCT-02/03 |
+| `DELETE /me` | M | `{}` → 202 (needs `reauth_at` within 5 min) | `last_admin`, `reauth_required` | ACCT-03 |
 | `GET /me/sessions`, `DELETE /me/sessions/{id}` | M | list / revoke | – | ACCT-04 |
 | `POST /me/exports` | M | `{include_media}` → 202 `{export}`; one in progress, 3 per 24 h | `export_in_progress`, `rate_limited` | ACCT-05 |
 | `GET /me/exports` | M | → `{items: Export[]}` newest first | – | ACCT-05 |
@@ -297,11 +327,12 @@ LIMIT :n + 1;
 | `GET /notification-prefs`, `PUT /notification-prefs` | M | matrix of type × channel | – | NOTIF-04 |
 | `GET /push/vapid-public-key` | M | → `{key}` | – | NOTIF-02 |
 | `POST /push-targets`, `DELETE /push-targets/{id}` | M | `{kind, endpoint, keys?, private_previews?}` | – | NOTIF-02,03 |
-| `GET /admin/users?q=&status=`, `PATCH /admin/users/{id}` `{status?, role?, quota_bytes_override?}`, `DELETE /admin/users/{id}`, `POST /admin/users/{id}/password-reset` | A | … → `{user}` / `{reset_url}` | `last_admin` | ADM-01,03 |
+| `GET /admin/users?q=&status=`, `PATCH /admin/users/{id}` `{status?, role?, quota_bytes_override?}`, `DELETE /admin/users/{id}`, `POST /admin/users/{id}/recovery-link` | A | … → `{user}` / `{url, expires_at}` | `last_admin` | ADM-01,03 |
 | `GET /admin/settings`, `PATCH /admin/settings` | A | settings object | `validation_failed` | ADM-02 |
 | `GET /admin/storage`, `POST /admin/retention/run` | A | stats / 202 | – | ADM-04 |
 | `GET /admin/audit?actor=&action=&before=` | A | paginated | – | ADM-05 |
-| `POST /auth/password-reset/{token}` | P | `{new_password}` → 204 | `reset_invalid` | ADM-03 |
+| `GET /auth/recovery/{token}` | P | → `{username, display_name, expires_at}` | `recovery_invalid` | ADM-03 |
+| `POST /auth/recovery/{token}/options`, `POST /auth/recovery/{token}` | P | `{}` → `{ceremony_id, options}`; `{ceremony_id, credential, passkey_name?}` → `{user}` + cookie session; the account's other passkeys and sessions are removed | `recovery_invalid`, `ceremony_invalid`, `passkey_invalid` | ADM-03 |
 
 Ops endpoints live outside `/api/v1`: `GET /healthz`, `GET /readyz`, and `GET :9464/metrics` (internal port).
 
@@ -340,7 +371,12 @@ Ops endpoints live outside `/api/v1`: `GET /healthz`, `GET /readyz`, and `GET :9
 
 ## 5. Security mechanisms
 
-- **argon2id parameters:** memory 19 MiB, iterations 2, parallelism 1 (the OWASP 2023 minimum), tuned at M1 so a hash takes about 50–100 ms on the reference host.
+- **WebAuthn** ([ADR-0018](../adr/0018-passkey-only-sign-in.md)), verified with `@simplewebauthn/server`:
+  - Relying party ID = `new URL(PUBLIC_URL).hostname`; expected origin = `PUBLIC_URL` origin; relying party name = the instance name.
+  - Registration: `residentKey: required`, `userVerification: required`, attestation `none`, algorithms ES256 and RS256, `excludeCredentials` = the account's passkeys. The user handle is 32 random bytes per account (never the database id).
+  - Authentication: no allow-list (discoverable), `userVerification: required`. A counter that goes backwards (when non-zero) rejects the assertion and is audited.
+  - Challenges: 32 random bytes, single use, 5 minutes.
+- **HTTPS:** in production the server refuses to start unless `PUBLIC_URL` is `https://` with a domain name; `http://localhost` is allowed for trials and tests.
 - **Tokens:**
   - 32 random bytes, base64url encoded.
   - Stored as `sha256` digests.
@@ -353,5 +389,6 @@ Ops endpoints live outside `/api/v1`: `GET /healthz`, `GET /readyz`, and `GET :9
 - **CSP:** `default-src 'self'; img-src 'self' blob: data: {media origin}; media-src 'self' blob: {media origin}; connect-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'`.
   - `{media origin}` is the configured S3 public endpoint origin.
   - `'unsafe-inline'` for styles is needed for Radix positioning. Revisit later.
-- **Password reset links:** `https://<host>/reset/<token>`, valid for 24 h, single use. All of the user's sessions are revoked on use.
-- **Log redaction:** the pino `redact` paths cover `req.headers.cookie`, `req.headers.authorization`, and `*.password`, `*.token`, `*.code`, `*.note`, `*.body` and `*.endpoint`. A unit test asserts the redaction (NFR-PRIV-02).
+- **Recovery links:** `https://<host>/recover/<token>`, valid for 24 h, single use. Registering a passkey through one removes the user's other passkeys and revokes all their sessions. `node dist/main.js recovery-link <username>` prints one to stdout (not the log) and audits `user.recovery_link` with no actor.
+- **Mobile hand-off codes:** 32 random bytes, stored as `sha256`, 60 seconds, single use, bound to an S256 `code_challenge`; the redirect target is fixed to `vidfriends://auth`.
+- **Log redaction:** the pino `redact` paths cover `req.headers.cookie`, `req.headers.authorization`, and `*.token`, `*.code`, `*.code_verifier`, `*.credential`, `*.note`, `*.body` and `*.endpoint`. A unit test asserts the redaction (NFR-PRIV-02).

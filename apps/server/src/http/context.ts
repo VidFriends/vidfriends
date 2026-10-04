@@ -9,6 +9,8 @@ export interface Viewer {
   sessionId: string;
   sessionHash: Buffer;
   client: 'web' | 'mobile';
+  /** Last passkey confirmation in this session (sensitive actions, WF-ACCT-2/3). */
+  reauthAt: Date | null;
   /** How the request authenticated; cookie-authenticated unsafe requests need CSRF checks. */
   via: 'cookie' | 'bearer';
 }

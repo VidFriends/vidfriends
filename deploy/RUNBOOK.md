@@ -88,12 +88,25 @@ Releases are tagged `vX.Y.Z` and published as multi-arch images with SBOMs
    (Building from source: `docker compose build` instead.)
 5. `docker compose pull && docker compose up -d --wait`. `migrate` runs before the server and
    worker start; if it fails, they do not start and the old data is untouched by the new code.
-6. Check: `docker compose logs migrate` ends with `migrations applied`; `/readyz` is ready; log in
-   and play a video.
+6. Check: `docker compose logs migrate` ends with `migrations applied`; `/readyz` is ready; sign
+   in and play a video.
 
 **Rollback:** set the image lines back to the previous tag and `docker compose up -d --wait`.
 Never run down-migrations. If the new release's notes say a rollback needs the database restored,
 use section 4 with the backup from step 2.
+
+**Upgrading from `v0.1.0-rc.1` to passkeys (operator action, ADR-0018).** Sign-in becomes
+passkey-only and migration `0005_passkeys` deletes the stored password hashes.
+
+- `PUBLIC_URL` must be `https://` on a domain name; the server refuses to start with an IP
+  address or plain http (`localhost` is allowed for trials).
+- Members who are signed in when you upgrade stay signed in and should add a passkey in
+  Settings → Passkeys. Everyone else, you included, needs a recovery link: Admin → Members →
+  _Recovery link_, or for yourself
+  `docker compose exec server node dist/main.js recovery-link <username>`.
+- Older app builds cannot sign in; members install the new app.
+- Rolling back to `v0.1.0-rc.1` needs the database restored from the step 2 backup (section 4);
+  passkeys created since then are lost.
 
 ## 3. Backup
 
@@ -175,15 +188,15 @@ rotated at 10 MB × 5 per container, no access log, no tokens or content).
 
 ## 6. Routine operations
 
-| Task                      | How                                                                                                                                                                                          |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Status                    | `docker compose ps`; `curl -fsS $PUBLIC_URL/readyz`                                                                                                                                          |
-| Logs                      | `docker compose logs -f server worker`                                                                                                                                                       |
-| Reset a member's password | Admin → Members → Password-reset link; give it to them privately (24 h, single use)                                                                                                          |
-| Free space now            | Admin → Storage → Run retention now                                                                                                                                                          |
-| yt-dlp update             | A scheduled workflow proposes each new yt-dlp version as a pull request; it reaches you in the next release. When extraction breaks for a site, check the release notes for a patch release. |
-| Rotate `S3_*` keys        | Change both in `.env`, then `docker compose up -d --wait` (SeaweedFS reads them at start)                                                                                                    |
-| Rotate `APP_SECRET`       | Not supported in place: members' push subscriptions would need re-enabling and CSRF tokens reset. Avoid unless compromised.                                                                  |
+| Task                       | How                                                                                                                                                                                                                                             |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Status                     | `docker compose ps`; `curl -fsS $PUBLIC_URL/readyz`                                                                                                                                                                                             |
+| Logs                       | `docker compose logs -f server worker`                                                                                                                                                                                                          |
+| Recover a member's account | Admin → Members → Recovery link; give it to them privately (24 h, single use; the new passkey replaces their old ones). Locked-out admin: `docker compose exec server node dist/main.js recovery-link <username>` prints a link in the terminal |
+| Free space now             | Admin → Storage → Run retention now                                                                                                                                                                                                             |
+| yt-dlp update              | A scheduled workflow proposes each new yt-dlp version as a pull request; it reaches you in the next release. When extraction breaks for a site, check the release notes for a patch release.                                                    |
+| Rotate `S3_*` keys         | Change both in `.env`, then `docker compose up -d --wait` (SeaweedFS reads them at start)                                                                                                                                                       |
+| Rotate `APP_SECRET`        | Not supported in place: members' push subscriptions would need re-enabling and CSRF tokens reset. Avoid unless compromised.                                                                                                                     |
 
 ## 7. Records
 

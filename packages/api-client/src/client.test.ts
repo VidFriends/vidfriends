@@ -1,4 +1,4 @@
-import { getInstance, listInvites, login, revokeInvite } from '@vidfriends/contracts';
+import { getInstance, listInvites, revokeInvite, signIn } from '@vidfriends/contracts';
 import { describe, expect, it, vi } from 'vitest';
 import { ApiError, buildPath, createApiClient } from './index.js';
 
@@ -26,13 +26,18 @@ describe('createApiClient', () => {
       onUnauthorized,
     });
     const err = await api
-      .call(login, { body: { username: 'a', password: 'b', client: 'web' } })
+      .call(signIn, {
+        body: {
+          ceremony_id: '00000000-0000-4000-8000-000000000000',
+          credential: { id: 'c', rawId: 'c', type: 'public-key', response: {} },
+        },
+      })
       .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(ApiError);
     expect((err as ApiError).code).toBe('invalid_credentials');
     const init = (fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1];
     expect((init.headers as Record<string, string>)['x-csrf-token']).toBe('tok');
-    // Login is public: a 401 there is not a session expiry.
+    // Sign-in is public: a 401 there is not a session expiry.
     expect(onUnauthorized).not.toHaveBeenCalled();
   });
 

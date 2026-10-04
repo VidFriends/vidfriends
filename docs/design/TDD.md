@@ -77,10 +77,11 @@
 | Share intake | `expo-share-intent` (or the current maintained equivalent) config plugin: iOS share extension and Android `ACTION_SEND` for `text/plain` URLs and `video/*` |
 | Token storage | `expo-secure-store` (FR-MOB-03) |
 | Pairing | `expo-camera` barcode scanning, plus paste. The base URL is stored in secure storage and applied at startup (WF-PAIR-2). |
-| Cleartext | `expo-build-properties` sets Android `usesCleartextTraffic`. The app allows `http://` only to private-network **IP literals** (RFC 1918, loopback, link-local, IPv6 ULA) with a warning (WF-PAIR-3); host names never qualify because their resolution cannot be checked before connecting (Assumption). iOS ATS uses `NSAllowsLocalNetworking`. |
+| Cleartext | Servers are reached over `https://` only (WF-PAIR-3, ADR-0018). The config plugin `plugins/with-loopback-cleartext.js` installs an Android network security config that permits plain http for `localhost` and `127.0.0.1` only (development and the emulator E2E); the app's pairing check applies the same rule. iOS ATS uses `NSAllowsLocalNetworking`. |
+| Sign-in | Browser hand-off (WF-AUTH-5): `expo-web-browser` `openAuthSessionAsync` opens `<instance>/app-auth` with a `state` and an S256 PKCE challenge (`expo-crypto`); the page runs the passkey ceremony and returns a 60 s single-use code to `vidfriends://auth`, which the app exchanges at `POST /auth/mobile/token`. The `app/auth.tsx` route completes a callback delivered as a deep link; a code is exchanged once even if both paths deliver it. |
 | Push | `expo-notifications`. The token is registered via `POST /api/v1/push-targets` with `{kind:"expo"}`; the server sends through the Expo Push API (`EXPO_ACCESS_TOKEN` only if the Expo project enforces push security). Tokens need the build's EAS project id, so builds without one hide the push switch and rely on the in-app list. |
 | Release | EAS Build and Submit. The internal-testing tracks are TestFlight and the Play internal track. |
-| E2E | Maestro flows (`apps/mobile/e2e`) against a release APK on an Android emulator in CI. The stack runs its plain-HTTP variant at `http://10.0.2.2:8880` (the emulator's address for the host), which exercises the WF-PAIR-3 private-address path. |
+| E2E | Maestro flows (`apps/mobile/e2e`) against a release APK on an Android emulator in CI. The stack runs at `http://localhost:8880`, forwarded into the emulator with `adb reverse` (the WF-PAIR-3 loopback exception). An emulator browser cannot run a passkey ceremony, so `e2e/seed.mjs` creates the accounts with software passkeys and Maestro mints hand-off codes (`e2e/scripts/mint-code.js`) that the app exchanges through its real `vidfriends://auth` path. Only the E2E build carries the matching verifier (`EXPO_PUBLIC_E2E_HANDOFF_VERIFIER`, random per run); release builds have none, so they accept only codes for a hand-off they started. The `/app-auth` page itself is covered by Playwright (`e2e/tests/app-auth.spec.ts`). |
 | Required plist strings | Camera (QR scanning and recording, if added), Photo Library, Microphone if recording ships. All are set before the first TestFlight build (legacy rejection risk). |
 
 ## 5. Security engineering
@@ -90,7 +91,8 @@
 | Threat | Example | Mitigation |
 |---|---|---|
 | Spoofing | Session theft or token forgery | Opaque random tokens, hashed at rest; HttpOnly cookie; secure-store on mobile; no JWT secrets to leak [NFR-SEC-02, ADR-0008] |
-| Spoofing | Brute-force login | Per-IP and per-username limits; argon2id cost [NFR-SEC-06] |
+| Spoofing | Credential theft or phishing | Passkeys only (no passwords to steal or guess), bound to the `PUBLIC_URL` host; single-use 5-minute challenges; per-IP auth rate limits [NFR-SEC-02, NFR-SEC-06, ADR-0018] |
+| Spoofing | Hand-off code interception (mobile) | Codes are single-use, expire in 60 s, are sent only to `vidfriends://auth` and are bound to the app's PKCE challenge [WF-AUTH-5] |
 | Tampering | CSRF on cookie auth | SameSite=Lax + Origin check + double-submit token [NFR-SEC-04] |
 | Tampering | Malicious media exploiting ffmpeg | Sandboxed worker, size and time caps, pinned ffmpeg, re-encode on doubt [NFR-SEC-08] |
 | Repudiation | Admin abuse | Append-only audit log [FR-ADM-05] |
@@ -166,7 +168,7 @@
 | Contract | Vitest | Generated OpenAPI up to date; every route registered; responses validate | PR |
 | API integration | Vitest + real Postgres and SeaweedFS S3 (compose or CI services) | Every FR via HTTP against the full Hono app; state-machine tables; **authz matrix**; job idempotency with kill/restart | PR |
 | Media | Vitest with fixture files and a fake `yt-dlp` script (deterministic) | Fetch, process and link_only paths, limits | PR. A live opt-in yt-dlp smoke test runs nightly (non-blocking, alerts). |
-| E2E web | Playwright (Chromium, Firefox, WebKit) + axe | Journeys J-1..J-8; seeded by API helpers; served by the production image | PR (Chromium), nightly (all) |
+| E2E web | Playwright (Chromium, Firefox, WebKit) + axe | Journeys J-1..J-8; seeded by API helpers; served by the production image. Passkeys: each persona's authenticator is a `SoftAuthenticator` (`packages/test-utils`) in Node; `e2e/support/passkeys.ts` answers the page's `navigator.credentials` calls with it, so the same ceremonies run in every browser and API helpers sign in with the same key | PR (Chromium), nightly (all) |
 | E2E mobile | Maestro on EAS or emulator builds | J-2..J-5 (M6) | Pre-release |
 | Load | k6 | Feed, send and media URL issuance at 50 virtual users (NFR-PERF-01) | Pre-release (M5+) |
 | Runbook | Human or agent with a checklist | Fresh-VM deploy, restore drill, real push on devices | Milestone exit |

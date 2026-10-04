@@ -1,32 +1,28 @@
 // M2-T5 / FR-FRND-01..05: request → accept → remove → block → unblock across two users.
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import type { SoftAuthenticator } from '@vidfriends/test-utils/authenticator';
 import { expectAccessible } from '../support/a11y';
-import { ADMIN, Api, PASSWORD } from '../support/api';
-
-async function loginAs(page: Page, username: string) {
-  await page.goto('/login');
-  await page.getByLabel('Username').fill(username);
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByRole('button', { name: 'Log in' }).click();
-  await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
-}
+import { Api } from '../support/api';
+import { authenticator } from '../support/passkeys';
+import { loginPage } from '../support/people';
 
 test('two members become friends, part ways, block and unblock', async ({ browser, baseURL }) => {
-  const admin = await Api.create(baseURL as string);
-  await admin.login(ADMIN.username, ADMIN.password);
+  const admin = await Api.admin(baseURL as string);
   const stamp = Date.now() % 100000;
   const names = { a: `ana${stamp}`, b: `ben${stamp}` };
+  const keys: Record<string, SoftAuthenticator> = {};
   for (const [key, name] of Object.entries(names)) {
     const { code } = await admin.createInvite({ auto_friend: false });
     const api = await Api.create(baseURL as string);
-    await api.register(code, name, key === 'a' ? 'Ana' : 'Ben');
+    keys[key] = authenticator(baseURL as string);
+    await api.register(code, name, key === 'a' ? 'Ana' : 'Ben', keys[key]);
     await api.dispose();
   }
 
   const ana = await (await browser.newContext()).newPage();
   const ben = await (await browser.newContext()).newPage();
-  await loginAs(ana, names.a);
-  await loginAs(ben, names.b);
+  await loginPage(ana, { auth: keys.a! });
+  await loginPage(ben, { auth: keys.b! });
 
   // Ana finds Ben and sends a request.
   await ana.getByRole('link', { name: 'Friends', exact: true }).click();

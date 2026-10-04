@@ -130,7 +130,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @vidfriends/contracts build
+      - run: pnpm --filter @vidfriends/contracts --filter @vidfriends/test-utils build
       - name: Start the production stack
         run: pnpm --filter @vidfriends/e2e stack:up
       - name: Install Playwright Chromium

@@ -26,7 +26,8 @@ backups on a separate disk.
 ## Before you start
 
 - **A domain name** pointing at the machine, with ports 80 and 443 open, so Caddy can get a
-  certificate. The mobile apps and Web Push need HTTPS.
+  certificate. Members sign in with passkeys, which need HTTPS on a domain name, so the server
+  refuses to start with an IP address or plain http in `PUBLIC_URL`.
 - **Your responsibility as operator.** You can technically read everything stored on the server,
   including videos and private conversations (ADR-0016). Members are told this in the privacy page
   (`/privacy`) on your server. Only invite people who trust you, and keep the machine, its backups
@@ -68,8 +69,12 @@ the app under **Admin → Settings** and takes effect immediately:
 
 - **Invites:** Admin → Invites (or the Invites page). Each invite is a link and a QR code; set how
   many people can use it, when it expires, and whether they become your friend automatically.
-- **Forgotten passwords:** there is no email. Admin → Members → *Password-reset link* gives you a
-  single-use link valid for 24 hours to pass on privately.
+- **Lost passkeys:** members sign in with passkeys only; there is no password and no email.
+  Admin → Members → *Recovery link* gives you a single-use link, valid for 24 hours, to pass on
+  privately. Opening it creates a new passkey, removes the member's old passkeys and signs out
+  every device. If you lost your own admin passkey, run on the server
+  `docker compose exec server node dist/main.js recovery-link <username>`; it prints the link in
+  your terminal only.
 - **Problem members:** suspend (they are logged out and their shares are hidden), or delete the
   account. You cannot remove the last admin.
 - **Storage:** Admin → Storage shows usage per member and lets you run retention now.
@@ -85,4 +90,4 @@ the app under **Admin → Settings** and takes effect immediately:
 
 Check the [runbook](../../deploy/RUNBOOK.md) and open an issue on the project's repository with
 the output of `docker compose ps` and the relevant `docker compose logs` lines. Logs contain no
-passwords, tokens, invite codes, notes or replies, but do contain member ids; review before posting.
+passkey data, tokens, invite codes, notes or replies, but do contain member ids; review before posting.

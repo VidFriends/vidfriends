@@ -1,21 +1,26 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useApiMutation } from '@vidfriends/api-client/react';
 import {
   AVATAR_MAX_BYTES,
-  changePassword,
+  addPasskey,
+  addPasskeyOptions,
   createExport,
   type DataExport,
   createAvatarUpload,
   deleteAvatar,
   deleteMe,
   listExports,
+  listPasskeys,
+  type Passkey,
+  reauth,
+  reauthOptions,
+  removePasskey,
+  renamePasskey,
   listSessions,
   revokeSessionRoute,
   type Session,
   DisplayName,
   logout,
-  Password,
   setAvatar,
   updateMe,
 } from '@vidfriends/contracts';
@@ -30,26 +35,16 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { meQuery } from '@/lib/session';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { z } from 'zod';
-import { PasswordInput } from '@/components/password-input';
+import { api } from '@/lib/api';
+import { assertPasskey, createPasskey, passkeyErrorMessage } from '@/lib/passkeys';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { Field } from '@/components/ui/field';
-import { applyApiError, errorMessage, fieldMessage } from '@/lib/errors';
+import { errorMessage, fieldMessage } from '@/lib/errors';
 import { getTheme, setTheme, type Theme } from '@/lib/theme';
-
-const schema = z
-  .object({
-    current_password: z.string().min(1, 'required'),
-    new_password: Password,
-    confirm: z.string(),
-  })
-  .refine((v) => v.new_password === v.confirm, { path: ['confirm'], message: 'password_mismatch' });
-type Values = z.infer<typeof schema>;
 
 export const Route = createFileRoute('/_app/settings')({
   component: SettingsPage,
@@ -62,7 +57,7 @@ function SettingsPage() {
       <h1 className="text-2xl font-semibold">{t('settings.title')}</h1>
       <ProfileCard />
       <PushCard />
-      <PasswordCard />
+      <PasskeysCard />
       <SessionsCard />
       <AppearanceCard />
       <ExportCard />
@@ -72,57 +67,128 @@ function SettingsPage() {
   );
 }
 
-function PasswordCard() {
+/** Confirms with one of the member's passkeys; sensitive actions are allowed for 5 minutes. */
+async function confirmWithPasskey() {
+  await assertPasskey(
+    () => api.call(reauthOptions, { body: {} }),
+    (ceremony_id, credential) => api.call(reauth, { body: { ceremony_id, credential } }),
+  );
+}
+
+/** FR-ACCT-02 / WF-ACCT-2: list, add, rename and remove passkeys. */
+function PasskeysCard() {
   const { t } = useTranslation();
-  const [formError, setFormError] = useState<string | null>(null);
-  const form = useForm<Values>({ resolver: zodResolver(schema) });
-  const mutation = useApiMutation(changePassword, {
-    onSuccess: () => {
-      form.reset({ current_password: '', new_password: '', confirm: '' });
-      toast.success(t('settings.passwordChanged'));
-    },
-    onError: (err) => {
-      if ((err as { code?: string }).code === 'invalid_credentials') {
-        form.setError('current_password', { message: 'invalid' });
-        setFormError(errorMessage(t, err));
-        return;
-      }
-      setFormError(applyApiError(t, err, form.setError, ['current_password', 'new_password']));
-    },
-  });
-  const err = form.formState.errors;
+  const queryClient = Route.useRouteContext().queryClient;
+  const passkeys = useApiQuery(listPasskeys);
+  const [busy, setBusy] = useState(false);
+  const [renaming, setRenaming] = useState<Passkey | null>(null);
+  const [name, setName] = useState('');
+  const refresh = () => queryClient.invalidateQueries({ queryKey: [listPasskeys.id] });
+
+  async function run(action: () => Promise<unknown>, done: string) {
+    setBusy(true);
+    try {
+      await action();
+      toast.success(done);
+      await refresh();
+    } catch (err) {
+      toast.error(passkeyErrorMessage(t, err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const add = () =>
+    run(
+      () =>
+        createPasskey(
+          () => api.call(addPasskeyOptions, { body: {} }),
+          (ceremony_id, credential) => api.call(addPasskey, { body: { ceremony_id, credential } }),
+        ),
+      t('passkeys.added'),
+    );
+  const remove = (p: Passkey) =>
+    run(async () => {
+      await confirmWithPasskey();
+      await api.call(removePasskey, { params: { id: p.id } });
+    }, t('passkeys.removed'));
+  const items = (passkeys.data?.items ?? []) as Passkey[];
+
   return (
-    <Card>
-      <CardTitle className="mb-4">{t('settings.passwordTitle')}</CardTitle>
-      <form
-        className="grid gap-4"
-        noValidate
-        onSubmit={form.handleSubmit((v) => {
-          setFormError(null);
-          mutation.mutate({
-            body: { current_password: v.current_password, new_password: v.new_password },
-          });
-        })}
+    <Card className="grid gap-3">
+      <CardTitle>{t('passkeys.title')}</CardTitle>
+      <CardDescription>{t('passkeys.help')}</CardDescription>
+      {passkeys.isError && <Alert variant="destructive">{errorMessage(t, passkeys.error)}</Alert>}
+      <ul className="grid gap-2" aria-label={t('passkeys.title')}>
+        {items.map((p) => (
+          <li
+            key={p.id}
+            className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
+          >
+            <div className="grid gap-0.5">
+              <span className="font-medium">
+                {p.name}
+                {p.current && ` · ${t('passkeys.current')}`}
+              </span>
+              <span className="text-muted-foreground">
+                {p.last_used_at
+                  ? t('passkeys.lastUsed', { when: formatRelative(p.last_used_at) })
+                  : t('passkeys.created', { when: formatRelative(p.created_at) })}
+                {p.backed_up && ` · ${t('passkeys.synced')}`}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={busy}
+                onClick={() => {
+                  setRenaming(p);
+                  setName(p.name);
+                }}
+              >
+                {t('passkeys.rename')}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={busy || items.length < 2}
+                onClick={() => void remove(p)}
+              >
+                {t('passkeys.remove')}
+              </Button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      {items.length === 1 && <CardDescription>{t('passkeys.addAnother')}</CardDescription>}
+      <div>
+        <Button variant="outline" disabled={busy} onClick={() => void add()}>
+          {t('passkeys.add')}
+        </Button>
+      </div>
+      <ConfirmDialog
+        open={!!renaming}
+        onOpenChange={(o) => !o && setRenaming(null)}
+        title={t('passkeys.rename')}
+        description={t('passkeys.renameHelp')}
+        confirmLabel={t('passkeys.save')}
+        pending={busy || !name.trim()}
+        onConfirm={() => {
+          const target = renaming;
+          setRenaming(null);
+          if (target)
+            void run(
+              () =>
+                api.call(renamePasskey, { params: { id: target.id }, body: { name: name.trim() } }),
+              t('passkeys.renamed'),
+            );
+        }}
       >
-        {formError && <Alert variant="destructive">{formError}</Alert>}
-        <Field
-          label={t('settings.currentPassword')}
-          error={fieldMessage(t, err.current_password?.message)}
-        >
-          <PasswordInput autoComplete="current-password" {...form.register('current_password')} />
+        <Field label={t('passkeys.name')}>
+          <Input value={name} maxLength={50} onChange={(e) => setName(e.target.value)} />
         </Field>
-        <Field label={t('settings.newPassword')} error={fieldMessage(t, err.new_password?.message)}>
-          <PasswordInput autoComplete="new-password" {...form.register('new_password')} />
-        </Field>
-        <Field label={t('settings.confirmPassword')} error={fieldMessage(t, err.confirm?.message)}>
-          <PasswordInput autoComplete="new-password" {...form.register('confirm')} />
-        </Field>
-        <div>
-          <Button type="submit" disabled={mutation.isPending}>
-            {t('settings.passwordSubmit')}
-          </Button>
-        </div>
-      </form>
+      </ConfirmDialog>
     </Card>
   );
 }
@@ -281,14 +347,26 @@ function DeleteAccountCard() {
   const navigate = useNavigate();
   const queryClient = Route.useRouteContext().queryClient;
   const [open, setOpen] = useState(false);
-  const [password, setPassword] = useState('');
-  const mutation = useApiMutation(deleteMe, {
-    onSuccess: async () => {
-      queryClient.clear();
-      toast.success(t('settings.deleted'));
-      await navigate({ to: '/login' });
-    },
-  });
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  async function confirmAndDelete() {
+    setError(null);
+    setPending(true);
+    try {
+      await confirmWithPasskey();
+      await api.call(deleteMe, { body: {} });
+      await onDeleted();
+    } catch (err) {
+      setError(passkeyErrorMessage(t, err));
+    } finally {
+      setPending(false);
+    }
+  }
+  const onDeleted = async () => {
+    queryClient.clear();
+    toast.success(t('settings.deleted'));
+    await navigate({ to: '/login' });
+  };
   return (
     <Card className="grid gap-3">
       <CardTitle>{t('settings.deleteTitle')}</CardTitle>
@@ -302,25 +380,15 @@ function DeleteAccountCard() {
         open={open}
         onOpenChange={(o) => {
           setOpen(o);
-          if (!o) {
-            setPassword('');
-            mutation.reset();
-          }
+          if (!o) setError(null);
         }}
         title={t('settings.deleteTitle')}
         description={t('settings.deleteConfirm')}
         confirmLabel={t('settings.deleteSubmit')}
-        pending={mutation.isPending || !password}
-        onConfirm={() => mutation.mutate({ body: { password } })}
+        pending={pending}
+        onConfirm={() => void confirmAndDelete()}
       >
-        {mutation.isError && <Alert variant="destructive">{errorMessage(t, mutation.error)}</Alert>}
-        <Field label={t('settings.currentPassword')}>
-          <PasswordInput
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </Field>
+        {error && <Alert variant="destructive">{error}</Alert>}
       </ConfirmDialog>
     </Card>
   );

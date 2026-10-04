@@ -1,5 +1,5 @@
 // M5-T2: FR-VID-06 retention (time travel), NFR-REL-05 sweeper, housekeeping; M5-T4 metrics.
-import { login, reportProgress, sendShares, updateShare } from '@vidfriends/contracts';
+import { reportProgress, sendShares, updateShare } from '@vidfriends/contracts';
 import { eq, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { notifications, users, videos } from '../src/db/schema.js';
@@ -12,7 +12,7 @@ import {
   claimAdmin,
   idemKey,
   makeVideo,
-  PASSWORD,
+  signInWith,
   registerMember,
   type Member,
 } from './support/factories.js';
@@ -28,9 +28,9 @@ beforeAll(async () => {
 afterAll(async () => server.close());
 
 async function pair() {
-  // Time travel in earlier tests can expire the admin's session; log in again.
-  admin.client = server.client();
-  await admin.client.ok(login, { body: { username: 'admin', password: PASSWORD, client: 'web' } });
+  // Time travel in earlier tests can expire the admin's session; sign in again with the passkey.
+  admin.client.cookies.clear();
+  expect((await signInWith(admin.client)).status).toBe(200);
   const a = await registerMember(server, admin, { autoFriend: false });
   const b = await registerMember(server, admin, { autoFriend: false });
   await setRelationship(server, a.user.id, b.user.id, 'accepted');

@@ -70,7 +70,8 @@ BC-1..BC-7 in the [BRD](requirements/BRD.md#5-business-constraints): no ads or t
 
 The numbering is kept stable. A-1 (licence) and A-4 (default instance) were resolved by the owner on 2026-10-03 and removed.
 
-- **A-2:** No email is collected; password recovery is admin-assisted (BR-ACCT-4).
+- **A-2:** No email is collected; account recovery (lost passkeys) is admin-assisted by a recovery link (BR-ACCT-4, ADR-0018).
+- **A-7:** An emulator browser cannot run a passkey ceremony, so the Maestro flows sign in by handing the app a code minted with the seed's software passkey sessions, exchanged through the app's real `vidfriends://auth` path with a verifier that only the E2E build carries; the `/app-auth` page is covered by Playwright. Real-device passkey sign-in on Android and iOS is a manual check (M7-T6).
 - **A-3:** Scale is ≤ 50 users per instance. All performance numbers marked † are proposals.
 - **A-5:** Expo push relay is acceptable (BC-6 exception).
 - **A-6:** The M5 load test capped the `server` and `postgres` containers at 1 vCPU / 2 GB each as a stand-in for the 2 vCPU / 4 GB reference host (NFR-PERF-01); repeat on the alpha VM if it differs.
@@ -279,8 +280,8 @@ Each item needs a PRD update and, where architectural, an ADR before work starts
 | M7-T2 Data export on mobile | The same card in the app's Settings; the app fetches the signed link as data (`GET /me/exports/{id}/download-url`, bearer clients cannot follow the redirect) and opens it in the browser | FR-ACCT-05, FR-MOB-01 | Maestro `apps/mobile/e2e/flows/export.yaml` requests an export and sees it ready; authz matrix `getExportUrl` <br>**✅** [PR #117](https://github.com/VidFriends/vidfriends/pull/117); Android Maestro run including `export.yaml` green |
 | M7-T3 Passkey-only decision and specs | ADR-0018 (passkeys only, no passwords; supersedes the password parts of ADR-0008): HTTPS on a domain name required, admin recovery link plus a server command for locked-out admins, mobile sign-in by browser hand-off. PRD, SRS (FR-AUTH-01..04, FR-ACCT-02/03, FR-ADM reset link, NFR-SEC-02, FR-PAIR-03), FRD workflows and LLD schema updated | Owner answers 2026-10-04, ADR-0008, ADR-0013 | Docs merged; no requirement still mentions passwords |
 | M7-T4 Passkeys on the server | WebAuthn registration and sign-in (setup, invite registration, sign-in, add/remove passkeys), recovery links (admin route and `recovery-link` server command), password columns and routes removed in a new migration, plain-http `PUBLIC_URL` refused at start | M7-T3 | API tests with a software authenticator; authz matrix for the new id routes |
-| M7-T5 Passkeys on the web | Setup, join, sign-in, recovery and Settings → Passkeys screens | M7-T4 | Playwright with Chromium's virtual authenticator: setup, join, sign in, add a second passkey, recovery link |
-| M7-T6 Passkeys on mobile | Sign-in and join through the server's pages in a secure browser sheet that returns a one-time code exchanged for the app session (PKCE); plain-http pairing removed | M7-T4, M7-T5 | Unit tests for the hand-off; Maestro flow on the emulator stack served over HTTPS |
+| M7-T5 Passkeys on the web | Setup, join, sign-in, recovery, Settings → Passkeys and the app hand-off page (`/app-auth`) | M7-T4 | Playwright: setup, join, sign in, add/rename/remove a passkey, recovery link, app hand-off (sign-in and join). Personas' passkeys are software authenticators answering the page's WebAuthn calls (`e2e/support/passkeys.ts`), so the nightly Firefox/WebKit runs work too |
+| M7-T6 Passkeys on mobile | Sign-in and join through the server's pages in a secure browser sheet that returns a one-time code exchanged for the app session (PKCE); plain-http pairing removed except loopback; Android cleartext only to loopback | M7-T4, M7-T5 | Unit tests for the hand-off and pairing; Maestro suite green with the hand-off sign-in (A-7). **Manual:** sign in on a real Android phone and iPhone against an HTTPS instance |
 
 Remaining backlog (not scheduled; passkeys moved to M7-T3..T6):
 
@@ -311,7 +312,7 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6):
 ## 7. Next actionable milestone
 
 **M7: passkey-only sign-in** (owner's choice, 2026-10-04).
-- **Now (agents):** M7-T3 (ADR-0018 and specs for passkey-only sign-in), then M7-T4..T6.
+- **Now (agents):** M7-T3..T6 passkey-only sign-in in one PR (specs, server, web, mobile); then the next backlog item.
 - **Owner:** enable branch protection on `main` (M1-T2); Apple and Google developer accounts for store builds (M6-T7). The alpha (M5-T9) is postponed by the owner.
 - **Verification:** each item's completion check in §5, with the CI run or record linked in the task row.
 
@@ -319,6 +320,7 @@ Remaining backlog (not scheduled; passkeys moved to M7-T3..T6):
 
 | Date | Change |
 |---|---|
+| 2026-10-04 | M7-T3..T6 passkey-only sign-in built: server (WebAuthn, recovery links and command, mobile hand-off codes, migration `0005_passkeys`), web screens, Playwright with software passkeys, mobile browser hand-off with https-only pairing. Mobile E2E moved to `http://localhost` via `adb reverse` (Assumption A-7). |
 | 2026-10-04 | Owner answers (multiple choice): next M7 item is **passkey-only sign-in, no passwords** (HTTPS on a domain required; recovery by admin link plus a server command; mobile sign-in by browser hand-off), tasks M7-T3..T6; releases stay without the APK for now (M6-T8 deferred), and the owner gets a test-signed phone APK instead (`mobile.yml` dispatch with *test_apk*). |
 | 2026-10-04 | [v0.1.0-rc.1](https://github.com/VidFriends/vidfriends/releases/tag/v0.1.0-rc.1) published (M5-T4 ✅). M7-T1/T2 data export and the M6-T8 sideload APK job merged in [PR #117](https://github.com/VidFriends/vidfriends/pull/117). |
 | 2026-10-04 | M6 merged ([PR #116](https://github.com/VidFriends/vidfriends/pull/116)) with the Android Maestro suite green; the emulator run found two app bugs (sign-in navigation race, Hermes `Intl.RelativeTimeFormat` crash) and the arm64 image build moved off QEMU for Node (SIGILL). `v0.1.0-rc.1` dispatched. |

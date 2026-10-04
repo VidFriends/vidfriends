@@ -7,37 +7,18 @@ export interface ParsedLink {
   baseUrl: string;
   /** Invite code when the input was a join link (`/join/<code>`). */
   inviteCode: string | null;
-  /** True for plain `http://`, allowed only to private-network addresses (WF-PAIR-3). */
-  insecure: boolean;
 }
 
-export type ParseError = 'empty' | 'invalid' | 'insecure_public';
-
-const IPV4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+export type ParseError = 'empty' | 'invalid' | 'insecure';
 
 /**
- * WF-PAIR-3: private-network IP literals only. Host names never qualify, because the app cannot
- * know what a name resolves to before connecting. Assumption: loopback counts (emulators and
- * development), link-local and IPv6 unique-local addresses count.
+ * WF-PAIR-3 (ADR-0018): https only, because passkeys need it. Plain http is accepted only for
+ * this device's own loopback address, which browsers also treat as secure (development and the
+ * emulator E2E, which forwards the port with `adb reverse`).
  */
-export function isPrivateAddress(host: string): boolean {
+export function isLoopback(host: string): boolean {
   const h = host.replace(/^\[|\]$/g, '').toLowerCase();
-  const m = IPV4.exec(h);
-  if (m) {
-    const [a, b] = [Number(m[1]), Number(m[2])];
-    if ([m[1], m[2], m[3], m[4]].some((o) => Number(o) > 255)) return false;
-    return (
-      a === 10 ||
-      (a === 172 && b >= 16 && b <= 31) ||
-      (a === 192 && b === 168) ||
-      a === 127 ||
-      (a === 169 && b === 254)
-    );
-  }
-  if (h.includes(':')) {
-    return h === '::1' || /^f[cd][0-9a-f]{2}:/.test(h) || /^fe[89ab][0-9a-f]:/.test(h);
-  }
-  return false;
+  return h === 'localhost' || h === '::1' || /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h);
 }
 
 /** Parses what the user scanned or pasted: a join link, an instance URL or a bare host name. */
@@ -53,10 +34,9 @@ export function parseInstanceInput(input: string): ParsedLink | ParseError {
   }
   if (url.protocol !== 'https:' && url.protocol !== 'http:') return 'invalid';
   if (!url.hostname || url.username || url.password) return 'invalid';
-  const insecure = url.protocol === 'http:';
-  if (insecure && !isPrivateAddress(url.hostname)) return 'insecure_public';
+  if (url.protocol === 'http:' && !isLoopback(url.hostname)) return 'insecure';
   const join = /^\/join\/([A-Za-z0-9_-]{6,64})\/?$/.exec(url.pathname);
-  return { baseUrl: url.origin, inviteCode: join ? join[1]! : null, insecure };
+  return { baseUrl: url.origin, inviteCode: join ? join[1]! : null };
 }
 
 export type VerifyResult =

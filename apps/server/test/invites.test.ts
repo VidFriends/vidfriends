@@ -4,6 +4,7 @@ import {
   listInvites,
   previewInvite,
   register,
+  registerOptions,
   revokeInvite,
 } from '@vidfriends/contracts';
 import { eq } from 'drizzle-orm';
@@ -13,13 +14,7 @@ import { DAY } from '../src/infra/clock.js';
 import { hashToken } from '../src/infra/tokens.js';
 import { updateSettings } from '../src/modules/settings/service.js';
 import { createTestServer, type TestServer } from './support/app.js';
-import {
-  claimAdmin,
-  PASSWORD,
-  registerMember,
-  uniqueName,
-  type Member,
-} from './support/factories.js';
+import { claimAdmin, registerMember, uniqueName, type Member } from './support/factories.js';
 
 let server: TestServer;
 let admin: Member;
@@ -32,10 +27,19 @@ beforeAll(async () => {
 });
 afterAll(async () => server.close());
 
-const join = (code: string, c = server.client()) =>
-  c.call(register, {
-    body: { username: uniqueName(), password: PASSWORD, invite_code: code, client: 'web' },
+/** Joins with a new passkey; returns the failing call (options or finish) or the final one. */
+async function join(code: string, c = server.client()) {
+  const start = await c.call(registerOptions, {
+    body: { username: uniqueName(), invite_code: code },
   });
+  if (start.status !== 200) return start;
+  return c.call(register, {
+    body: {
+      ceremony_id: start.body.ceremony_id,
+      credential: c.authenticator.create(start.body.options) as never,
+    },
+  });
+}
 
 describe('FR-INV-01 create', () => {
   it('returns the code and join URL once and stores only the hash', async () => {

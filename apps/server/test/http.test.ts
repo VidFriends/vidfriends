@@ -33,20 +33,22 @@ describe('HTTP pipeline', () => {
   });
 
   it('reports validation failures per field without leaking internals', async () => {
-    const res = await server.client().raw('POST', '/api/v1/auth/login', { body: { username: 5 } });
+    const res = await server
+      .client()
+      .raw('POST', '/api/v1/auth/register/options', { body: { username: 5, invite_code: 7 } });
     expect(res.status).toBe(400);
     const body = (await res.json()) as {
       error: { code: string; details: { fields: Record<string, string> } };
     };
     expect(body.error.code).toBe('validation_failed');
     expect(Object.keys(body.error.details.fields)).toEqual(
-      expect.arrayContaining(['username', 'password']),
+      expect.arrayContaining(['username', 'invite_code']),
     );
   });
 
   it('rejects non-JSON bodies', async () => {
     const res = await server.fetch(
-      new Request('https://vf.test/api/v1/auth/login', {
+      new Request('https://vf.test/api/v1/auth/signin/options', {
         method: 'POST',
         headers: { 'content-type': 'text/plain', origin: 'https://vf.test' },
         body: 'username=x',
