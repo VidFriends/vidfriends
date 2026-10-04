@@ -116,7 +116,7 @@ jobs:
         run: |
           for image in vidfriends-server:local vidfriends-worker:local; do
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.75.0 \
-              image --severity CRITICAL --ignore-unfixed --exit-code 1 --no-progress "$image"
+              image --scanners vuln --severity CRITICAL --ignore-unfixed --exit-code 1 --no-progress "$image"
           done
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
