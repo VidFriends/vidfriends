@@ -1,2 +1,0 @@
-json_key_file ENV["FIREBASE_SERVICE_ACCOUNT"]
-package_name "com.vidflow.app"

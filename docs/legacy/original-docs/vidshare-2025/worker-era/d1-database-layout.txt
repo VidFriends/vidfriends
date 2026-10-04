@@ -1,0 +1,59 @@
+The Cloudflare D1 tables are as follows:
+//CHATGPT DO NOT EDIT: this file is for your reference for an external resource
+
+table: users
+columns: 
+id (text, generated UUID)
+username (text, user created)
+avatar_url (text, user uploaded)
+created_at (integer, epoch seconds)
+last_login (integer, epoch seconds)
+
+table: credentials (one user can have multiple credential entries)
+columns:
+id (text, generated UUID)
+user_id (text, linked to users id)
+type (text, preset types of logins, username_pw, email_pw, phone_sms, passkey, appleid, discord, github)
+identifier (text, based on type, could be username, email, phone number, appleid identifier, and so forth)
+external_id (text, used for passkey credentialid, and social provider_sub)
+secret_hash (text, PBKDF2, only used for username_pw and email_pw as password hash)
+public_key (blob, used for passkey)
+sign_count (integer, used for webauthn)
+created_at (integer, epoch seconds)
+last_used (integer, epoch seconds)
+
+table: sessions
+columns:
+id (text, generated UUID)
+user_id (text, linked to users id)
+refresh_hash (text, SHA-256(base64(refreshToken)))
+created_at (integer, epoch seconds)
+expires_at (integer, epoch seconds, 60 days from now)
+user_agent (text)
+last_rotated_at (integer, epoch seconds)
+rotation_count (integer)
+
+table: friendships
+columns:
+id (text, generated UUID)
+initiating_user (text, linked to users id)
+receiving_user (text, linked to users id)
+status (text, one of: pending, accepted, declined, blocked)
+blocked_by (text, linked to users id, nullable; set when status = blocked)
+created_at (integer, epoch seconds)
+updated_at (integer, epoch seconds)
+
+table: links
+id (text, generated UUID)
+url (text, user provided url of the video)
+sender_id (text, linked to users id)
+recipient_id (text, linked to users id)
+created_at (integer, epoch seconds)
+watched (integer, boolean watched or not watched)
+saved (integer, boolean, saved or not saved)
+reaction (text, could be an emoji reference or a message)
+title (text, will populate with metadata from video provider)
+thumbnail_url (text, url thumbnail for video, from video provider)
+watched_at (integer, epoch seconds, nullable; set when link is viewed)
+
+these are all the tables currently.
