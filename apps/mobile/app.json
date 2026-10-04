@@ -85,14 +85,7 @@
           "androidIntentFilters": ["text/*", "video/*"]
         }
       ],
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "usesCleartextTraffic": true
-          }
-        }
-      ]
+      "./plugins/with-loopback-cleartext"
     ],
     "experiments": {
       "typedRoutes": true,

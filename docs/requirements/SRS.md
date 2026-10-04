@@ -25,7 +25,7 @@
 |---|---|---|---|---|---|---|
 | FR-PAIR-01 | `GET /api/v1/instance` returns, without authentication, the instance name, signup mode, server version, API major version, and whether setup is complete. | M | CAP-01, WF-PAIR-1 | LLD §3 | M1 | API |
 | FR-PAIR-02 | The web client is served by the instance at `/`, and calls the API on the same origin. | M | WF-PAIR-4 | HLD §3 | M1 | E2E |
-| FR-PAIR-03 | The mobile app connects to an instance via QR scan or a pasted join or instance URL (no default instance, ADR-0014). It accepts only `https://` URLs (ADR-0018), validates the instance with FR-PAIR-01 before saving it, and reapplies the saved URL on every launch. | M | WF-PAIR-1..3, L-16 | ADR-0013, ADR-0018 | M6; https-only M7 | Unit, E2E (mobile) |
+| FR-PAIR-03 | The mobile app connects to an instance via QR scan or a pasted join or instance URL (no default instance, ADR-0014). It accepts only `https://` URLs (ADR-0018; the device's loopback address excepted, WF-PAIR-3), validates the instance with FR-PAIR-01 before saving it, and reapplies the saved URL on every launch. | M | WF-PAIR-1..3, L-16 | ADR-0013, ADR-0018 | M6; https-only M7 | Unit, E2E (mobile) |
 | FR-PAIR-04 | Join URLs `https://<host>/join/<code>` open the web registration screen with the code prefilled. The mobile app accepts the same URL via in-app scan or paste. There are no Universal or App Links (ADR-0014). | M | BR-INV-4 | ADR-0013, ADR-0014 | M1 (web), M6 (in-app) | E2E |
 
 ### 1.2 Authentication and accounts (FR-AUTH, FR-ACCT)

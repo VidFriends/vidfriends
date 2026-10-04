@@ -33,7 +33,7 @@ export const ENV_SPEC = {
   PUBLIC_URL: {
     schema: z.url().transform((u) => u.replace(/\/+$/, '')),
     description:
-      'Public origin of the instance, e.g. `https://vf.example.org`. Used for join links, CSRF origin checks and cookie security.',
+      'Public origin of the instance, e.g. `https://vf.example.org`. Used for join links, CSRF origin checks, cookie security and as the passkey relying party (its host name). In production it must be `https://` on a domain name (`localhost` excepted, ADR-0018); changing the host later invalidates every passkey.',
     example: 'https://vf.example.org',
   },
   DATABASE_URL: {

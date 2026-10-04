@@ -3,7 +3,14 @@ import { config } from '@vidfriends/config/eslint';
 export default [
   { ignores: ['.expo/**', 'android/**', 'ios/**', 'expo-env.d.ts'] },
   ...config({ native: true, tsconfigRootDir: import.meta.dirname }),
-  { files: ['*.config.js'], languageOptions: { sourceType: 'commonjs' } },
+  {
+    files: ['*.config.js', 'plugins/*.js'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: { require: 'readonly', module: 'writable' },
+    },
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
+  },
   {
     files: ['**/*.test.ts', '**/*.test.tsx'],
     languageOptions: {

@@ -16,18 +16,23 @@ cd apps/mobile
 npx expo run:android        # or: npx expo run:ios (macOS + Xcode)
 ```
 
-On first launch, paste the address of a running server. A local stack started with
-`pnpm dev:services` + `pnpm dev` is reachable from the Android emulator at `http://10.0.2.2:8080`
-(plain http is accepted only for private-network addresses, with a warning).
+On first launch, paste the address of a running server. Servers need `https://` (passkeys,
+ADR-0018); plain http is accepted only for the device's loopback address. To use a local stack
+(`pnpm dev:services` + `pnpm dev`) from the Android emulator, forward the port with
+`adb reverse tcp:8080 tcp:8080` and connect to `http://localhost:8080`. Signing in opens the
+server's sign-in page in the browser, which needs a device with passkey support.
 
 Checks: `pnpm --filter @vidfriends/mobile lint|typecheck|test|bundle`.
 
 ## End-to-end tests
 
-`.github/workflows/mobile.yml` builds a release APK, starts the production stack in its emulator
-variant (`http://10.0.2.2:8880`), seeds it (`e2e/seed.mjs`) and runs the Maestro flows in
-`e2e/` on an Android 14 emulator: join through a join link (J-2), send a link (J-3), sign in as the
-recipient, watch, react and reply (J-4/J-5).
+`.github/workflows/mobile.yml` builds a release APK, starts the production stack at
+`http://localhost:8880` (forwarded into the emulator with `adb reverse`), seeds it
+(`e2e/seed.mjs`) and runs the Maestro flows in `e2e/` on an Android 14 emulator: pair through a
+join link (J-2), send a link (J-3), sign in as the recipient, watch, react and reply (J-4/J-5).
+The emulator browser cannot create passkeys, so the seed creates the accounts with software
+passkeys and the flows sign in by handing the app a code through `vidfriends://auth`, exchanged
+with a verifier that only the E2E build carries (see TDD §4).
 
 ## Push notifications
 
