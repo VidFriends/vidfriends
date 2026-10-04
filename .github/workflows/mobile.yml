@@ -54,7 +54,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-          cache: gradle
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with:
@@ -66,6 +65,8 @@ jobs:
         run: pnpm --filter @vidfriends/mobile exec expo prebuild --platform android --no-install
         env:
           CI: '1'
+      # The Gradle project exists only after prebuild, so caching is set up here.
+      - uses: gradle/actions/setup-gradle@v4
       - name: Build the release APK (x86_64 for the emulator)
         working-directory: apps/mobile/android
         run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon
