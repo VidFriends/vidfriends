@@ -1,3 +1,4 @@
 # sha256 of each applied migration. Never edit a line: migrations are immutable once merged.
 8e0bef162705461b582a0f54234dfdf44629077b41b06eb438231b3dbacbe478  0000_init.sql
 f35291066207b7ce5099e71c22c57ef07216f45f86946d1aea38c41ef6920456  0001_relationship_cooldown.sql
+4541cc0ade9b9b72a65e6ff6a468402b60ea7bd42fa982a09e2f1028e623fb13  0002_videos.sql

@@ -6,6 +6,8 @@ import { createApp } from './http/app.js';
 import { allHandlers } from './http/handlers.js';
 import { createDatabase } from './infra/db.js';
 import { createLogger } from './infra/logger.js';
+import { createQueue } from './infra/queue.js';
+import { QUEUES } from './jobs/worker.js';
 import { buildDeps, initSetupToken } from './bootstrap.js';
 import { SERVER_VERSION } from './version.js';
 
@@ -42,6 +44,12 @@ async function main(): Promise<void> {
     log.warn('S3 storage is not configured; media features are unavailable');
   }
 
+  // Both roles enqueue jobs; only the worker role processes them (SDD §4).
+  deps.queue = await createQueue(env.DATABASE_URL, QUEUES, log, {
+    supervise: env.ROLE !== 'api',
+    schedule: env.ROLE !== 'api',
+  });
+
   if (env.ROLE === 'api' || env.ROLE === 'all') {
     await initSetupToken(deps);
     const app = createApp(deps, allHandlers());
@@ -73,6 +81,7 @@ async function main(): Promise<void> {
     }, env.SHUTDOWN_GRACE_SECONDS * 1000);
     timer.unref();
     await Promise.allSettled(shutdownTasks.map((t) => t()));
+    await deps.queue?.stop().catch(() => {});
     await deps.database.close();
     log.info('stopped');
     process.exit(0);

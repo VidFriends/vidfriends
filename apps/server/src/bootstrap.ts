@@ -1,4 +1,5 @@
 import { getConnInfo } from '@hono/node-server/conninfo';
+import { lookup } from 'node:dns/promises';
 import type { Env } from './config/env.js';
 import { systemClock, type Clock } from './infra/clock.js';
 import { createDatabase, type Database } from './infra/db.js';
@@ -28,6 +29,11 @@ export function buildDeps(
     trustedProxies: createTrustedProxies(env.TRUSTED_PROXIES),
     setup: { token: null },
     storage,
+    queue: null,
+    net: {
+      lookup: (host) => lookup(host, { all: true, verbatim: true }),
+      fetch: (url, init) => fetch(url, init),
+    },
     peerIp: (c) => {
       try {
         return getConnInfo(c).remote.address;

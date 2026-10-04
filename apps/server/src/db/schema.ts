@@ -194,3 +194,98 @@ export const auditLog = pgTable(
     index('audit_log_action_idx').on(t.action),
   ],
 );
+
+export const VIDEO_STATES = [
+  'queued',
+  'fetching',
+  'processing',
+  'ready',
+  'link_only',
+  'failed',
+  'expired',
+] as const;
+
+export const videos = pgTable(
+  'videos',
+  {
+    id: uuid('id').primaryKey(),
+    addedBy: uuid('added_by').references(() => users.id, { onDelete: 'set null' }),
+    sourceKind: text('source_kind', { enum: ['link', 'upload'] }).notNull(),
+    sourceUrl: text('source_url'),
+    normalizedUrl: text('normalized_url'),
+    platform: text('platform'),
+    sha256: bytea('sha256'),
+    state: text('state', { enum: VIDEO_STATES }).notNull(),
+    failureReason: text('failure_reason'),
+    title: text('title').notNull().default(''),
+    authorHandle: text('author_handle'),
+    durationMs: integer('duration_ms'),
+    width: integer('width'),
+    height: integer('height'),
+    mediaKey: text('media_key'),
+    thumbKey: text('thumb_key'),
+    mediaBytes: bigint('media_bytes', { mode: 'number' }).notNull().default(0),
+    createdAt: createdAt(),
+    updatedAt: tstz('updated_at').notNull().defaultNow(),
+    readyAt: tstz('ready_at'),
+    expiredAt: tstz('expired_at'),
+  },
+  (t) => [
+    uniqueIndex('videos_normalized_url_key')
+      .on(t.normalizedUrl)
+      .where(sql`${t.normalizedUrl} is not null`),
+    uniqueIndex('videos_sha256_key')
+      .on(t.sha256)
+      .where(sql`${t.sha256} is not null`),
+    index('videos_added_by_idx').on(t.addedBy),
+    index('videos_state_idx').on(t.state),
+    check('videos_source_kind_check', sql`${t.sourceKind} in ('link','upload')`),
+    check(
+      'videos_state_check',
+      sql`${t.state} in ('queued','fetching','processing','ready','link_only','failed','expired')`,
+    ),
+    check('videos_title_length', sql`char_length(${t.title}) <= 200`),
+  ],
+);
+
+/** Every member who added a video (by link or upload). Dedup reuses media, never ownership (BR-MED-4). */
+export const videoAdditions = pgTable(
+  'video_additions',
+  {
+    videoId: uuid('video_id')
+      .notNull()
+      .references(() => videos.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.videoId, t.userId] }),
+    index('video_additions_user_idx').on(t.userId),
+  ],
+);
+
+export const uploads = pgTable(
+  'uploads',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    objectKey: text('object_key').notNull(),
+    declaredBytes: bigint('declared_bytes', { mode: 'number' }).notNull(),
+    contentType: text('content_type').notNull(),
+    multipartId: text('multipart_id'),
+    state: text('state', { enum: ['pending', 'completed', 'aborted'] })
+      .notNull()
+      .default('pending'),
+    videoId: uuid('video_id').references(() => videos.id, { onDelete: 'set null' }),
+    expiresAt: tstz('expires_at').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('uploads_user_idx').on(t.userId),
+    check('uploads_state_check', sql`${t.state} in ('pending','completed','aborted')`),
+  ],
+);

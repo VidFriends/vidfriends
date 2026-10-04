@@ -113,6 +113,30 @@ export const ENV_SPEC = {
     schema: bool.default(true),
     description: 'Use path-style S3 URLs (required for SeaweedFS and MinIO).',
   },
+  WORK_DIR: {
+    schema: z.string().default('/tmp/vidfriends-work'),
+    description:
+      'Disk-backed directory for per-job temporary files (worker). Each job uses and removes its own subdirectory.',
+  },
+  WORKER_FETCH_CONCURRENCY: {
+    schema: int(1, 16).default(2),
+    description: 'Concurrent `video.fetch` jobs per worker (NFR-PERF-03).',
+  },
+  WORKER_PROCESS_CONCURRENCY: {
+    schema: int(1, 8).default(1),
+    description: 'Concurrent `video.process` (transcode) jobs per worker (NFR-PERF-03).',
+  },
+  YTDLP_PATH: { schema: z.string().default('yt-dlp'), description: 'yt-dlp executable.' },
+  FFMPEG_PATH: { schema: z.string().default('ffmpeg'), description: 'ffmpeg executable.' },
+  FFPROBE_PATH: { schema: z.string().default('ffprobe'), description: 'ffprobe executable.' },
+  FETCH_TIMEOUT_SECONDS: {
+    schema: int(10, 3600).default(600),
+    description: 'Wall-clock limit for one yt-dlp run (BR-MED-2).',
+  },
+  PROCESS_TIMEOUT_SECONDS: {
+    schema: int(10, 7200).default(900),
+    description: 'Wall-clock limit for one ffmpeg run.',
+  },
 } satisfies Record<string, EnvEntry>;
 
 type Spec = typeof ENV_SPEC;

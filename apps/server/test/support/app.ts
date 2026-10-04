@@ -10,6 +10,8 @@ import { allHandlers } from '../../src/http/handlers.js';
 import { FakeClock } from '../../src/infra/clock.js';
 import { createDatabase } from '../../src/infra/db.js';
 import { createLogger } from '../../src/infra/logger.js';
+import { createQueue } from '../../src/infra/queue.js';
+import { QUEUES, startWorker } from '../../src/jobs/worker.js';
 import { createTestDatabase } from './db.js';
 
 export const PUBLIC_URL = 'https://vf.test';
@@ -24,9 +26,15 @@ export interface TestServer {
   close(): Promise<void>;
 }
 
+export interface TestServerOptions {
+  /** Also run the background worker in-process (media jobs). */
+  worker?: boolean;
+}
+
 export async function createTestServer(
   envOverrides: Record<string, string> = {},
   depsOverrides: Partial<Deps> = {},
+  options: TestServerOptions = {},
 ): Promise<TestServer> {
   const testDb = await createTestDatabase();
   const s3 = process.env.TEST_S3_ENDPOINT
@@ -68,6 +76,11 @@ export async function createTestServer(
     ...depsOverrides,
   });
   if (deps.storage) await deps.storage.ensureBucket();
+  deps.queue = await createQueue(env.DATABASE_URL, QUEUES, log, {
+    supervise: options.worker ?? false,
+    schedule: false,
+  });
+  const worker = options.worker ? await startWorker(deps) : null;
   await initSetupToken(deps);
   const app = createApp(deps, allHandlers());
   const fetch = async (request: Request) => app.fetch(request);
@@ -79,6 +92,8 @@ export async function createTestServer(
     fetch,
     client: (options = {}) => new TestClient(fetch, { baseUrl: PUBLIC_URL, ...options }),
     async close() {
+      await worker?.stop();
+      await deps.queue?.stop();
       if (deps.storage) {
         const all: string[] = [];
         for await (const o of deps.storage.listKeys('')) all.push(o.key);

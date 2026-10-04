@@ -101,12 +101,17 @@ erDiagram
 - `media_bytes` bigint NOT NULL DEFAULT 0
 - `created_at`, `updated_at`, `ready_at` NULL, `expired_at` NULL
 
+**`video_additions`** (migration 0002)
+- `video_id` FK videos CASCADE, `user_id` FK users CASCADE, `created_at`; PK (`video_id`, `user_id`)
+- One row per member who added the video, by link or upload. Dedup reuses media only (BR-MED-4), so a member who adds an existing video gets a row here: it drives visibility (BR-SHR-6) and the send precondition (WF-SHR-1). `videos.added_by` remains the first adder, for quota attribution (BR-MED-6).
+
 **`uploads`**
 - `id` PK
 - `user_id` FK CASCADE
 - `object_key` text
 - `declared_bytes` bigint
 - `content_type` text
+- `multipart_id` text NULL (S3 multipart upload id for files above 64 MB)
 - `state` CHECK in (`pending`, `completed`, `aborted`)
 - `video_id` NULL FK videos SET NULL
 - `expires_at`
@@ -261,6 +266,7 @@ LIMIT :n + 1;
 | `POST /uploads` | M | `{bytes, content_type}` → `{upload_id, put_url \| multipart:{part_urls, …}, expires_at}` | `too_large`, `quota_exceeded`, `storage_full` | VID-03 |
 | `POST /uploads/{id}/complete` | M | `{title?, parts?}` → `{video}` | `upload_incomplete` | VID-03 |
 | `GET /videos/{id}` | M | → `{video}` (visibility per BR-SHR-6) | 404 | VID-05 |
+| `GET /videos/{id}/media` | M (adder or participant) | → `{media_url?, thumb_url?, expires_at}` for a video the viewer can see; used before a share exists (send preview) | 404, `not_playable` | VID-05 |
 | `POST /shares` | M | `{video_id, recipient_ids[], note?, idempotency_key}` → `{results:[{recipient_id, status, share_id?}]}` | `video_not_found` | SHR-01,02 |
 | `DELETE /shares/{id}` | M (sender) | → 204 | `already_watched` | SHR-04 |
 | `GET /shares/{id}` | M (participant) | → `{share, video, sender, recipient, reaction, reply_count}` | 404 | – |
