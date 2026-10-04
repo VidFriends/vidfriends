@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { currentUser, meQuery } from '@/lib/session';
 import { useQuery } from '@tanstack/react-query';
+import { useRealtime } from '@/lib/realtime';
 
 export const Route = createFileRoute('/_app')({
   beforeLoad: async ({ context, location }) => {
@@ -60,7 +61,8 @@ function AppLayout() {
     },
   });
   const user = me.data?.user;
-  // FR-NOTIF-05: unread badge refreshes on focus and at least every 60 s.
+  // FR-NOTIF-06: live updates; FR-NOTIF-05: the badge still refreshes on focus and every 60 s.
+  useRealtime();
   const unreadQuery = useApiQuery(
     unreadCount,
     {},

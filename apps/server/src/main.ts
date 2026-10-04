@@ -86,6 +86,9 @@ async function main(): Promise<void> {
         return Number(r.rows[0]?.n ?? 0);
       },
     );
+    registerGauge('vidfriends_realtime_streams', 'Open realtime event streams', async () =>
+      Promise.resolve(deps.realtime?.total() ?? 0),
+    );
     registerGauge(
       'vidfriends_queue_depth',
       'Queued jobs by queue',
@@ -107,6 +110,12 @@ async function main(): Promise<void> {
   });
 
   if (env.ROLE === 'api' || env.ROLE === 'all') {
+    // ADR-0019: one LISTEN connection per API process fans events out to open streams.
+    const { createRealtimeHub } = await import('./infra/realtime.js');
+    const hub = createRealtimeHub(env.DATABASE_URL, log);
+    await hub.start();
+    deps.realtime = hub;
+    shutdownTasks.push(() => hub.stop());
     await initSetupToken(deps);
     const app = createApp(deps, allHandlers());
     const server = serve({ fetch: app.fetch, hostname: env.HOST, port: env.PORT });

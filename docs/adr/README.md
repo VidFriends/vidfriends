@@ -18,7 +18,7 @@ These records follow the rules in [ADR-0001](0001-record-architecture-decisions.
 | [0008](0008-authentication-sessions.md) | Opaque DB sessions; cookie (web) / bearer (mobile) | Accepted; password parts superseded by 0018 | Claude (delegated) |
 | [0009](0009-media-ingestion-and-storage.md) | Media via durable jobs; private S3 + presigned URLs | Accepted (risk accepted by owner); superseded in part by 0015 | Claude (delegated) |
 | [0010](0010-share-centric-social-model.md) | Share-centric social model; no global feed | Accepted | Claude (delegated) |
-| [0011](0011-notifications.md) | In-app + Web Push + Expo Push; polling | Accepted | Claude (delegated) |
+| [0011](0011-notifications.md) | In-app + Web Push + Expo Push; polling | Accepted; realtime part superseded by 0019 | Claude (delegated) |
 | [0012](0012-monorepo-and-tooling.md) | pnpm/Turborepo monorepo layout and tooling | Accepted | Claude (delegated) |
 | [0013](0013-instance-pairing-and-join-links.md) | HTTPS join links; QR encodes the same URL | Accepted; amended by 0014 and 0018 | Claude (delegated) |
 | [0014](0014-self-host-only-no-public-instance.md) | Self-host only; no public or default instance; no project domain | Accepted | Owner |
@@ -26,5 +26,6 @@ These records follow the rules in [ADR-0001](0001-record-architecture-decisions.
 | [0016](0016-accepted-residual-security-risks-v0-1.md) | Accept unproxied yt-dlp redirects (optional egress proxy) and operator data access for v0.1 | Accepted | Claude (delegated) |
 | [0017](0017-single-react-version-pinned-by-expo.md) | One React version for the monorepo, set by the Expo SDK | Accepted | Claude (delegated) |
 | [0018](0018-passkey-only-sign-in.md) | Passkey-only sign-in; no passwords; mobile sign-in by browser hand-off | Accepted | Owner (+ Claude for the mechanism) |
+| [0019](0019-realtime-invalidation-over-sse.md) | Realtime updates: server-sent invalidation hints over Postgres LISTEN/NOTIFY | Accepted | Owner (+ Claude for the mechanism) |
 
 **Template for new ADRs:** use the header fields Status, Date, Decided by and Supersedes, then the sections Context, Decision, Alternatives considered, Consequences, and Revisit when.

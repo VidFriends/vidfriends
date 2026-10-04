@@ -29,6 +29,7 @@ export default [
         SERVER_URL: 'readonly',
         TOKEN: 'readonly',
         HANDOFF_CHALLENGE: 'readonly',
+        BODY: 'readonly',
       },
     },
   },

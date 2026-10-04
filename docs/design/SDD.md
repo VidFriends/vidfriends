@@ -101,7 +101,8 @@ apps/mobile (M6)
 **Client patterns:**
 - **Session expiry ([L-17](../legacy/AUDIT.md#4-lessons-referenced-by-id-from-the-design-docs)):** a single global handler. Any 401 from a member route clears the query cache and routes to login. There is no token refresh to coordinate (sessions slide, [ADR-0008](../adr/0008-authentication-sessions.md)).
 - **Optimistic updates** only for reactions, save/hide and friend actions, always with rollback and a toast on failure. Never fabricate server data ([L-11](../legacy/AUDIT.md#4-lessons-referenced-by-id-from-the-design-docs)).
-- **Polling:** unread notifications and feed head refetch on window focus and every 60 s (FR-NOTIF-05).
+- **Realtime:** one `EventSource` on `/api/v1/events` per tab (the app: a streaming `fetch` while in the foreground). Each event invalidates the TanStack queries it names, using the shared map in `@vidfriends/api-client` (`queriesFor(event)`), FR-NOTIF-06.
+- **Polling (fallback):** unread notifications and feed head refetch on window focus and every 60 s (FR-NOTIF-05).
 - **Media URLs** expire. The player refetches `/shares/{id}/media` when the URL is within 60 s of expiry or a 403 occurs.
 
 ## 6. How the design satisfies the key requirements

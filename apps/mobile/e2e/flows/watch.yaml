@@ -1,4 +1,5 @@
-# J-4/J-5: sign out, sign in as Alex on the same server, watch Mia's video, react and reply.
+# J-4/J-5: sign out, sign in as Alex on the same server, watch Mia's video, react and reply; Mia's
+# answer arrives live (M7-T9).
 appId: io.github.vidfriends.app
 ---
 - tapOn: 'More'
@@ -39,3 +40,13 @@ appId: io.github.vidfriends.app
 - extendedWaitUntil:
     visible: 'so good'
     timeout: 10000
+# M7-T9 / FR-NOTIF-06: Mia answers from her own device; the open conversation (which does not
+# poll) shows it within seconds through the realtime stream.
+- runScript:
+    file: ../scripts/reply-as.js
+    env:
+      TOKEN: ${MIA_TOKEN}
+      BODY: thanks alex
+- extendedWaitUntil:
+    visible: 'thanks alex'
+    timeout: 8000
