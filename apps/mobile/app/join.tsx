@@ -1,7 +1,7 @@
 // J-2 on mobile: register through the invite from a scanned or pasted join link (FR-PAIR-04).
 import { useQuery } from '@tanstack/react-query';
 import { DisplayName, Password, previewInvite, register, Username } from '@vidfriends/contracts';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { errorText } from '@/i18n';
@@ -25,10 +25,10 @@ export default function Join() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  if (!code) {
-    router.replace('/login');
-    return null;
-  }
+  // Navigation follows the committed session state: signIn() clears the invite, and the tabs
+  // guard would bounce an imperative navigation that runs before signedIn is rendered.
+  if (session.signedIn) return <Redirect href="/(tabs)/feed" />;
+  if (!code) return <Redirect href="/login" />;
   if (preview.isPending) return <Loading />;
 
   async function submit() {
@@ -58,7 +58,6 @@ export default function Join() {
       });
       if (!res.token) throw new Error('no token');
       await session.signIn(res.token);
-      router.replace('/(tabs)/feed');
     } catch (err) {
       setError(errorText(err));
     } finally {

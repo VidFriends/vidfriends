@@ -1,5 +1,5 @@
 import { login } from '@vidfriends/contracts';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { errorText } from '@/i18n';
@@ -14,6 +14,9 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Leave once the signed-in state is rendered (see join.tsx).
+  if (session.signedIn) return <Redirect href="/(tabs)/feed" />;
+
   async function submit() {
     setError(null);
     if (!username.trim() || !password) return setError(t('errors.required'));
@@ -24,7 +27,6 @@ export default function Login() {
       });
       if (!res.token) throw new Error('no token');
       await session.signIn(res.token);
-      router.replace('/(tabs)/feed');
     } catch (err) {
       setError(errorText(err));
     } finally {
