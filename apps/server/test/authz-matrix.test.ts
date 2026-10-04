@@ -1,5 +1,18 @@
 // M1-T9 / NFR-SEC-01: object-level authorization for every id-bearing route.
 import {
+  clearReaction,
+  createPushTarget,
+  deletePushTarget,
+  deleteReply,
+  getShare,
+  getShareMedia,
+  listReplies,
+  postReply,
+  reportProgress,
+  sendShares,
+  setReaction,
+  unsendShare,
+  updateShare,
   acceptFriendRequest,
   addVideo,
   completeUpload,
@@ -23,6 +36,7 @@ import {
 import sharp from 'sharp';
 import { hasS3 } from './support/s3.js';
 import { setRelationship } from './support/world.js';
+import { idemKey, makeVideo } from './support/factories.js';
 import { matrixCase, missingRoutes, runMatrix, type MatrixCase } from '@vidfriends/test-utils';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -90,7 +104,95 @@ function cases(): MatrixCase[] {
     });
     return video.id;
   };
+  /** A fresh share from the owner to the participant. */
+  const ownerShare = async () => {
+    const res = await world.members.owner.client.ok(sendShares, {
+      body: {
+        video_id: await makeVideo(server, owner()),
+        recipient_ids: [world.members.participant.user.id],
+        idempotency_key: idemKey(),
+      },
+    });
+    return res.results[0]!.share_id!;
+  };
+  const both = (ok: number) => only(['owner', 'participant'], ok);
   return [
+    matrixCase({
+      route: getShare,
+      prepare: async () => ({ params: { id: await ownerShare() } }),
+      expect: both(200),
+    }),
+    matrixCase({
+      route: getShareMedia,
+      prepare: async () => ({ params: { id: await ownerShare() } }),
+      expect: both(hasS3 ? 200 : 503),
+    }),
+    matrixCase({
+      route: unsendShare,
+      prepare: async () => ({ params: { id: await ownerShare() } }),
+      expect: only(['owner'], 204),
+    }),
+    matrixCase({
+      route: reportProgress,
+      prepare: async () => ({ params: { id: await ownerShare() }, body: { position_ms: 1000 } }),
+      expect: only(['participant'], 200),
+    }),
+    matrixCase({
+      route: updateShare,
+      prepare: async () => ({ params: { id: await ownerShare() }, body: { saved: true } }),
+      expect: only(['participant'], 200),
+    }),
+    matrixCase({
+      route: setReaction,
+      prepare: async () => ({ params: { id: await ownerShare() }, body: { emoji: '👍' } }),
+      expect: only(['participant'], 200),
+    }),
+    matrixCase({
+      route: clearReaction,
+      prepare: async () => ({ params: { id: await ownerShare() } }),
+      expect: only(['participant'], 200),
+    }),
+    matrixCase({
+      route: listReplies,
+      prepare: async () => ({ params: { id: await ownerShare() }, query: {} }),
+      expect: both(200),
+    }),
+    matrixCase({
+      route: postReply,
+      prepare: async () => ({ params: { id: await ownerShare() }, body: { body: 'hello' } }),
+      expect: both(201),
+    }),
+    matrixCase({
+      route: deleteReply,
+      // The owner's reply in a share with the participant: only its author may delete it.
+      prepare: async () => {
+        const id = await ownerShare();
+        const { reply } = await world.members.owner.client.ok(postReply, {
+          params: { id },
+          body: { body: 'mine' },
+        });
+        return { params: { id: reply.id } };
+      },
+      expect: only(['owner'], 204),
+    }),
+    matrixCase({
+      route: deletePushTarget,
+      prepare: async () => {
+        const { target } = await world.members.owner.client.ok(createPushTarget, {
+          body: {
+            kind: 'webpush',
+            endpoint: `https://fcm.googleapis.com/fcm/send/matrix-${Math.random()}`,
+            keys: {
+              p256dh:
+                'BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8QcYP7DkM',
+              auth: 'tBHItJI5svbpez7KI4CCXg',
+            },
+          },
+        });
+        return { params: { id: target.id } };
+      },
+      expect: only(['owner'], 204),
+    }),
     matrixCase({
       route: getVideo,
       // BR-SHR-6: only members who added (or, from M4, were sent) the video can see it.

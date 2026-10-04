@@ -112,7 +112,7 @@ async function finishLinkOnly(
         sql`${videos.id} = ${video.id} and ${videos.state} in ('queued','fetching','processing')`,
       )
       .returning({ id: videos.id });
-    if (updated) await emitBecamePlayable(tx, video.id);
+    if (updated) await emitBecamePlayable(deps, tx, video.id);
   });
   deps.log.info({ video_id: video.id, reason }, 'video is link-only');
 }
@@ -292,7 +292,7 @@ export async function handleProcess(deps: Deps, job: Job<ProcessJob>): Promise<v
           .set({ storageBytes: sql`${users.storageBytes} + ${bytes}` })
           .where(eq(users.id, updated.addedBy));
       }
-      await emitBecamePlayable(tx, id);
+      await emitBecamePlayable(deps, tx, id);
     });
     await deps.storage!.deleteObjects([sourceKey]).catch(() => {});
     deps.log.info({ video_id: id, bytes }, 'video ready');

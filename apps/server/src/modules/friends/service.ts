@@ -90,9 +90,9 @@ async function lockPair(db: DbOrTx, a: string, b: string) {
 }
 
 export interface FriendEvents {
-  requestReceived?(tx: DbOrTx, from: string, to: string): Promise<void>;
-  requestAccepted?(tx: DbOrTx, accepter: string, requester: string): Promise<void>;
-  blocked?(tx: DbOrTx, blocker: string, blocked: string): Promise<void>;
+  requestReceived?(deps: Deps, tx: DbOrTx, from: string, to: string): Promise<void>;
+  requestAccepted?(deps: Deps, tx: DbOrTx, accepter: string, requester: string): Promise<void>;
+  blocked?(deps: Deps, tx: DbOrTx, blocker: string, blocked: string): Promise<void>;
 }
 
 /** Hooks other modules (notifications, shares) register; avoids an import cycle. */
@@ -116,7 +116,7 @@ export async function sendRequest(
     if (state === 'request_received') {
       // BR-FRND-3: a mutual request is accepted immediately.
       const accepted = await writeState(tx, viewer.id, userId, { state: 'accepted' }, now);
-      await friendEvents.requestAccepted?.(tx, viewer.id, userId);
+      await friendEvents.requestAccepted?.(deps, tx, viewer.id, userId);
       await audit(tx, {
         actorId: viewer.id,
         action: 'friend.accepted',
@@ -140,7 +140,7 @@ export async function sendRequest(
       { state: 'pending', requestedBy: viewer.id },
       now,
     );
-    await friendEvents.requestReceived?.(tx, viewer.id, userId);
+    await friendEvents.requestReceived?.(deps, tx, viewer.id, userId);
     return toRelationship(user, 'request_sent', pending);
   });
 }
@@ -163,7 +163,7 @@ export async function acceptRequest(
       { state: 'accepted' },
       deps.clock.now(),
     );
-    await friendEvents.requestAccepted?.(tx, viewer.id, userId);
+    await friendEvents.requestAccepted?.(deps, tx, viewer.id, userId);
     await audit(tx, {
       actorId: viewer.id,
       action: 'friend.accepted',
@@ -248,7 +248,7 @@ export async function block(deps: Deps, viewer: Viewer, userId: string, ip: stri
       { state: 'blocked', blockedBy: viewer.id },
       deps.clock.now(),
     );
-    await friendEvents.blocked?.(tx, viewer.id, userId);
+    await friendEvents.blocked?.(deps, tx, viewer.id, userId);
     await audit(tx, {
       actorId: viewer.id,
       action: 'user.blocked',

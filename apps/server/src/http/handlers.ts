@@ -4,6 +4,9 @@ import { friendHandlers } from '../modules/friends/routes.js';
 import { instanceHandlers } from '../modules/instance/routes.js';
 import { inviteHandlers } from '../modules/invites/routes.js';
 import { videoHandlers } from '../modules/videos/routes.js';
+import { shareHandlers } from '../modules/shares/routes.js';
+import { notificationHandlers } from '../modules/notifications/routes.js';
+import '../modules/hooks.js';
 import type { RouteHandler } from './register.js';
 
 /** Every route handler. `registerRoutes` fails at startup if one is missing (NFR-MAINT-01). */
@@ -15,5 +18,7 @@ export function allHandlers(): RouteHandler[] {
     ...inviteHandlers,
     ...friendHandlers,
     ...videoHandlers,
+    ...shareHandlers,
+    ...notificationHandlers,
   ] as unknown as RouteHandler[];
 }

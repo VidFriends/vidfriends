@@ -5,11 +5,15 @@ export * from './routes/accounts.js';
 export * from './routes/invites.js';
 export * from './routes/friends.js';
 export * from './routes/videos.js';
+export * from './routes/shares.js';
+export * from './routes/notifications.js';
 
 import * as accounts from './routes/accounts.js';
 import * as invites from './routes/invites.js';
 import * as friends from './routes/friends.js';
 import * as videos from './routes/videos.js';
+import * as shares from './routes/shares.js';
+import * as notifications from './routes/notifications.js';
 import type { RouteDef } from './route.js';
 
 function collect(...modules: Record<string, unknown>[]): RouteDef[] {
@@ -31,4 +35,11 @@ function collect(...modules: Record<string, unknown>[]): RouteDef[] {
 }
 
 /** Every API route, in a stable order. The server must register exactly these. */
-export const allRoutes: readonly RouteDef[] = collect(accounts, invites, friends, videos);
+export const allRoutes: readonly RouteDef[] = collect(
+  accounts,
+  invites,
+  friends,
+  videos,
+  shares,
+  notifications,
+);

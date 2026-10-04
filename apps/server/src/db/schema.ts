@@ -289,3 +289,161 @@ export const uploads = pgTable(
     check('uploads_state_check', sql`${t.state} in ('pending','completed','aborted')`),
   ],
 );
+
+export const REACTION_SET = ['👍', '❤️', '😂', '😮', '😢', '🔥'] as const;
+
+export const shares = pgTable(
+  'shares',
+  {
+    id: uuid('id').primaryKey(),
+    videoId: uuid('video_id')
+      .notNull()
+      .references(() => videos.id, { onDelete: 'cascade' }),
+    senderId: uuid('sender_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    recipientId: uuid('recipient_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    note: text('note').notNull().default(''),
+    deliveredAt: tstz('delivered_at'),
+    watchedAt: tstz('watched_at'),
+    progressMs: integer('progress_ms').notNull().default(0),
+    saved: boolean('saved').notNull().default(false),
+    savedAt: tstz('saved_at'),
+    hidden: boolean('hidden').notNull().default(false),
+    reaction: text('reaction'),
+    reactionAt: tstz('reaction_at'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('shares_sender_recipient_video_key').on(t.senderId, t.recipientId, t.videoId),
+    index('shares_feed_idx')
+      .on(t.recipientId, t.watchedAt.nullsFirst(), t.deliveredAt, t.id)
+      .where(sql`${t.hidden} = false and ${t.deliveredAt} is not null`),
+    index('shares_sender_idx').on(t.senderId, t.createdAt.desc()),
+    index('shares_video_idx').on(t.videoId),
+    index('shares_recipient_saved_idx')
+      .on(t.recipientId, t.savedAt.desc())
+      .where(sql`${t.saved}`),
+    check('shares_not_self', sql`${t.senderId} <> ${t.recipientId}`),
+    check('shares_note_length', sql`char_length(${t.note}) <= 500`),
+    check(
+      'shares_reaction_check',
+      sql`${t.reaction} is null or ${t.reaction} in ('👍','❤️','😂','😮','😢','🔥')`,
+    ),
+  ],
+);
+
+/** Send idempotency (WF-SHR-1): retries with the same key within 24 h return the stored result. */
+export const sendRequests = pgTable(
+  'send_requests',
+  {
+    senderId: uuid('sender_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    idempotencyKey: text('idempotency_key').notNull(),
+    response: jsonb('response').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.senderId, t.idempotencyKey] })],
+);
+
+export const replies = pgTable(
+  'replies',
+  {
+    id: uuid('id').primaryKey(),
+    shareId: uuid('share_id')
+      .notNull()
+      .references(() => shares.id, { onDelete: 'cascade' }),
+    authorId: uuid('author_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    body: text('body').notNull(),
+    deletedAt: tstz('deleted_at'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('replies_share_idx').on(t.shareId, t.createdAt),
+    check('replies_body_length', sql`char_length(${t.body}) between 1 and 1000`),
+  ],
+);
+
+export const NOTIFICATION_TYPE_LIST = [
+  'share_received',
+  'reaction_received',
+  'reply_received',
+  'friend_request_received',
+  'friend_request_accepted',
+  'share_watched',
+] as const;
+
+export const notifications = pgTable(
+  'notifications',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    type: text('type', { enum: NOTIFICATION_TYPE_LIST }).notNull(),
+    actorId: uuid('actor_id').references(() => users.id, { onDelete: 'set null' }),
+    shareId: uuid('share_id').references(() => shares.id, { onDelete: 'cascade' }),
+    data: jsonb('data').notNull().default({}),
+    readAt: tstz('read_at'),
+    pushedAt: tstz('pushed_at'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('notifications_user_idx').on(t.userId, t.readAt.nullsFirst(), t.createdAt.desc()),
+    index('notifications_share_idx').on(t.shareId),
+    check(
+      'notifications_type_check',
+      sql`${t.type} in ('share_received','reaction_received','reply_received','friend_request_received','friend_request_accepted','share_watched')`,
+    ),
+  ],
+);
+
+export const notificationPrefs = pgTable(
+  'notification_prefs',
+  {
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    type: text('type').notNull(),
+    channel: text('channel').notNull(),
+    enabled: boolean('enabled').notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.type, t.channel] }),
+    check('notification_prefs_channel_check', sql`${t.channel} in ('push')`),
+  ],
+);
+
+export const pushTargets = pgTable(
+  'push_targets',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    kind: text('kind', { enum: ['webpush', 'expo'] }).notNull(),
+    endpoint: text('endpoint').notNull(),
+    p256dh: text('p256dh'),
+    auth: text('auth'),
+    privatePreviews: boolean('private_previews').notNull().default(false),
+    createdAt: createdAt(),
+    lastSuccessAt: tstz('last_success_at'),
+  },
+  (t) => [
+    uniqueIndex('push_targets_endpoint_key').on(t.endpoint),
+    index('push_targets_user_idx').on(t.userId),
+    check('push_targets_kind_check', sql`${t.kind} in ('webpush','expo')`),
+  ],
+);
+
+/** Instance secrets encrypted with a key derived from APP_SECRET (AES-256-GCM), e.g. VAPID. */
+export const instanceSecrets = pgTable('instance_secrets', {
+  key: text('key').primaryKey(),
+  ciphertext: bytea('ciphertext').notNull(),
+  createdAt: createdAt(),
+});
