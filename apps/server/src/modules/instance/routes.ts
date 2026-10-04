@@ -13,6 +13,7 @@ export const instanceHandlers = [
       api_version: API_VERSION,
       signup_mode: settings.signup_mode,
       setup_complete: await adminExists(deps.db),
+      retention_days: settings.retention_days,
     };
   }),
 ];

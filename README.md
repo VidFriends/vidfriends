@@ -10,7 +10,8 @@ Implementation is under way, milestone by milestone. See [docs/ROADMAP.md](docs/
 - Agent and contributor rules: [AGENTS.md](AGENTS.md)
 - Requirements: [BRD](docs/requirements/BRD.md) · [PRD](docs/requirements/PRD.md) · [FRD](docs/requirements/FRD.md) · [SRS](docs/requirements/SRS.md)
 - Design: [HLD](docs/design/HLD.md) · [SDD](docs/design/SDD.md) · [TDD](docs/design/TDD.md) · [LLD](docs/design/LLD.md) · [ADRs](docs/adr/README.md)
-- Self-hosting: [deploy/](deploy/) (compose stack, [environment reference](deploy/ENV.md))
+- Self-hosting: [guide](docs/guides/self-hosting.md) · [operator runbook](deploy/RUNBOOK.md) (install, upgrade, backup, restore, monitoring) · [environment reference](deploy/ENV.md)
+- Reports: [M5 load test and security review](docs/reports/2026-10-04-m5-load-and-security-review.md)
 - History: [legacy audit](docs/legacy/AUDIT.md)
 
 ## Repository layout

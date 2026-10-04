@@ -51,6 +51,8 @@ export const InstanceInfo = z.object({
   api_version: z.number().int(),
   signup_mode: SignupMode,
   setup_complete: z.boolean(),
+  /** Shown in the privacy disclosure (BR-MED-5); 0 means media is kept until deleted. */
+  retention_days: z.number().int(),
 });
 export type InstanceInfo = z.infer<typeof InstanceInfo>;
 

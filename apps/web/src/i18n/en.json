@@ -38,7 +38,8 @@
     "theme": "Theme",
     "themeSystem": "System",
     "themeLight": "Light",
-    "themeDark": "Dark"
+    "themeDark": "Dark",
+    "back": "Back"
   },
   "errors": {
     "validation_failed": "Please check the highlighted fields.",
@@ -494,5 +495,127 @@
       "failed": "Failed",
       "expired": "Expired"
     }
+  },
+  "footer": {
+    "privacy": "Privacy",
+    "help": "Help",
+    "label": "About this server"
+  },
+  "privacy": {
+    "title": "Privacy on {{name}}",
+    "intro": "VidFriends is private by design: no ads, no strangers, no tracking. This page explains exactly what this server stores and who can see it.",
+    "sections": [
+      {
+        "title": "Who runs this server",
+        "body": [
+          "This server is run by its operator, usually the person who invited you. It is not run by the VidFriends project, and there is no central VidFriends service.",
+          "The operator controls the machine, so they can technically access everything stored on it, including videos and conversations, by reading the database or storage directly. Only join a server run by someone you trust."
+        ]
+      },
+      {
+        "title": "What is stored about you",
+        "body": [
+          "Your username, display name, optional profile picture and a hash of your password (never the password itself). No email address or phone number is collected.",
+          "The videos you add, who you send them to, your notes, reactions and replies, what you have watched, saved or hidden, your friend list and blocks, and your notification settings.",
+          "Your active sessions (device type, browser or app name, last activity) and, if you enable push notifications, the push address your browser or phone gave us."
+        ]
+      },
+      {
+        "title": "Who can see what",
+        "body": [
+          "Only you and the friends you send a video to can see that share, its note and its conversation. There is no public profile, global feed or follower list.",
+          "Other members can find you by username or display name to send a friend request; they see only your username, display name and profile picture.",
+          "Admins of this server can see a list of members with counts (videos sent and received, storage used) and an audit log of account events. The app gives them no way to read your conversations, notes or feed."
+        ]
+      },
+      {
+        "title": "Logs and the audit log",
+        "body": [
+          "The server keeps an audit log of security events (logins and failed logins, admin actions, account deletions, invite use, setting changes) with the network address they came from. It is kept for 365 days.",
+          "Server logs never contain passwords, session tokens, invite codes, notes or replies."
+        ]
+      },
+      {
+        "title": "How long things are kept",
+        "body": [
+          "Watched video files are deleted after the server's retention period ({{days}} days on this server) unless someone saved them; the title and thumbnail stay, with a link to the original. A video nobody was sent is deleted after a day.",
+          "Notifications are deleted after 90 days. Sessions end after a period of inactivity or when you log out."
+        ]
+      },
+      {
+        "title": "Third parties",
+        "body": [
+          "The apps load nothing from other companies: no analytics, trackers, ads, fonts or CDNs.",
+          "When you add a link, this server downloads the video from that site, so the site sees a request from this server, not from you. Opening the original link takes you to that site.",
+          "Push notifications travel through your browser's or phone's push service (for example Google, Apple or Mozilla). They contain only a short generic text such as \"New video from Sam\", or no name at all with private previews on."
+        ]
+      },
+      {
+        "title": "Your choices",
+        "body": [
+          "Change your profile, password, notifications and sessions in Settings. You can log out of every device at once.",
+          "Delete your account in Settings. It removes your account, friendships, every share you sent or received with their conversations, and your notifications, immediately; video files nobody else needs are cleaned up shortly after. Backups the operator keeps may hold a copy until they expire."
+        ]
+      }
+    ]
+  },
+  "help": {
+    "title": "How VidFriends works",
+    "intro": "A private feed made only of videos your friends sent you.",
+    "sections": [
+      {
+        "title": "Adding friends",
+        "body": [
+          "Join with an invite link from a friend. If they chose to, you are friends right away.",
+          "Find more people under Friends by username or name and send a request. They appear in your friend list once they accept. You can remove or block someone at any time; blocking also removes what you sent each other."
+        ]
+      },
+      {
+        "title": "Sending a video",
+        "body": [
+          "Open Send, paste a link from a supported site (or share it to VidFriends from your phone), or upload a video file.",
+          "Pick friends, add a note if you like, and send. If the video is still downloading, your friends get it as soon as it is ready. You can unsend while they haven't watched it."
+        ]
+      },
+      {
+        "title": "Watching",
+        "body": [
+          "Home is your feed: videos you haven't watched come first, oldest first, then the ones you watched recently. Scroll or use the arrow keys to move between videos.",
+          "A video counts as watched after 10 seconds or half of it, whichever comes first, or when you open the original. Your friend sees when you watched it.",
+          "If a site doesn't allow downloads, or the file was cleaned up, you get a card with a link to the original instead."
+        ]
+      },
+      {
+        "title": "Reacting and replying",
+        "body": [
+          "Tap a reaction or reply under a video. Each share has its own private conversation between you and the friend who sent it. You can delete your own replies."
+        ]
+      },
+      {
+        "title": "Keeping track",
+        "body": [
+          "Inbox shows what is new, Saved keeps videos you want to keep (saved videos are never cleaned up), History lists everything you watched, and Sent shows what your friends did with the videos you sent."
+        ]
+      },
+      {
+        "title": "Notifications",
+        "body": [
+          "The bell shows new videos, reactions, replies and friend requests. To get notifications when the app is closed, turn on push notifications in Settings, and turn on private previews if you don't want names on your lock screen."
+        ]
+      },
+      {
+        "title": "Installing the app",
+        "body": [
+          "In Chrome, Edge or Safari, use \"Install app\" or \"Add to Home Screen\" to open VidFriends like an app. On Android, the installed app also appears in the share menu of other apps."
+        ]
+      },
+      {
+        "title": "Account help",
+        "body": [
+          "Forgot your password? Ask an admin of this server for a password-reset link; it works once and expires after 24 hours.",
+          "You can delete your account in Settings. See Privacy for what that removes."
+        ]
+      }
+    ]
   }
 }
