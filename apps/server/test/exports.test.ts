@@ -19,7 +19,7 @@ import {
   claimAdmin,
   idemKey,
   makeVideo,
-  PASSWORD,
+  confirmPasskey,
   registerMember,
   type Member,
 } from './support/factories.js';
@@ -116,7 +116,7 @@ describe.skipIf(!hasS3)('FR-ACCT-05 data export', () => {
     expect(text).toContain(b.user.username);
     // No secrets in the export.
     const all = names.map((n) => new TextDecoder().decode(files[n])).join('\n');
-    expect(all).not.toMatch(/argon2|password_hash|token/i);
+    expect(all).not.toMatch(/public_key|credential|token/i);
 
     // Bearer clients get the same link as data.
     const asData = await a.client.ok(getExportUrl, { params: { id: requested.id } });
@@ -199,7 +199,8 @@ describe.skipIf(!hasS3)('FR-ACCT-05 data export', () => {
     await ready(a, e.id);
     const [row] = await server.deps.db.select().from(exports).where(eq(exports.id, e.id));
     expect(await server.deps.storage!.headObject(row!.objectKey!)).not.toBeNull();
-    expect((await a.client.call(deleteMe, { body: { password: PASSWORD } })).status).toBe(202);
+    await confirmPasskey(a.client);
+    expect((await a.client.call(deleteMe, { body: {} })).status).toBe(202);
     expect(await server.deps.db.select().from(exports).where(eq(exports.id, e.id))).toEqual([]);
     await waitFor(
       async () => (await server.deps.storage!.headObject(row!.objectKey!)) === null,

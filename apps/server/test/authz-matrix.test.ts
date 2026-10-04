@@ -1,12 +1,17 @@
 // M1-T9 / NFR-SEC-01: object-level authorization for every id-bearing route.
 import {
   adminDeleteUser,
-  adminPasswordReset,
+  adminRecoveryLink,
+  addPasskey,
+  addPasskeyOptions,
+  getRecovery,
+  recover,
+  recoveryOptions,
+  removePasskey,
+  renamePasskey,
   adminUpdateUser,
   listSessions,
-  login,
   revokeSessionRoute,
-  usePasswordReset,
   clearReaction,
   createPushTarget,
   deletePushTarget,
@@ -44,9 +49,11 @@ import {
   unblockUser,
 } from '@vidfriends/contracts';
 import sharp from 'sharp';
-import { exports } from '../src/db/schema.js';
+import { eq } from 'drizzle-orm';
+import { exports, passkeys, users } from '../src/db/schema.js';
 import { DAY } from '../src/infra/clock.js';
 import { newId } from '../src/infra/ids.js';
+import { createRecoveryLink } from '../src/modules/auth/service.js';
 import { hasS3 } from './support/s3.js';
 import { setRelationship } from './support/world.js';
 import { idemKey, makeVideo, registerMember } from './support/factories.js';
@@ -54,14 +61,15 @@ import { matrixCase, missingRoutes, runMatrix, type MatrixCase } from '@vidfrien
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { createTestServer, type TestServer } from './support/app.js';
-import { PASSWORD } from './support/factories.js';
+import { confirmPasskey, signInWith } from './support/factories.js';
 import { buildWorld, type World } from './support/world.js';
 
 let server: TestServer;
 let world: World;
 
 beforeAll(async () => {
-  server = await createTestServer();
+  // Many passkey confirmations by the same member within a minute (one per persona).
+  server = await createTestServer({ RATE_LIMIT_AUTH_PER_MINUTE: '1000' });
   world = await buildWorld(server);
   if (hasS3) {
     const png = await sharp({ create: { width: 8, height: 8, channels: 3, background: '#123456' } })
@@ -143,6 +151,30 @@ function cases(): MatrixCase[] {
   });
   const victim = async () =>
     (await registerMember(server, world.members.admin, { autoFriend: false })).user.id;
+  // Inserted directly: the recovery case replaces the admin persona's session as it runs.
+  const accountToRecover = async () => {
+    const id = newId();
+    await server.deps.db.insert(users).values({ id, username: `rec${id.slice(-12)}` });
+    return id;
+  };
+  const recoveryToken = async () =>
+    (
+      await createRecoveryLink(server.deps, {
+        userId: await accountToRecover(),
+        actorId: world.members.admin.user.id,
+        ip: null,
+      })
+    ).url
+      .split('/')
+      .pop()!;
+  const ownerPasskey = async () => {
+    const [row] = await server.deps.db
+      .select({ id: passkeys.id })
+      .from(passkeys)
+      .where(eq(passkeys.userId, world.members.owner.user.id))
+      .limit(1);
+    return row!.id;
+  };
   return [
     matrixCase({
       route: adminUpdateUser,
@@ -155,41 +187,70 @@ function cases(): MatrixCase[] {
       expect: adminOnly(202),
     }),
     matrixCase({
-      route: adminPasswordReset,
+      route: adminRecoveryLink,
       prepare: async () => ({ params: { id: await victim() } }),
       expect: adminOnly(201),
     }),
+    // Public by design: the unguessable single-use recovery token is the capability (WF-ADM-4).
     matrixCase({
-      route: usePasswordReset,
-      // Public by design: the unguessable single-use token is the capability.
-      prepare: async () => {
-        const { reset_url } = await world.members.admin.client.ok(adminPasswordReset, {
-          params: { id: await victim() },
-        });
-        return {
-          params: { token: reset_url.split('/').pop()! },
-          body: { new_password: 'matrix-reset-2026' },
-        };
-      },
+      route: getRecovery,
+      prepare: async () => ({ params: { token: await recoveryToken() } }),
       expect: {
-        owner: 204,
-        participant: 204,
-        friend: 204,
-        stranger: 204,
-        blocked: 204,
-        suspended: 204,
-        admin: 204,
-        anonymous: 204,
+        owner: 200,
+        participant: 200,
+        friend: 200,
+        stranger: 200,
+        blocked: 200,
+        suspended: 200,
+        admin: 200,
+        anonymous: 200,
       },
+    }),
+    matrixCase({
+      route: recoveryOptions,
+      prepare: async () => ({ params: { token: await recoveryToken() }, body: {} }),
+      expect: {
+        owner: 200,
+        participant: 200,
+        friend: 200,
+        stranger: 200,
+        blocked: 200,
+        suspended: 200,
+        admin: 200,
+        anonymous: 200,
+      },
+    }),
+    matrixCase({
+      route: renamePasskey,
+      prepare: async () => ({ params: { id: await ownerPasskey() }, body: { name: 'Renamed' } }),
+      expect: only(['owner'], 200),
+    }),
+    matrixCase({
+      route: removePasskey,
+      // The owner gets a second passkey and a fresh confirmation, so removal is allowed.
+      prepare: async () => {
+        const owner = world.members.owner.client;
+        const start = await owner.ok(addPasskeyOptions, { body: {} });
+        const { passkey } = await owner.ok(addPasskey, {
+          body: {
+            ceremony_id: start.ceremony_id,
+            credential: owner.authenticator.create(start.options) as never,
+          },
+        });
+        await confirmPasskey(owner);
+        return { params: { id: passkey.id } };
+      },
+      expect: only(['owner'], 204),
     }),
     matrixCase({
       route: revokeSessionRoute,
       // A second session of the owner: only the owner can revoke it.
       prepare: async () => {
         const extra = server.client();
-        await extra.ok(login, {
-          body: { username: 'owner', password: PASSWORD, client: 'mobile' },
-        });
+        extra.authenticator.credentials.push(
+          ...world.members.owner.client.authenticator.credentials,
+        );
+        expect((await signInWith(extra)).status).toBe(200);
         const { items } = await world.members.owner.client.ok(listSessions);
         return { params: { id: items.find((x) => !x.current)!.id } };
       },
@@ -512,6 +573,32 @@ function cases(): MatrixCase[] {
         suspended: 200,
         admin: 200,
         anonymous: 200,
+      },
+    }),
+    matrixCase({
+      route: recover,
+      // Last: a successful recovery signs the caller in as the recovered member.
+      prepare: async (persona) => {
+        const token = await recoveryToken();
+        const device = world.client(persona);
+        const start = await server.client().ok(recoveryOptions, { params: { token }, body: {} });
+        return {
+          params: { token },
+          body: {
+            ceremony_id: start.ceremony_id,
+            credential: device.authenticator.create(start.options) as never,
+          },
+        };
+      },
+      expect: {
+        owner: 201,
+        participant: 201,
+        friend: 201,
+        stranger: 201,
+        blocked: 201,
+        suspended: 201,
+        admin: 201,
+        anonymous: 201,
       },
     }),
   ];

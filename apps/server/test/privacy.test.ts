@@ -1,6 +1,6 @@
 // NFR-PRIV-01 (no third-party origins in the clients' allowed sources) and NFR-PRIV-03 (personal
-// data limited to username, display name, avatar, password hash and activity data).
-import { register } from '@vidfriends/contracts';
+// data limited to username, display name, avatar, passkey public keys and activity data).
+import { registerOptions } from '@vidfriends/contracts';
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestServer, PUBLIC_URL, type TestServer } from './support/app.js';
@@ -41,7 +41,7 @@ describe('NFR-PRIV-03: personal data is minimal', () => {
         'display_name',
         'id',
         'last_active_at',
-        'password_hash',
+        'webauthn_user_id',
         'quota_bytes_override',
         'role',
         'status',
@@ -53,9 +53,7 @@ describe('NFR-PRIV-03: personal data is minimal', () => {
   });
 
   it('registration accepts no contact details', () => {
-    const shape = Object.keys(register.body!.shape);
-    expect(shape.sort()).toEqual(
-      ['client', 'display_name', 'invite_code', 'password', 'username'].sort(),
-    );
+    const shape = Object.keys(registerOptions.body!.shape);
+    expect(shape.sort()).toEqual(['display_name', 'invite_code', 'username'].sort());
   });
 });

@@ -1,3 +1,4 @@
+import { isIP } from 'node:net';
 // Environment configuration (TDD §3, NFR-OPS-02, NFR-SEC-03).
 // Env holds infrastructure: URLs, secrets, ports, concurrency. Product policy lives in instance settings.
 // Durations carry their unit in the key name (L-07). `deploy/ENV.md` is generated from this file.
@@ -234,6 +235,13 @@ export function loadEnv(source: Record<string, string | undefined> = process.env
       if (p) problems.push(`DATABASE_URL password ${p}`);
     }
     if (!env.S3_ACCESS_KEY_ID) problems.push('S3_ACCESS_KEY_ID is required');
+    // Passkeys need HTTPS on a domain name (ADR-0018); localhost is allowed for trials.
+    const url = new URL(env.PUBLIC_URL);
+    const local = url.hostname === 'localhost';
+    if (url.protocol !== 'https:' && !local) problems.push('PUBLIC_URL must use https://');
+    if (!local && (isIP(url.hostname.replace(/^\[|\]$/g, '')) || !url.hostname.includes('.'))) {
+      problems.push('PUBLIC_URL must use a domain name, not an IP address (passkeys need one)');
+    }
     const s3 = weak(env.S3_SECRET_ACCESS_KEY, 16);
     if (s3) problems.push(`S3_SECRET_ACCESS_KEY ${s3}`);
   } else if (env.APP_SECRET.length < 16) {

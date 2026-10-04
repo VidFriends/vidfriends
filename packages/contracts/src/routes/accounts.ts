@@ -8,8 +8,6 @@ export const Username = z
   .trim()
   .toLowerCase()
   .regex(/^[a-z0-9][a-z0-9_.]{2,29}$/, 'username_format');
-// BR-ACCT-2: 10–128 characters, no composition rules (denylist checked server-side).
-export const Password = z.string().min(10, 'password_too_short').max(128, 'password_too_long');
 // BR-ACCT-3: 0–50 characters, trimmed.
 export const DisplayName = z.string().trim().max(50);
 export const ClientKind = z.enum(['web', 'mobile']);
@@ -37,11 +35,8 @@ export const PublicUser = z.object({
 });
 export type PublicUser = z.infer<typeof PublicUser>;
 
-export const SessionResponse = z.object({
-  user: SelfUser,
-  /** Bearer token; only returned to `client: "mobile"`. Web clients get an httpOnly cookie. */
-  token: z.string().optional(),
-});
+/** Web sign-in result; the session travels in an httpOnly cookie (ADR-0008). */
+export const SessionResponse = z.object({ user: SelfUser });
 
 export const SignupMode = z.enum(['invite_only', 'open']);
 
@@ -65,61 +60,6 @@ export const getInstance = defineRoute({
   summary: 'Instance name, version and signup mode (FR-PAIR-01)',
   status: 200,
   response: InstanceInfo,
-});
-
-export const setup = defineRoute({
-  id: 'setup',
-  method: 'post',
-  path: '/setup',
-  auth: 'public',
-  tag: 'instance',
-  summary: 'Claim the instance with the one-time setup token (FR-AUTH-01)',
-  body: z.object({
-    setup_token: z.string().min(1).max(200),
-    instance_name: z.string().trim().min(1).max(60),
-    username: Username,
-    password: Password,
-    client: ClientKind.default('web'),
-  }),
-  status: 201,
-  response: SessionResponse,
-  errors: ['setup_invalid', 'not_found', 'rate_limited'],
-});
-
-export const register = defineRoute({
-  id: 'register',
-  method: 'post',
-  path: '/auth/register',
-  auth: 'public',
-  tag: 'auth',
-  summary: 'Register with an invite (FR-AUTH-02/03)',
-  body: z.object({
-    username: Username,
-    password: Password,
-    display_name: DisplayName.optional(),
-    invite_code: z.string().max(200).optional(),
-    client: ClientKind.default('web'),
-  }),
-  status: 201,
-  response: SessionResponse,
-  errors: ['invite_invalid', 'username_taken', 'rate_limited'],
-});
-
-export const login = defineRoute({
-  id: 'login',
-  method: 'post',
-  path: '/auth/login',
-  auth: 'public',
-  tag: 'auth',
-  summary: 'Log in (FR-AUTH-04)',
-  body: z.object({
-    username: z.string().trim().toLowerCase().min(1).max(30),
-    password: z.string().min(1).max(128),
-    client: ClientKind.default('web'),
-  }),
-  status: 200,
-  response: SessionResponse,
-  errors: ['invalid_credentials', 'account_suspended', 'rate_limited'],
 });
 
 export const logout = defineRoute({
@@ -148,19 +88,6 @@ export const getMe = defineRoute({
       can_invite: z.boolean(),
     }),
   }),
-});
-
-export const changePassword = defineRoute({
-  id: 'changePassword',
-  method: 'post',
-  path: '/me/password',
-  auth: 'member',
-  tag: 'me',
-  summary: 'Change password; revokes other sessions (FR-ACCT-02)',
-  body: z.object({ current_password: z.string().min(1).max(128), new_password: Password }),
-  status: 204,
-  response: null,
-  errors: ['invalid_credentials', 'rate_limited'],
 });
 
 export const updateMe = defineRoute({

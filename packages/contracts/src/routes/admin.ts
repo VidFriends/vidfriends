@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Id, PageQuery, Timestamp, page } from '../common.js';
 import { defineRoute } from '../route.js';
 import { InstanceSettings, InstanceSettingsPatch } from '../settings.js';
-import { Password, PublicUser, Role, SelfUser, UserStatus } from './accounts.js';
+import { PublicUser, Role, SelfUser, UserStatus } from './accounts.js';
 import { VideoState } from './videos.js';
 
 /** An admin's view of a member: counts only, never content (BR-ADM-1). */
@@ -67,19 +67,6 @@ export const adminDeleteUser = defineRoute({
   status: 202,
   response: z.object({ deleted: z.literal(true) }),
   errors: ['not_found', 'last_admin'],
-});
-
-export const adminPasswordReset = defineRoute({
-  id: 'adminPasswordReset',
-  method: 'post',
-  path: '/admin/users/{id}/password-reset',
-  auth: 'admin',
-  tag: 'admin',
-  summary: 'Create a single-use password-reset link valid for 24 h (FR-ADM-03, WF-ADM-4)',
-  params: UserId,
-  status: 201,
-  response: z.object({ reset_url: z.string(), expires_at: Timestamp }),
-  errors: ['not_found'],
 });
 
 export const adminGetSettings = defineRoute({
@@ -163,31 +150,18 @@ export const adminAudit = defineRoute({
   response: page(AuditEntry),
 });
 
-export const usePasswordReset = defineRoute({
-  id: 'usePasswordReset',
-  method: 'post',
-  path: '/auth/password-reset/{token}',
-  auth: 'public',
-  tag: 'auth',
-  summary: 'Set a new password with a reset link; revokes all sessions (FR-ADM-03)',
-  params: z.object({ token: z.string().min(10).max(200) }),
-  body: z.object({ new_password: Password }),
-  status: 204,
-  response: null,
-  errors: ['reset_invalid', 'rate_limited'],
-});
-
 export const deleteMe = defineRoute({
   id: 'deleteMe',
   method: 'delete',
   path: '/me',
   auth: 'member',
   tag: 'me',
-  summary: 'Delete my account after re-entering the password (FR-ACCT-03, WF-ACCT-3)',
-  body: z.object({ password: z.string().min(1).max(128) }),
+  summary:
+    'Delete my account; needs a passkey confirmation from the last 5 minutes (FR-ACCT-03, WF-ACCT-3)',
+  body: z.object({}),
   status: 202,
   response: z.object({ deleted: z.literal(true) }),
-  errors: ['invalid_credentials', 'last_admin', 'rate_limited'],
+  errors: ['reauth_required', 'last_admin', 'rate_limited'],
 });
 
 export const Session = z.object({

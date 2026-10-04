@@ -25,7 +25,7 @@ export interface NewSession {
 export async function createSession(
   db: DbOrTx,
   deps: Deps,
-  input: { userId: string; client: 'web' | 'mobile'; userAgent: string },
+  input: { userId: string; client: 'web' | 'mobile'; userAgent: string; passkeyId?: string },
 ): Promise<NewSession> {
   const settings = await getSettings(db);
   const now = deps.clock.now();
@@ -46,6 +46,7 @@ export async function createSession(
     lastSeenAt: now,
     idleExpiresAt: idle,
     absoluteExpiresAt: absolute,
+    passkeyId: input.passkeyId ?? null,
   });
   return { token, hash, id };
 }
@@ -66,6 +67,7 @@ export async function resolveSession(
       lastSeenAt: sessions.lastSeenAt,
       idleExpiresAt: sessions.idleExpiresAt,
       absoluteExpiresAt: sessions.absoluteExpiresAt,
+      reauthAt: sessions.reauthAt,
       userId: users.id,
       username: users.username,
       displayName: users.displayName,
@@ -102,6 +104,7 @@ export async function resolveSession(
     sessionId: row.sessionId,
     sessionHash: hash,
     client: row.client,
+    reauthAt: row.reauthAt,
     via,
   };
 }

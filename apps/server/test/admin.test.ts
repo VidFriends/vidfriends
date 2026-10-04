@@ -4,7 +4,7 @@ import {
   adminDeleteUser,
   adminGetSettings,
   adminListUsers,
-  adminPasswordReset,
+  adminRecoveryLink,
   adminRunRetention,
   adminStorage,
   adminUpdateSettings,
@@ -12,10 +12,11 @@ import {
   deleteMe,
   getMe,
   listSessions,
-  login,
+  getRecovery,
+  recover,
+  recoveryOptions,
   revokeSessionRoute,
   sendShares,
-  usePasswordReset,
 } from '@vidfriends/contracts';
 import { eq, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -26,7 +27,8 @@ import {
   claimAdmin,
   idemKey,
   makeVideo,
-  PASSWORD,
+  confirmPasskey,
+  signInWith,
   registerMember,
   type Member,
 } from './support/factories.js';
@@ -75,24 +77,14 @@ describe('FR-ADM-01 users', () => {
     });
     expect(res.user.status).toBe('suspended');
     expect((await m.client.call(getMe)).status).toBe(401);
-    expect(
-      (
-        await server
-          .client()
-          .call(login, { body: { username: m.user.username, password: PASSWORD, client: 'web' } })
-      ).status,
-    ).toBe(403);
+    const refused = await signInWith(m.client);
+    expect(refused.status).toBe(403);
+    expect(refused.body.error?.code).toBe('account_suspended');
     await admin.client.ok(adminUpdateUser, {
       params: { id: m.user.id },
       body: { status: 'active' },
     });
-    expect(
-      (
-        await server
-          .client()
-          .call(login, { body: { username: m.user.username, password: PASSWORD, client: 'web' } })
-      ).status,
-    ).toBe(200);
+    expect((await signInWith(m.client)).status).toBe(200);
   });
 
   it('never demotes, suspends or deletes the last admin', async () => {
@@ -105,9 +97,8 @@ describe('FR-ADM-01 users', () => {
       (await admin.client.call(adminDeleteUser, { params: { id: admin.user.id } })).body.error
         ?.code,
     ).toBe('last_admin');
-    expect(
-      (await admin.client.call(deleteMe, { body: { password: PASSWORD } })).body.error?.code,
-    ).toBe('last_admin');
+    await confirmPasskey(admin.client);
+    expect((await admin.client.call(deleteMe, { body: {} })).body.error?.code).toBe('last_admin');
     // With a second admin it works, and a role change revokes the target's sessions (BR-SES-2).
     const second = await registerMember(server, admin);
     await admin.client.ok(adminUpdateUser, {
@@ -115,16 +106,13 @@ describe('FR-ADM-01 users', () => {
       body: { role: 'admin' },
     });
     expect((await second.client.call(getMe)).status).toBe(401);
-    const relog = server.client();
-    await relog.ok(login, {
-      body: { username: second.user.username, password: PASSWORD, client: 'web' },
-    });
+    const relog = second.client;
+    relog.cookies.clear();
+    expect((await signInWith(relog)).status).toBe(200);
     await relog.ok(adminUpdateUser, { params: { id: admin.user.id }, body: { role: 'member' } });
     await relog.ok(adminUpdateUser, { params: { id: admin.user.id }, body: { role: 'admin' } });
-    admin.client = server.client();
-    await admin.client.ok(login, {
-      body: { username: 'admin', password: PASSWORD, client: 'web' },
-    });
+    admin.client.cookies.clear();
+    expect((await signInWith(admin.client)).status).toBe(200);
   });
 
   it('sets a per-user quota override', async () => {
@@ -137,53 +125,51 @@ describe('FR-ADM-01 users', () => {
   });
 });
 
-describe('FR-ADM-03 password reset links', () => {
-  it('creates a single-use 24 h link that sets a new password and revokes all sessions', async () => {
-    const m = await registerMember(server, admin);
-    const { reset_url } = await admin.client.ok(adminPasswordReset, { params: { id: m.user.id } });
-    expect(reset_url).toMatch(/^https:\/\/vf\.test\/reset\/[A-Za-z0-9_-]{43}$/);
-    const token = reset_url.split('/').pop()!;
-    const weak = await server
-      .client()
-      .call(usePasswordReset, { params: { token }, body: { new_password: 'password123' } });
-    expect(weak.status).toBe(400);
-    expect(
-      (
-        await server
-          .client()
-          .call(usePasswordReset, { params: { token }, body: { new_password: 'fresh-start-2026' } })
-      ).status,
-    ).toBe(204);
+/** Registers a new passkey with a recovery link on a fresh "device". */
+async function recoverWith(token: string) {
+  const device = server.client();
+  const start = await device.call(recoveryOptions, { params: { token }, body: {} });
+  if (start.status !== 200) return { device, res: start };
+  const res = await device.call(recover, {
+    params: { token },
+    body: {
+      ceremony_id: start.body.ceremony_id,
+      credential: device.authenticator.create(start.body.options) as never,
+    },
+  });
+  return { device, res };
+}
+
+describe('FR-ADM-03 recovery links (WF-ADM-4)', () => {
+  it('registers a new passkey that replaces the old ones and revokes every session', async () => {
+    const m = await registerMember(server, admin, { displayName: 'Lost Phone' });
+    const { url } = await admin.client.ok(adminRecoveryLink, { params: { id: m.user.id } });
+    expect(url).toMatch(/^https:\/\/vf\.test\/recover\/[A-Za-z0-9_-]{43}$/);
+    const token = url.split('/').pop()!;
+    expect(await server.client().ok(getRecovery, { params: { token } })).toMatchObject({
+      username: m.user.username,
+      display_name: 'Lost Phone',
+    });
+
+    const { device, res } = await recoverWith(token);
+    expect(res.status).toBe(201);
     expect((await m.client.call(getMe)).status).toBe(401);
-    expect(
-      (
-        await server.client().call(login, {
-          body: { username: m.user.username, password: 'fresh-start-2026', client: 'web' },
-        })
-      ).status,
-    ).toBe(200);
-    const again = await server
-      .client()
-      .call(usePasswordReset, { params: { token }, body: { new_password: 'another-one-2026' } });
-    expect(again.body.error?.code).toBe('reset_invalid');
+    // The lost passkey no longer signs in; the new one does.
+    expect((await signInWith(m.client)).body.error?.code).toBe('invalid_credentials');
+    device.cookies.clear();
+    expect((await signInWith(device)).status).toBe(200);
+    // Single use.
+    expect((await recoverWith(token)).res.body.error?.code).toBe('recovery_invalid');
   });
 
   it('expires after 24 hours', async () => {
     const m = await registerMember(server, admin);
-    const token = (
-      await admin.client.ok(adminPasswordReset, { params: { id: m.user.id } })
-    ).reset_url
+    const token = (await admin.client.ok(adminRecoveryLink, { params: { id: m.user.id } })).url
       .split('/')
       .pop()!;
     server.clock.advance(DAY + 1000);
     try {
-      expect(
-        (
-          await server
-            .client()
-            .call(usePasswordReset, { params: { token }, body: { new_password: 'too-late-2026x' } })
-        ).body.error?.code,
-      ).toBe('reset_invalid');
+      expect((await recoverWith(token)).res.body.error?.code).toBe('recovery_invalid');
     } finally {
       server.clock.advance(-(DAY + 1000));
     }
@@ -244,10 +230,10 @@ describe('FR-ADM-04/05 storage and audit', () => {
 describe('FR-ACCT-04 sessions', () => {
   it('lists my sessions and revokes one', async () => {
     const m = await registerMember(server, admin);
+    // A second browser with the same (synced) passkey.
     const other = server.client();
-    await other.ok(login, {
-      body: { username: m.user.username, password: PASSWORD, client: 'web' },
-    });
+    other.authenticator.credentials.push(...m.client.authenticator.credentials);
+    expect((await signInWith(other)).status).toBe(200);
     const list = await m.client.ok(listSessions);
     expect(list.items).toHaveLength(2);
     const notCurrent = list.items.find((s) => !s.current)!;
@@ -262,7 +248,7 @@ describe('FR-ACCT-04 sessions', () => {
 });
 
 describe('FR-ACCT-03 account deletion (WF-ACCT-3, NFR-DATA-01)', () => {
-  it('requires the password and removes the account, its shares and data', async () => {
+  it('requires a recent passkey confirmation and removes the account, its shares and data', async () => {
     const a = await registerMember(server, admin, { autoFriend: false });
     const b = await registerMember(server, admin, { autoFriend: false });
     await setRelationship(server, a.user.id, b.user.id, 'accepted');
@@ -270,10 +256,10 @@ describe('FR-ACCT-03 account deletion (WF-ACCT-3, NFR-DATA-01)', () => {
     await a.client.ok(sendShares, {
       body: { video_id: video, recipient_ids: [b.user.id], idempotency_key: idemKey() },
     });
-    expect((await a.client.call(deleteMe, { body: { password: 'wrong-password-1' } })).status).toBe(
-      401,
-    );
-    expect((await a.client.call(deleteMe, { body: { password: PASSWORD } })).status).toBe(202);
+    const unconfirmed = await a.client.call(deleteMe, { body: {} });
+    expect(unconfirmed.body.error?.code).toBe('reauth_required');
+    await confirmPasskey(a.client);
+    expect((await a.client.call(deleteMe, { body: {} })).status).toBe(202);
 
     const id = a.user.id;
     const left = await server.deps.db.execute(sql`
