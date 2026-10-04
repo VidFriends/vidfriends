@@ -124,7 +124,7 @@ jobs:
           emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: |
             adb install -r "$RUNNER_TEMP/vidfriends.apk"
-            maestro test apps/mobile/e2e/main.yaml -e JOIN_URL="$JOIN_URL" -e ADMIN_USER="$ADMIN_USER" -e ADMIN_PASSWORD="$ADMIN_PASSWORD" -e VIDEO_URL="https://www.youtube.com/watch?v=ok&e2e=mobile" --format junit --output maestro-report.xml --debug-output maestro-debug
+            maestro test apps/mobile/e2e/main.yaml -e JOIN_URL="$JOIN_URL" -e ADMIN_USER="$ADMIN_USER" -e ADMIN_PASSWORD="$ADMIN_PASSWORD" -e VIDEO_URL="https://www.youtube.com/watch?v=ok&e2e=mobile" --format junit --output maestro-report.xml --debug-output maestro-debug --flatten-debug-output --test-output-dir maestro-debug || { adb exec-out screencap -p > maestro-debug/failure.png; maestro hierarchy > maestro-debug/hierarchy.json; exit 1; }
       - name: Stack logs
         if: failure()
         run: node e2e/scripts/stack.mjs logs
