@@ -73,6 +73,7 @@ The numbering is kept stable. A-1 (licence) and A-4 (default instance) were reso
 - **A-2:** No email is collected; password recovery is admin-assisted (BR-ACCT-4).
 - **A-3:** Scale is ≤ 50 users per instance. All performance numbers marked † are proposals.
 - **A-5:** Expo push relay is acceptable (BC-6 exception).
+- **A-6:** The M5 load test capped the `server` and `postgres` containers at 1 vCPU / 2 GB each as a stand-in for the 2 vCPU / 4 GB reference host (NFR-PERF-01); repeat on the alpha VM if it differs.
 
 ### 3.4 Open questions
 **None open.** The owner resolved OQ-1..OQ-4 on 2026-10-03 ([BRD §7](requirements/BRD.md#7-open-questions-all-resolved-2026-10-03)):
@@ -210,7 +211,7 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 
 **Exit:** all of the above green. No test depends on real source platforms.
 
-### M4: Sharing, feed, engagement, notifications (Web MVP) 🟡 (server done; web UI in progress)
+### M4: Sharing, feed, engagement, notifications (Web MVP) 🟡 (all built and tested; M4-T6 real-device push/share-target check and the M4-T7 nightly browser matrix are pending)
 
 **Goal:** the core product loop works on the web.
 **Requirements:** FR-SHR-01..05; FR-FEED-01..06; FR-ENG-01..02; FR-NOTIF-01, 02(S), 04, 05; FR-PWA-01..02(S); FR-VID-08(C); NFR-A11Y-01; NFR-COMPAT-01; NFR-PERF-02, 04(S).
@@ -218,17 +219,17 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 
 | Task | Objective | References | Completion check |
 |---|---|---|---|
-| M4-T1 Shares | Send (idempotent, per-recipient results), deferred delivery on ready or link-only, unsend | WF-SHR-1/2, LLD §2–4 | API tests including idempotency replay and the authz matrix for share routes |
-| M4-T2 Feed queries | Feed, inbox (48 h), saved, history, sent, keyset pagination, "also sent by" | BR-FEED-*, LLD §2 | API tests with a fake clock; `EXPLAIN` on 10k seeded shares uses the feed index |
-| M4-T3 Vertical player | 3-slot player, preload, muted autoplay and unmute, keyboard, reduced motion, link-only and expired cards, progress beacons | FRD §7, TDD §4 | Playwright `watch.spec.ts` (clock-controlled watched threshold); axe clean |
-| M4-T4 Engagement | Reaction set, replies (rate limit, delete placeholder) | FRD §8 | API and Playwright `conversation.spec.ts` |
-| M4-T5 Notifications (in-app) | Notification writes in the same transaction, list, unread count, mark-read, prefs, polling | FRD §9, ADR-0011 | API tests; Playwright badge updates within 60 s |
-| M4-T6 Web Push and PWA | VAPID key management, subscription UI, dispatch job with coalescing and gone-cleanup; manifest, icons, SW with correct fallback, share target | FR-NOTIF-02, FR-PWA-01/02 | API test with a push-service mock; runbook checks on Chrome desktop and Android (real push, share target) recorded in the PR |
-| M4-T7 Web MVP acceptance | Specs J-3..J-6 across Chromium, Firefox and WebKit; bundle-size check | PRD §6 | All green in CI (nightly for the full browser matrix) |
+| M4-T1 Shares | Send (idempotent, per-recipient results), deferred delivery on ready or link-only, unsend | WF-SHR-1/2, LLD §2–4 | API tests including idempotency replay and the authz matrix for share routes <br>**✅** `apps/server/test/shares.test.ts`, `authz-matrix.test.ts` |
+| M4-T2 Feed queries | Feed, inbox (48 h), saved, history, sent, keyset pagination, "also sent by" | BR-FEED-*, LLD §2 | API tests with a fake clock; `EXPLAIN` on 10k seeded shares uses the feed index <br>**✅** `apps/server/test/shares.test.ts` ("uses the feed index on 10k seeded shares") |
+| M4-T3 Vertical player | 3-slot player, preload, muted autoplay and unmute, keyboard, reduced motion, link-only and expired cards, progress beacons | FRD §7, TDD §4 | Playwright `watch.spec.ts` (clock-controlled watched threshold); axe clean <br>**✅** `e2e/tests/watch.spec.ts` |
+| M4-T4 Engagement | Reaction set, replies (rate limit, delete placeholder) | FRD §8 | API and Playwright `conversation.spec.ts` <br>**✅** `apps/server/test/engagement.test.ts`; the conversation flow (react, reply, sender sees both) is covered in `e2e/tests/watch.spec.ts` rather than a separate `conversation.spec.ts` |
+| M4-T5 Notifications (in-app) | Notification writes in the same transaction, list, unread count, mark-read, prefs, polling | FRD §9, ADR-0011 | API tests; Playwright badge updates within 60 s <br>**✅** `apps/server/test/notifications.test.ts`; badge assertion in `e2e/tests/watch.spec.ts` |
+| M4-T6 Web Push and PWA | VAPID key management, subscription UI, dispatch job with coalescing and gone-cleanup; manifest, icons, SW with correct fallback, share target | FR-NOTIF-02, FR-PWA-01/02 | API test with a push-service mock; runbook checks on Chrome desktop and Android (real push, share target) recorded in the PR <br>**🟡** Push-service mock tests in `apps/server/test/notifications.test.ts`; SW/manifest/share target built and served. Real-device checks need a phone and a public HTTPS instance: folded into M5-T9 (alpha). |
+| M4-T7 Web MVP acceptance | Specs J-3..J-6 across Chromium, Firefox and WebKit; bundle-size check | PRD §6 | All green in CI (nightly for the full browser matrix) <br>**🟡** J-3..J-6 green on Chrome in CI; bundle budget enforced (177 kB gzip of 250 kB). `nightly.yml` runs Firefox and WebKit but can only be dispatched once merged to `main`. |
 
 **Exit:** the web MVP is usable by an invited group on a dev or staging deployment.
 
-### M5: Admin, operations, alpha ⬜
+### M5: Admin, operations, alpha 🟡 (T1–T3, T5, T7 done; T4/T6/T8 await a published tag or the alpha; T9 is the owner's)
 
 **Goal:** an operator can run the instance safely. The owner's alpha group uses it.
 **Requirements:** FR-ACCT-03, 04(S); FR-VID-06; FR-ADM-01..05 (UI); NFR-REL-04, 05; NFR-DATA-01; NFR-OPS-01, 03 (metrics), 04; NFR-PERF-01.
@@ -236,15 +237,15 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 
 | Task | Objective | Completion check |
 |---|---|---|
-| M5-T1 Admin console | Users, invites, settings, storage, audit log screens and APIs (WF-ADM-*) | Playwright `admin.spec.ts` (suspend → session rejected; last-admin protection; password-reset link) |
-| M5-T2 Retention and sweeper | `retention.purge`, `storage.sweep`, `session.cleanup` crons, manual run | API time-travel tests; the sweeper finds a planted orphan |
-| M5-T3 Account deletion | WF-ACCT-3, including media purge | API test verifies no rows or objects remain for the user within the job run |
-| M5-T4 Ops hardening | Metrics endpoint, optional monitoring compose, log rotation, release workflow (GHCR multi-arch, SBOM), upgrade doc | A tag on a test repo produces images; the upgrade runbook is executed |
-| M5-T5 Backup and restore | Scripts and runbook for Postgres and object storage | Restore drill recorded (date, RPO and RTO observed) in `deploy/RUNBOOK.md` |
-| M5-T6 Fresh-VM deploy | Runbook from a blank VM to a claimed instance in ≤ 30 min (BO-4) | Executed and timed by someone (or an agent) following only the docs |
-| M5-T7 Load and security review | k6 at 50 VUs (NFR-PERF-01); threat-model review against TDD §5; dependency audit | Report committed under `docs/reports/`; issues fixed or accepted in an ADR |
-| M5-T8 Operator and user guides | Self-hosting guide, privacy disclosure, member help pages | Docs reviewed against the deployed alpha |
-| M5-T9 Alpha release v0.1.0 | Owner's private self-hosted instance live; alpha group onboarded; BO metrics collection plan (manual, privacy-preserving) | Owner sign-off |
+| M5-T1 Admin console | Users, invites, settings, storage, audit log screens and APIs (WF-ADM-*) | Playwright `admin.spec.ts` (suspend → session rejected; last-admin protection; password-reset link) <br>**✅** `e2e/tests/admin.spec.ts`; APIs in `apps/server/test/admin.test.ts` |
+| M5-T2 Retention and sweeper | `retention.purge`, `storage.sweep`, `session.cleanup` crons, manual run | API time-travel tests; the sweeper finds a planted orphan <br>**✅** `apps/server/test/maintenance.test.ts` |
+| M5-T3 Account deletion | WF-ACCT-3, including media purge | API test verifies no rows or objects remain for the user within the job run <br>**✅** `apps/server/test/admin.test.ts` (account deletion) |
+| M5-T4 Ops hardening | Metrics endpoint, optional monitoring compose, log rotation, release workflow (GHCR multi-arch, SBOM), upgrade doc | A tag on a test repo produces images; the upgrade runbook is executed <br>**🟡** Metrics, monitoring overlay (verified), log rotation, `.github/workflows/release.yml` (multi-arch build verified unpushed on the PR), upgrade runbook executed (M3 → current, [RUNBOOK §7](../deploy/RUNBOOK.md#7-records)). Publishing needs a `v*` tag on `main` after merge. |
+| M5-T5 Backup and restore | Scripts and runbook for Postgres and object storage | Restore drill recorded (date, RPO and RTO observed) in `deploy/RUNBOOK.md` <br>**✅** `deploy/backup/`, drill in [RUNBOOK §7](../deploy/RUNBOOK.md#7-records); repeated in CI by `e2e/scripts/restore-drill.sh` |
+| M5-T6 Fresh-VM deploy | Runbook from a blank VM to a claimed instance in ≤ 30 min (BO-4) | Executed and timed by someone (or an agent) following only the docs <br>**🟡** Executed by an agent from the docs: 28 s to a claimed instance excluding Docker install and image pulls ([RUNBOOK §7](../deploy/RUNBOOK.md#7-records)). Repeat on a real blank VM with released images during M5-T9. |
+| M5-T7 Load and security review | k6 at 50 VUs (NFR-PERF-01); threat-model review against TDD §5; dependency audit | Report committed under `docs/reports/`; issues fixed or accepted in an ADR <br>**✅** [Report](reports/2026-10-04-m5-load-and-security-review.md) (p95 20.9 ms at 50 VUs; findings F-1..F-6 fixed); residual risks accepted in [ADR-0016](adr/0016-accepted-residual-security-risks-v0-1.md) |
+| M5-T8 Operator and user guides | Self-hosting guide, privacy disclosure, member help pages | Docs reviewed against the deployed alpha <br>**🟡** [Self-hosting guide](guides/self-hosting.md), in-app `/privacy` and `/help` (`e2e/tests/docs.spec.ts`), [runbook](../deploy/RUNBOOK.md). Reviewed against the E2E deployment; the review against the owner's alpha happens in M5-T9. |
+| M5-T9 Alpha release v0.1.0 | Owner's private self-hosted instance live; alpha group onboarded; BO metrics collection plan (manual, privacy-preserving) | Owner sign-off <br>**⛔** Owner action: run the instance, onboard the alpha group, sign off. |
 
 ### M6: Mobile apps (Expo) ⬜
 
@@ -296,17 +297,16 @@ Not scheduled. Each item needs a PRD update and, where architectural, an ADR bef
 
 ## 7. Next actionable milestone
 
-**M1: Foundations and accounts.**
-- **Start with** M1-T1, then M1-T2 and M1-T3 in parallel.
-- **Prerequisites:**
-  - Read AGENTS.md, this roadmap, SRS §1.1–1.3, FRD §2–3, ADR-0003/0006/0007/0008/0012, SDD §1–3, TDD §1/§3/§7, and LLD §2–3/§5.
-  - Owner: enable branch protection once CI exists.
-- **Verification:** M1-T11 specs (`setup.spec.ts`, `join.spec.ts`) and all M1 API tests are green in CI on `main`, and the authorization matrix covers all M1 routes.
+**M6: Mobile apps (Expo)**, while the M4/M5 items that need a merged `main`, a published tag or the owner's alpha complete in parallel.
+- **Now (agents):** merge [PR #112](https://github.com/VidFriends/vidfriends/pull/112) when CI is green (owner delegation, 2026-10-04); then dispatch `nightly.yml` (M4-T7 browser matrix, M3-T7 live smoke) and `yt-dlp-bump.yml` (M3-T7) on `main`; write the detailed M6 task table and start M6-T1 (scaffold) and M6-T2 (pairing).
+- **Owner:** enable branch protection on `main` (M1-T2); push the first `v0.1.0` tag or approve an agent doing so (M5-T4); deploy the alpha from the [runbook](../deploy/RUNBOOK.md), check real Web Push and the Android share target (M4-T6), review the guides (M5-T8) and sign off (M5-T9). App-store accounts remain the M6 blocker for store submission.
+- **Verification:** each item's completion check in §5, with the CI run or record linked in the task row.
 
 ## 8. Change log
 
 | Date | Change |
 |---|---|
+| 2026-10-04 | M4 built and tested (web MVP: shares, feed player, engagement, notifications, Web Push, PWA). M5: admin console, retention/sweeper, account deletion, metrics and monitoring overlay, release workflow, backup/restore with a CI drill, runbook with restore/upgrade/install drills, load test and security review (ADR-0016), privacy disclosure, help and self-hosting guide. Remaining M4/M5 checks need a merged `main`, a tag or the owner's alpha. Assumption A-6 added. |
 | 2026-10-04 | Owner answers (multiple choice): agents may merge their own PRs when CI is green; legacy deployments are shut down (M0-T3 ✅, so M0 is complete); agents should enable branch protection on `main`; no Apple or Google developer accounts yet, so M6 store submission is blocked (⛔) and the rest of M6 proceeds. AGENTS.md rule 11: blockers are asked as multiple-choice questions. |
 | 2026-10-03 | Owner decisions recorded (OQ-1..4 → ADR-0014, MIT); old repos archived; Dependabot PRs closed; single `main` branch (M0-T4/T5 ✅). |
 | 2026-10-03 | Roadmap created during the consolidation of seven legacy repos (M0). No previous authoritative roadmap existed ([AUDIT §2](legacy/AUDIT.md#2-what-each-attempt-contributes)). |
