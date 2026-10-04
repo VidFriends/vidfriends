@@ -25,10 +25,18 @@ export async function loadUser(deps: Deps, id: string) {
   return user;
 }
 
-export async function updateDisplayName(deps: Deps, viewer: Viewer, displayName: string) {
+export async function updateProfile(
+  deps: Deps,
+  viewer: Viewer,
+  input: { display_name?: string | undefined; language?: 'en' | 'es' | undefined },
+) {
   const [user] = await deps.db
     .update(users)
-    .set({ displayName, updatedAt: deps.clock.now() })
+    .set({
+      ...(input.display_name !== undefined ? { displayName: input.display_name } : {}),
+      ...(input.language ? { language: input.language } : {}),
+      updatedAt: deps.clock.now(),
+    })
     .where(eq(users.id, viewer.id))
     .returning();
   if (!user) throw new ApiError('unauthorized');

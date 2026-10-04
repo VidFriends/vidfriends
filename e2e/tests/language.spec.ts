@@ -20,8 +20,15 @@ test('follows the browser language and can be switched in Settings', async ({ pa
   await page.waitForURL((u) => !u.pathname.startsWith('/login'));
   await page.goto('/settings');
   await expect(page.getByRole('heading', { name: 'Ajustes', level: 1 })).toBeVisible();
+  // M7-T15: the account records the language in use, for push titles.
+  await expect
+    .poll(async () => (await ana.api.get<{ user: { language: string } }>('/me')).user.language)
+    .toBe('es');
   await page.getByLabel('Idioma').selectOption('en');
   await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible();
+  await expect
+    .poll(async () => (await ana.api.get<{ user: { language: string } }>('/me')).user.language)
+    .toBe('en');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible();

@@ -20,6 +20,7 @@ import {
   type PushKind,
 } from '../../infra/push/channels.js';
 import { checkPushUrl } from '../../infra/push/egress.js';
+import { testTitle } from '../../jobs/push-text.js';
 import { encryptSecret } from '../../infra/secrets.js';
 import { assertPublicHost } from '../videos/url.js';
 import type { Viewer } from '../../http/context.js';
@@ -339,7 +340,7 @@ export async function testPushTarget(deps: Deps, viewer: Viewer, id: string) {
   const sender = (await deps.pushSenders())[row.kind];
   if (!sender) return { result: 'error' as const };
   const result = await sender.send(row, {
-    title: 'Test notification from VidFriends',
+    title: testTitle(await userLanguage(deps, viewer.id)),
     data: { notification_id: row.id, url: '/settings' },
     tag: 'test',
   });
@@ -358,4 +359,12 @@ export async function deletePushTarget(deps: Deps, viewer: Viewer, id: string) {
     .where(and(eq(pushTargets.id, id), eq(pushTargets.userId, viewer.id)))
     .returning({ id: pushTargets.id });
   if (!deleted.length) throw notFound();
+}
+
+async function userLanguage(deps: Deps, userId: string): Promise<'en' | 'es'> {
+  const [u] = await deps.db
+    .select({ language: users.language })
+    .from(users)
+    .where(eq(users.id, userId));
+  return u?.language ?? 'en';
 }

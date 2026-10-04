@@ -514,6 +514,13 @@
                             "admin"
                           ]
                         },
+                        "language": {
+                          "type": "string",
+                          "enum": [
+                            "en",
+                            "es"
+                          ]
+                        },
                         "created_at": {
                           "type": "string",
                           "format": "date-time"
@@ -525,6 +532,7 @@
                         "display_name",
                         "avatar_url",
                         "role",
+                        "language",
                         "created_at"
                       ]
                     }
@@ -894,6 +902,13 @@
                             "admin"
                           ]
                         },
+                        "language": {
+                          "type": "string",
+                          "enum": [
+                            "en",
+                            "es"
+                          ]
+                        },
                         "created_at": {
                           "type": "string",
                           "format": "date-time"
@@ -905,6 +920,7 @@
                         "display_name",
                         "avatar_url",
                         "role",
+                        "language",
                         "created_at"
                       ]
                     }
@@ -1528,6 +1544,13 @@
                             "admin"
                           ]
                         },
+                        "language": {
+                          "type": "string",
+                          "enum": [
+                            "en",
+                            "es"
+                          ]
+                        },
                         "created_at": {
                           "type": "string",
                           "format": "date-time"
@@ -1539,6 +1562,7 @@
                         "display_name",
                         "avatar_url",
                         "role",
+                        "language",
                         "created_at"
                       ]
                     },
@@ -1782,7 +1806,7 @@
       },
       "patch": {
         "operationId": "updateMe",
-        "summary": "Edit display name (FR-ACCT-01)",
+        "summary": "Edit display name or language (FR-ACCT-01, NFR-I18N-01)",
         "tags": [
           "me"
         ],
@@ -1804,11 +1828,15 @@
                   "display_name": {
                     "type": "string",
                     "maxLength": 50
+                  },
+                  "language": {
+                    "type": "string",
+                    "enum": [
+                      "en",
+                      "es"
+                    ]
                   }
-                },
-                "required": [
-                  "display_name"
-                ]
+                }
               }
             }
           }
@@ -1847,6 +1875,13 @@
                             "admin"
                           ]
                         },
+                        "language": {
+                          "type": "string",
+                          "enum": [
+                            "en",
+                            "es"
+                          ]
+                        },
                         "created_at": {
                           "type": "string",
                           "format": "date-time"
@@ -1858,6 +1893,7 @@
                         "display_name",
                         "avatar_url",
                         "role",
+                        "language",
                         "created_at"
                       ]
                     }
@@ -32328,6 +32364,13 @@
                             "admin"
                           ]
                         },
+                        "language": {
+                          "type": "string",
+                          "enum": [
+                            "en",
+                            "es"
+                          ]
+                        },
                         "created_at": {
                           "type": "string",
                           "format": "date-time"
@@ -32339,6 +32382,7 @@
                         "display_name",
                         "avatar_url",
                         "role",
+                        "language",
                         "created_at"
                       ]
                     },
@@ -33030,6 +33074,13 @@
                             "admin"
                           ]
                         },
+                        "language": {
+                          "type": "string",
+                          "enum": [
+                            "en",
+                            "es"
+                          ]
+                        },
                         "created_at": {
                           "type": "string",
                           "format": "date-time"
@@ -33041,6 +33092,7 @@
                         "display_name",
                         "avatar_url",
                         "role",
+                        "language",
                         "created_at"
                       ]
                     }
@@ -34437,6 +34489,13 @@
                             "admin"
                           ]
                         },
+                        "language": {
+                          "type": "string",
+                          "enum": [
+                            "en",
+                            "es"
+                          ]
+                        },
                         "created_at": {
                           "type": "string",
                           "format": "date-time"
@@ -34448,6 +34507,7 @@
                         "display_name",
                         "avatar_url",
                         "role",
+                        "language",
                         "created_at"
                       ]
                     }
@@ -36134,6 +36194,13 @@
                             "admin"
                           ]
                         },
+                        "language": {
+                          "type": "string",
+                          "enum": [
+                            "en",
+                            "es"
+                          ]
+                        },
                         "created_at": {
                           "type": "string",
                           "format": "date-time"
@@ -36145,6 +36212,7 @@
                         "display_name",
                         "avatar_url",
                         "role",
+                        "language",
                         "created_at"
                       ]
                     }
@@ -36980,6 +37048,13 @@
                             "admin"
                           ]
                         },
+                        "language": {
+                          "type": "string",
+                          "enum": [
+                            "en",
+                            "es"
+                          ]
+                        },
                         "created_at": {
                           "type": "string",
                           "format": "date-time"
@@ -36991,6 +37066,7 @@
                         "display_name",
                         "avatar_url",
                         "role",
+                        "language",
                         "created_at"
                       ]
                     }

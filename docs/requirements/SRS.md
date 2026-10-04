@@ -195,7 +195,7 @@ Numbers marked † are **proposed targets** chosen under delegation for a small 
 | NFR-A11Y-02 | The mobile apps support VoiceOver and TalkBack labels, Dynamic Type / font scaling, and reduced motion. | M | M6 | Audit |
 | NFR-COMPAT-01 | Web supports the latest two versions of Chrome, Edge, Firefox and Safari (macOS and iOS). | M | M4 | E2E (Playwright projects) |
 | NFR-COMPAT-02 | Mobile supports iOS 17+ and Android 10+ (API 29)†. | M | M6 | Audit |
-| NFR-I18N-01 | All UI strings are externalised from day one. The web app and the mobile app are available in English and Spanish (M7); the language follows the browser or phone, and a member can pick one in Settings (stored on that device). A test keeps every catalog complete, with the same placeholders. Dates and relative times use locale-aware formatting. Push notification titles are still English (they are written by the server). | M | M1; Spanish M7 | Audit, Unit |
+| NFR-I18N-01 | All UI strings are externalised from day one. The web app and the mobile app are available in English and Spanish (M7); the language follows the browser or phone, and a member can pick one in Settings (stored on that device). A test keeps every catalog complete, with the same placeholders. The signed-in client records the language in use on the member's account (`users.language`), and the server writes push titles (Web Push, Expo, ntfy, Gotify) in it. Dates and relative times use locale-aware formatting. | M | M1; Spanish M7 | Audit, Unit |
 
 ### Maintainability (NFR-MAINT)
 
