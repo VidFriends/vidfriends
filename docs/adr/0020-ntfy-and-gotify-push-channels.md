@@ -1,6 +1,6 @@
 # ADR-0020: ntfy and Gotify push channels; UnifiedPush deferred
 
-- **Status:** Accepted
+- **Status:** Accepted; item 6 superseded by [ADR-0024](0024-unifiedpush-via-local-expo-module.md) (UnifiedPush on Android)
 - **Date:** 2026-10-04
 - **Decided by:** Owner scheduled more push channels (multiple-choice answer, 2026-10-04).
   Mechanism: Claude under delegation.

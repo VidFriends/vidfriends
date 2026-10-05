@@ -592,7 +592,7 @@ export const pushTargets = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    kind: text('kind', { enum: ['webpush', 'expo', 'ntfy', 'gotify'] }).notNull(),
+    kind: text('kind', { enum: ['webpush', 'expo', 'ntfy', 'gotify', 'unifiedpush'] }).notNull(),
     endpoint: text('endpoint').notNull(),
     p256dh: text('p256dh'),
     auth: text('auth'),
@@ -605,12 +605,15 @@ export const pushTargets = pgTable(
   (t) => [
     uniqueIndex('push_targets_device_endpoint_key')
       .on(t.endpoint)
-      .where(sql`${t.kind} in ('webpush','expo')`),
+      .where(sql`${t.kind} in ('webpush','expo','unifiedpush')`),
     uniqueIndex('push_targets_user_endpoint_key')
       .on(t.userId, t.endpoint)
       .where(sql`${t.kind} in ('ntfy','gotify')`),
     index('push_targets_user_idx').on(t.userId),
-    check('push_targets_kind_check', sql`${t.kind} in ('webpush','expo','ntfy','gotify')`),
+    check(
+      'push_targets_kind_check',
+      sql`${t.kind} in ('webpush','expo','ntfy','gotify','unifiedpush')`,
+    ),
   ],
 );
 

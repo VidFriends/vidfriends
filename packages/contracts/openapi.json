@@ -23416,7 +23416,7 @@
     "/api/v1/push-targets": {
       "post": {
         "operationId": "createPushTarget",
-        "summary": "Register a Web Push subscription, an Expo push token, or an ntfy/Gotify target (FR-NOTIF-02/03/07)",
+        "summary": "Register a Web Push subscription, an Expo push token, an ntfy/Gotify target or a UnifiedPush endpoint (FR-NOTIF-02/03/07/08)",
         "tags": [
           "notifications"
         ],
@@ -23441,7 +23441,8 @@
                       "webpush",
                       "expo",
                       "ntfy",
-                      "gotify"
+                      "gotify",
+                      "unifiedpush"
                     ]
                   },
                   "endpoint": {
@@ -23505,7 +23506,8 @@
                             "webpush",
                             "expo",
                             "ntfy",
-                            "gotify"
+                            "gotify",
+                            "unifiedpush"
                           ]
                         },
                         "label": {
@@ -23968,7 +23970,8 @@
                               "webpush",
                               "expo",
                               "ntfy",
-                              "gotify"
+                              "gotify",
+                              "unifiedpush"
                             ]
                           },
                           "label": {

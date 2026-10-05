@@ -1,0 +1,21 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'io.github.vidfriends'
+version = '0.1.0'
+
+android {
+  namespace "io.github.vidfriends.unifiedpush"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+}
+
+dependencies {
+  // ADR-0024: the UnifiedPush connector (registration, Web Push key pair and decryption).
+  implementation 'org.unifiedpush.android:connector:3.0.10'
+  implementation 'androidx.core:core-ktx:1.13.1'
+}

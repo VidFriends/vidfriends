@@ -306,5 +306,15 @@
     "empty": "No videos in this collection yet. Add them from a video's page.",
     "add": "Add to collection",
     "addHelp": "Tick the collections this video belongs in, or make a new one. It is saved too."
+  },
+  "unifiedpush": {
+    "title": "UnifiedPush",
+    "help": "Get notifications through a UnifiedPush app such as ntfy, without Google. Pushes are end-to-end encrypted to this phone.",
+    "use": "Use {{name}}",
+    "waiting": "Connecting to {{name}}…",
+    "on": "Notifications arrive through {{name}}.",
+    "off": "Turn off UnifiedPush",
+    "none": "No UnifiedPush app is installed. Install one, such as ntfy, to get notifications without Google.",
+    "failed": "The UnifiedPush app could not register VidFriends. Try again or pick another app."
   }
 }

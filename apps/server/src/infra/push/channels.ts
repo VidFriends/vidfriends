@@ -1,5 +1,5 @@
-// Push channels (ADR-0011, ADR-0020): Web Push for browsers, Expo Push for the mobile apps, and
-// member-configured ntfy and Gotify servers.
+// Push channels (ADR-0011, ADR-0020, ADR-0024): Web Push for browsers, Expo Push for the mobile
+// apps, member-configured ntfy and Gotify servers, and UnifiedPush endpoints on Android.
 import webpush from 'web-push';
 import type { Db } from '../db.js';
 import { decryptSecret, getOrCreateSecret } from '../secrets.js';
@@ -14,7 +14,7 @@ export interface PushPayload {
   lang?: 'en' | 'es';
 }
 
-export type PushKind = 'webpush' | 'expo' | 'ntfy' | 'gotify';
+export type PushKind = 'webpush' | 'expo' | 'ntfy' | 'gotify' | 'unifiedpush';
 
 export interface PushTargetRow {
   id: string;
@@ -205,6 +205,50 @@ export function createGotifySender(o: HttpPushOptions): PushSender {
           }),
         });
         return outcome(status);
+      } catch {
+        return 'error';
+      }
+    },
+  };
+}
+
+/**
+ * UnifiedPush (ADR-0024): the distributor on the phone gave the app an endpoint URL and Web Push
+ * keys. Messages are Web Push (RFC 8291, aes128gcm, with VAPID), and the URL is user input, so the
+ * request goes through the egress guard like ntfy and Gotify (ADR-0020).
+ */
+export function createUnifiedPushSender(o: {
+  keys: VapidKeys;
+  subject: string;
+  post: PostFn;
+}): PushSender {
+  return {
+    async send(target, payload) {
+      if (target.kind !== 'unifiedpush' || !target.p256dh || !target.auth) return 'error';
+      try {
+        const details = webpush.generateRequestDetails(
+          { endpoint: target.endpoint, keys: { p256dh: target.p256dh, auth: target.auth } },
+          JSON.stringify(payload),
+          {
+            vapidDetails: {
+              subject: o.subject,
+              publicKey: o.keys.publicKey,
+              privateKey: o.keys.privateKey,
+            },
+            TTL: 24 * 3600,
+            contentEncoding: 'aes128gcm',
+          },
+        );
+        const headers: Record<string, string> = {};
+        for (const [k, v] of Object.entries(details.headers)) headers[k.toLowerCase()] = String(v);
+        const status = await o.post(details.endpoint, {
+          headers,
+          body: details.body as Buffer,
+        });
+        if (status >= 200 && status < 300) return 'ok';
+        // The distributor dropped the registration (BR-NOT-6).
+        if (status === 404 || status === 410) return 'gone';
+        return 'error';
       } catch {
         return 'error';
       }

@@ -1,0 +1,7 @@
+{
+  "name": "vidfriends-unifiedpush",
+  "version": "0.1.0",
+  "private": true,
+  "description": "UnifiedPush for the VidFriends Android app (ADR-0024)",
+  "main": "index.ts"
+}

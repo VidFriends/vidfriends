@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useTranslation } from 'react-i18next';
 import '@/i18n';
 import { PushRegistration } from '@/features/push';
+import { UnifiedPushSync } from '@/features/unifiedpush';
 import { OfflineProvider } from '@/features/offline/store';
 import { LanguageSync } from '@/features/language-sync';
 import { RealtimeUpdates } from '@/features/realtime';
@@ -16,6 +17,7 @@ export default function RootLayout() {
       <SessionProvider>
         <StatusBar style="auto" />
         <PushRegistration />
+        <UnifiedPushSync />
         <RealtimeUpdates />
         <LanguageSync />
         <OfflineProvider>

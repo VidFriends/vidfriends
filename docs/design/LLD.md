@@ -197,9 +197,9 @@ erDiagram
 **`push_targets`**
 - `id` PK
 - `user_id` FK CASCADE
-- `kind` CHECK in (`webpush`, `expo`, `ntfy`, `gotify`)
-- `endpoint` text: UNIQUE for `webpush`/`expo` (a re-subscribing device takes it over); UNIQUE per `(user_id, endpoint)` for `ntfy`/`gotify` (ADR-0020)
-- `p256dh` text NULL, `auth` text NULL
+- `kind` CHECK in (`webpush`, `expo`, `ntfy`, `gotify`, `unifiedpush`) (`unifiedpush`: migration 0011, ADR-0024)
+- `endpoint` text: UNIQUE for `webpush`/`expo`/`unifiedpush` (a re-subscribing device takes it over); UNIQUE per `(user_id, endpoint)` for `ntfy`/`gotify` (ADR-0020)
+- `p256dh` text NULL, `auth` text NULL (Web Push keys for `webpush` and `unifiedpush`)
 - `secret` bytea NULL: the ntfy/Gotify token, AES-256-GCM under a key derived from `APP_SECRET`
 - `private_previews` bool DEFAULT false
 - `created_at`
@@ -351,7 +351,7 @@ LIMIT :n + 1;
 | `GET /events` | M | → `text/event-stream`: `event: ready` first, then `data: RealtimeEvent` (`{type:'notification', notification_type, share_id}` or `{type:'notifications_read'}`), a `: ping` comment every 25 s; ends after 30 min or when the session stops being valid (ADR-0019). Fan-out: `pg_notify('vf_events', {u, e})` in the writing transaction, one `LISTEN` connection per API process | `rate_limited` (more than 5 open streams) | NOTIF-06 |
 | `GET /notification-prefs`, `PUT /notification-prefs` | M | matrix of type × channel | – | NOTIF-04 |
 | `GET /push/vapid-public-key` | M | → `{key}` | – | NOTIF-02 |
-| `POST /push-targets`, `DELETE /push-targets/{id}` | M | `{kind: webpush\|expo\|ntfy\|gotify, endpoint, keys?, token?, private_previews?}` → `{target}`. ntfy/gotify: `endpoint` is the topic or server URL (https, public address unless in `PUSH_PRIVATE_HOSTS`), `token` required for gotify and stored encrypted | `validation_failed` (`push_endpoint_not_allowed`, `token required`), `rate_limited` (more than 5 ntfy/gotify targets) | NOTIF-02,03,07 |
+| `POST /push-targets`, `DELETE /push-targets/{id}` | M | `{kind: webpush\|expo\|ntfy\|gotify\|unifiedpush, endpoint, keys?, token?, private_previews?}` → `{target}`. unifiedpush: `endpoint` is the distributor's URL (same address rules as ntfy), `keys` required, at most 5 per member (ADR-0024). ntfy/gotify: `endpoint` is the topic or server URL (https, public address unless in `PUSH_PRIVATE_HOSTS`), `token` required for gotify and stored encrypted | `validation_failed` (`push_endpoint_not_allowed`, `token required`), `rate_limited` (more than 5 ntfy/gotify targets) | NOTIF-02,03,07 |
 | `GET /push-targets` | M | → `{items: PushTarget[]}` (`id, kind, label, private_previews, created_at, last_success_at`; never endpoints of Web Push/Expo or tokens) | – | NOTIF-07 |
 | `POST /push-targets/{id}/test` | M | `{}` → `{result: ok\|error\|gone}` (5 per 10 min) | `not_found`, `rate_limited` | NOTIF-07 |
 | `GET /admin/users?q=&status=`, `PATCH /admin/users/{id}` `{status?, role?, quota_bytes_override?}`, `DELETE /admin/users/{id}`, `POST /admin/users/{id}/recovery-link` | A | … → `{user}` / `{url, expires_at}` | `last_admin` | ADM-01,03 |

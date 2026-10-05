@@ -113,10 +113,10 @@ export const getVapidKey = defineRoute({
   response: z.object({ key: z.string() }),
 });
 
-export const PUSH_KINDS = ['webpush', 'expo', 'ntfy', 'gotify'] as const;
+export const PUSH_KINDS = ['webpush', 'expo', 'ntfy', 'gotify', 'unifiedpush'] as const;
 export const PushKind = z.enum(PUSH_KINDS);
 
-/** BR-NOT-8: ntfy and Gotify targets per member. */
+/** BR-NOT-8: ntfy and Gotify targets per member, and UnifiedPush registrations per member. */
 export const MAX_SERVER_PUSH_TARGETS = 5;
 
 export const PushTarget = z.object({
@@ -137,7 +137,7 @@ export const createPushTarget = defineRoute({
   auth: 'member',
   tag: 'notifications',
   summary:
-    'Register a Web Push subscription, an Expo push token, or an ntfy/Gotify target (FR-NOTIF-02/03/07)',
+    'Register a Web Push subscription, an Expo push token, an ntfy/Gotify target or a UnifiedPush endpoint (FR-NOTIF-02/03/07/08)',
   body: z.object({
     kind: PushKind,
     endpoint: z.string().trim().min(1).max(1000),
