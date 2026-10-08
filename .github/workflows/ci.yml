@@ -24,11 +24,11 @@ jobs:
     name: Static checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -71,7 +71,7 @@ jobs:
       TEST_S3_ACCESS_KEY_ID: ciaccesskey
       TEST_S3_SECRET_ACCESS_KEY: ci-secret-key-not-a-real-secret
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Start SeaweedFS (S3)
         run: |
           printf '{"identities":[{"name":"ci","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Admin","Read","Write","List","Tagging"]}]}' \
@@ -85,8 +85,8 @@ jobs:
           done
       - name: Install ffmpeg
         run: sudo apt-get update -q && sudo apt-get install -yq --no-install-recommends ffmpeg
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -98,10 +98,10 @@ jobs:
     name: Images, Trivy and E2E
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
       - name: Build server image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: server
@@ -110,7 +110,7 @@ jobs:
           cache-from: type=gha,scope=server
           cache-to: type=gha,mode=max,scope=server
       - name: Build worker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: worker
@@ -124,8 +124,8 @@ jobs:
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.75.0 \
               image --scanners vuln --severity CRITICAL --ignore-unfixed --exit-code 1 --no-progress "$image"
           done
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -144,7 +144,7 @@ jobs:
       - name: Stack logs
         if: failure()
         run: node e2e/scripts/stack.mjs logs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: playwright-report
