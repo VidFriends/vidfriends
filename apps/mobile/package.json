@@ -50,7 +50,7 @@
     "eslint": "9.39.5",
     "jest": "30.5.2",
     "jest-expo": "57.0.5",
-    "typescript": "5.9.3"
+    "typescript": "6.0.3"
   },
   "jest": {
     "preset": "jest-expo",
