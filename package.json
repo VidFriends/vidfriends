@@ -22,8 +22,8 @@
     "dev:services": "docker compose -f deploy/compose.dev.yml up -d --wait"
   },
   "devDependencies": {
-    "prettier": "3.9.9",
-    "turbo": "2.11.7",
+    "prettier": "3.9.10",
+    "turbo": "2.11.9",
     "typescript": "5.9.3"
   }
 }
