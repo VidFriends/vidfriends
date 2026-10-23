@@ -271,7 +271,7 @@ M2 and M3 can run in parallel after M1. M5 and M6 can run in parallel after M4. 
 ### v1.0
 M5 and M6 are complete, and every Must requirement in the SRS has passing verification (PRD §6).
 
-### M7: Post-v1 backlog 🟡 (data export and passkey-only sign-in done; M7-T6 real-device check pending; realtime updates M7-T7..T9 scheduled by the owner)
+### M7: Post-v1 backlog 🟡 (all scheduled items M7-T1..T20 merged with CI evidence; owner checks pending: real-device passkeys M7-T6, the Cloudflare instance M7-T12 and UnifiedPush delivery M7-T20)
 
 Each item needs a PRD update and, where architectural, an ADR before work starts. The owner chose data export as the first item (multiple-choice answer, 2026-10-04); PRD CAP-18 and SRS FR-ACCT-05 now describe it.
 
@@ -321,8 +321,8 @@ Backlog: none remaining. Passkeys moved to M7-T3..T6, realtime to M7-T7..T9, off
 
 ## 7. Next actionable milestone
 
-**M7: post-v1 backlog.** Data export and passkey-only sign-in are done; realtime updates (M7-T7..T9) are next, chosen by the owner on 2026-10-04.
-- **Now (agents):** M7-T18..T20 are done locally and wait in [PR #128](https://github.com/VidFriends/vidfriends/pull/128). GitHub Actions has not started any job since 2026-10-04 22:54 UTC (no runner assigned; likely Actions billing). The owner chose to wait for CI (2026-10-05): merge each when CI is green on the PR, then the roadmap is complete.
+**M7: post-v1 backlog.** Every scheduled item (M7-T1..T20) is merged with CI evidence, and the backlog is empty (more languages: not planned).
+- **Now (agents):** nothing scheduled. M7-T18..T20 merged in [PR #128](https://github.com/VidFriends/vidfriends/pull/128) once GitHub Actions ran again (2026-10-23). New work starts from a backlog item the owner adds.
 - **Owner:** check passkey sign-in on a real Android phone and iPhone against an HTTPS instance (M7-T6); on an Android phone with ntfy installed, turn on Settings → UnifiedPush and confirm a push arrives (M7-T20); enable branch protection on `main` (M1-T2); Apple and Google developer accounts for store builds (M6-T7). The alpha (M5-T9) is postponed by the owner.
 - **Verification:** each item's completion check in §5, with the CI run or record linked in the task row.
 
@@ -330,6 +330,7 @@ Backlog: none remaining. Passkeys moved to M7-T3..T6, realtime to M7-T7..T9, off
 
 | Date | Change |
 |---|---|
+| 2026-10-23 | M7-T18 perceptual dedup, M7-T19 bundled egress proxy and M7-T20 UnifiedPush ✅, merged in [PR #128](https://github.com/VidFriends/vidfriends/pull/128) with CI green after GitHub Actions resumed: static checks, unit/contract/API tests (incl. `dedup.test.ts`, `egress-proxy.test.ts`, `push-servers.test.ts`), images/Trivy/Playwright, and the Android build (first compile of the UnifiedPush module) with Maestro. The repository history was rewritten on 2026-10-23 (new commit ids, identical trees). |
 | 2026-10-05 | Owner answers (multiple choice): wait for CI to run again before merging M7-T18..T20 (no merge on local checks); push them to the PR branch meanwhile; **more languages: not planned**, so the backlog is empty. |
 | 2026-10-05 | Owner answer (multiple choice): next, **UnifiedPush** (M7-T20, ADR-0024, FR-NOTIF-08) through a local Expo module. |
 | 2026-10-04 | Owner answer (multiple choice): next, the **bundled egress proxy** (M7-T19, ADR-0023): an optional compose profile with our own filtering proxy for yt-dlp. |
