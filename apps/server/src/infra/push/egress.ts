@@ -52,7 +52,7 @@ export function guardedLookup(privateHosts: readonly string[]): LookupFunction {
 
 export type PostFn = (
   url: string,
-  init: { headers: Record<string, string>; body: string; timeoutMs?: number },
+  init: { headers: Record<string, string>; body: string | Buffer; timeoutMs?: number },
 ) => Promise<number>;
 
 /** POSTs through the guard; resolves with the HTTP status (no redirects followed). */

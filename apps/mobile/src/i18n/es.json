@@ -314,5 +314,15 @@
     "empty": "Aún no hay vídeos en esta colección. Añádelos desde la página de un vídeo.",
     "add": "Añadir a una colección",
     "addHelp": "Marca las colecciones en las que va este vídeo o crea una nueva. También se guarda."
+  },
+  "unifiedpush": {
+    "title": "UnifiedPush",
+    "help": "Recibe notificaciones a través de una app de UnifiedPush como ntfy, sin Google. Los avisos van cifrados de extremo a extremo hasta este teléfono.",
+    "use": "Usar {{name}}",
+    "waiting": "Conectando con {{name}}…",
+    "on": "Las notificaciones llegan a través de {{name}}.",
+    "off": "Desactivar UnifiedPush",
+    "none": "No hay ninguna app de UnifiedPush instalada. Instala una, como ntfy, para recibir notificaciones sin Google.",
+    "failed": "La app de UnifiedPush no pudo registrar VidFriends. Inténtalo de nuevo o elige otra app."
   }
 }

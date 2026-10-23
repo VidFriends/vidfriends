@@ -56,6 +56,8 @@ export async function createTestServer(
     LOG_LEVEL: 'info',
     WEB_DIST: '/nonexistent',
     RATE_LIMIT_IP_PER_MINUTE: '100000',
+    // Fixture videos repeat the same test pattern; only the dedup test turns perceptual on.
+    MEDIA_DEDUP: 'exact',
     ...s3,
     ...envOverrides,
   });

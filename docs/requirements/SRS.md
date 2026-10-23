@@ -76,6 +76,7 @@
 | FR-VID-07 | Per-user quota and instance storage cap are enforced (BR-MED-2, BR-MED-6). | M | BR-MED-2,6 | LLD §4 | M3 | API |
 | FR-VID-08 | Exact dedup by normalised URL or SHA-256 reuses media only (BR-MED-4), and the feed shows "also sent by" (BR-FEED-7). | C | BR-MED-4, CAP-13 | LLD §4 | M4 | API |
 | FR-VID-09 | When `link_download_enabled = false`, links become `link_only` and no media is downloaded. | M | BR-MED-9, BRD OQ-1 | ADR-0009 | M3 | API |
+| FR-VID-10 | With `MEDIA_DEDUP=perceptual`, a newly processed Video that shows the same clip as an earlier ready one reuses its stored file without merging anything else, is not charged for it, and the file is kept while any Video uses it (BR-MED-4..6). | S | BR-MED-4, ADR-0022 | LLD §2, §4 | M7 | Unit (hash maths), API (fixture media) |
 
 ### 1.6 Sharing (FR-SHR)
 
@@ -115,6 +116,7 @@
 | FR-NOTIF-03 | Mobile push via Expo Push, using the same rules. | M | BR-NOT-* | ADR-0011 | M6 | Runbook (device) |
 | FR-NOTIF-04 | Per-type, per-channel notification preferences. | M | BR-NOT-2 | LLD §3 | M4 | API |
 | FR-NOTIF-07 | Members can add ntfy and Gotify push targets (URL, token, private previews), list, test and remove them. Deliveries follow BR-NOT-2..4 and BR-NOT-8; tokens are encrypted at rest and never returned; sends reach only public addresses over https unless the operator lists the host in `PUSH_PRIVATE_HOSTS`. | S | BR-NOT-8 | ADR-0020 | M7 | API, E2E |
+| FR-NOTIF-08 | On Android, members can receive pushes through a UnifiedPush distributor of their choice: the app registers with it, saves the endpoint and Web Push keys as a push target, and shows decrypted pushes; the server sends RFC 8291 Web Push with VAPID through the egress guard (BR-NOT-9). | S | BR-NOT-9 | ADR-0024 | M7 | API (decrypts the delivered payload), Unit (app), E2E (Maestro: card renders) |
 | FR-NOTIF-05 | Clients refresh unread counts and the feed by polling (focus refetch plus an interval of at most 60 s). Polling remains the fallback when the realtime stream (FR-NOTIF-06) is unavailable. | M | CAP-19 | ADR-0011 | M4 | E2E |
 | FR-NOTIF-06 | Open web tabs and the foreground app receive realtime invalidation events (`GET /events`, server-sent events) and refresh the affected data within 5 s† of a notification being created or read on another device. Events carry types and ids only (BR-NOT-7); a revoked session or suspended account ends the stream within 30 s. | S | CAP-19, BR-NOT-7 | ADR-0019 | M7 | API, E2E |
 
@@ -230,6 +232,6 @@ The tables above are the trace matrix: each row links a requirement to its PRD c
 | M4 | FR-SHR-01..03,05; FR-FEED-01..06; FR-ENG-01..02; FR-NOTIF-01,04,05; NFR-A11Y-01; NFR-COMPAT-01 |
 | M5 | FR-ACCT-03; FR-VID-06; FR-ADM-01..05 (UI); NFR-REL-04,05; NFR-DATA-01; NFR-OPS-01,03(metrics),04 |
 | M6 | FR-PAIR-03,04(in-app); FR-NOTIF-03; FR-MOB-01..03; NFR-A11Y-02; NFR-COMPAT-02 |
-| M7 | Passkey-only sign-in (ADR-0018): FR-AUTH-01..04, FR-ACCT-02,03, FR-ADM-03, FR-PAIR-03 (https-only), NFR-SEC-02 change their mechanism; FR-ACCT-05 (S) data export; FR-NOTIF-06 (S) realtime updates (ADR-0019); FR-NOTIF-07 (S) ntfy and Gotify push (ADR-0020); FR-MOB-04 (S) offline downloads; NFR-I18N-01 Spanish; FR-FRND-06 (S) groups of friends; FR-FEED-07 (S) collections |
+| M7 | Passkey-only sign-in (ADR-0018): FR-AUTH-01..04, FR-ACCT-02,03, FR-ADM-03, FR-PAIR-03 (https-only), NFR-SEC-02 change their mechanism; FR-ACCT-05 (S) data export; FR-NOTIF-06 (S) realtime updates (ADR-0019); FR-NOTIF-07 (S) ntfy and Gotify push (ADR-0020); FR-MOB-04 (S) offline downloads; NFR-I18N-01 Spanish; FR-FRND-06 (S) groups of friends; FR-FEED-07 (S) collections; FR-VID-10 (S) perceptual dedup; FR-NOTIF-08 (S) UnifiedPush |
 
 Every Must requirement appears in exactly one delivery milestone (or is split explicitly by layer); the M7 row lists requirements whose mechanism M7 replaced. NFR-MAINT-03 applies to every milestone.

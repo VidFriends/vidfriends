@@ -336,6 +336,8 @@ export const videos = pgTable(
     mediaKey: text('media_key'),
     thumbKey: text('thumb_key'),
     mediaBytes: bigint('media_bytes', { mode: 'number' }).notNull().default(0),
+    /** The media file was stored for another video and reused (perceptual dedup, ADR-0022). */
+    mediaReused: boolean('media_reused').notNull().default(false),
     createdAt: createdAt(),
     updatedAt: tstz('updated_at').notNull().defaultNow(),
     readyAt: tstz('ready_at'),
@@ -357,6 +359,24 @@ export const videos = pgTable(
     ),
     check('videos_title_length', sql`char_length(${t.title}) <= 200`),
   ],
+);
+
+/** Perceptual fingerprint of a processed video (BR-MED-4, ADR-0022). */
+export const videoFingerprints = pgTable(
+  'video_fingerprints',
+  {
+    videoId: uuid('video_id')
+      .primaryKey()
+      .references(() => videos.id, { onDelete: 'cascade' }),
+    durationMs: integer('duration_ms').notNull(),
+    width: integer('width'),
+    height: integer('height'),
+    /** 8 frame hashes of 8 bytes each; `mask` marks the usable ones. */
+    hashes: bytea('hashes').notNull(),
+    mask: integer('mask').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index('video_fingerprints_duration_idx').on(t.durationMs)],
 );
 
 /** Every member who added a video (by link or upload). Dedup reuses media, never ownership (BR-MED-4). */
@@ -572,7 +592,7 @@ export const pushTargets = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    kind: text('kind', { enum: ['webpush', 'expo', 'ntfy', 'gotify'] }).notNull(),
+    kind: text('kind', { enum: ['webpush', 'expo', 'ntfy', 'gotify', 'unifiedpush'] }).notNull(),
     endpoint: text('endpoint').notNull(),
     p256dh: text('p256dh'),
     auth: text('auth'),
@@ -585,12 +605,15 @@ export const pushTargets = pgTable(
   (t) => [
     uniqueIndex('push_targets_device_endpoint_key')
       .on(t.endpoint)
-      .where(sql`${t.kind} in ('webpush','expo')`),
+      .where(sql`${t.kind} in ('webpush','expo','unifiedpush')`),
     uniqueIndex('push_targets_user_endpoint_key')
       .on(t.userId, t.endpoint)
       .where(sql`${t.kind} in ('ntfy','gotify')`),
     index('push_targets_user_idx').on(t.userId),
-    check('push_targets_kind_check', sql`${t.kind} in ('webpush','expo','ntfy','gotify')`),
+    check(
+      'push_targets_kind_check',
+      sql`${t.kind} in ('webpush','expo','ntfy','gotify','unifiedpush')`,
+    ),
   ],
 );
 

@@ -29,7 +29,7 @@
 | Hash | SHA-256 streamed while uploading to storage | Exact dedup (BR-MED-4) |
 | Temp storage | Docker volume `/work` (disk, not tmpfs). Per-job directory removed in `finally`. | Legacy 64 MB tmpfs and leaked files |
 | Sandbox | Worker container: non-root, read-only root filesystem except `/work` and `/tmp`, `cap_drop: ALL`, `no-new-privileges`, memory limit 1 GiB† | Contains extractor or ffmpeg exploits (TB-4) |
-| Egress | App-level: resolve the host and reject private, loopback, link-local and CGNAT ranges before invoking yt-dlp. Optional network-level egress proxy documented for hardened installs. | yt-dlp follows redirects internally, so app-level checks are best-effort. Documented as a residual risk (§5). |
+| Egress | App-level: resolve the host and reject private, loopback, link-local and CGNAT ranges before invoking yt-dlp. Optional bundled egress proxy (compose profile `egress-proxy`, ADR-0023) for hardened installs. | yt-dlp follows redirects internally, so app-level checks are best-effort. Documented as a residual risk (§5). |
 
 ## 3. Server engineering
 
@@ -105,7 +105,7 @@
 | SSRF | Link to internal services | Allowlist + private-IP block + `--` [NFR-SEC-05] |
 
 **Residual risks (accepted in [ADR-0016](../adr/0016-accepted-residual-security-risks-v0-1.md) after the M5 review):**
-- yt-dlp redirect-following can reach hosts outside the allowlist. Mitigation: SeaweedFS's unauthenticated master/volume/filer APIs bind to loopback (only the authenticated S3 gateway is on the network), and the optional egress proxy `FETCH_PROXY_URL`.
+- yt-dlp redirect-following can reach hosts outside the allowlist. Mitigation: SeaweedFS's unauthenticated master/volume/filer APIs bind to loopback (only the authenticated S3 gateway is on the network), and the optional egress proxy: the bundled `egress-proxy` compose profile (ADR-0023) or any filtering proxy set in `FETCH_PROXY_URL`.
 - The operator can read all data. Mitigation: disclosed to users.
 
 **Secrets:**

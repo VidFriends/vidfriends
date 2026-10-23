@@ -48,7 +48,7 @@ MoSCoW priority applies to v1. "v1" means milestones M1–M6 in the [roadmap](..
 | CAP-17 | Import from YouTube or other playlists via OAuth | Won't | – | – | Not planned |
 | CAP-18 | Self-service data export | Should (post-v1; scheduled by the owner 2026-10-04) | BO-5 | FR-ACCT-05 | M7 |
 | CAP-19 | Realtime updates (push-to-open-tab) | Should (post-v1; scheduled by the owner 2026-10-04). Polling stays as the fallback. | BO-2 | FR-NOTIF-06 | M7 |
-| CAP-20 | ntfy and Gotify push (de-Googled phones, self-hosted push); UnifiedPush later | Should (post-v1; scheduled by the owner 2026-10-04) | BO-5 | FR-NOTIF-07 | M7 |
+| CAP-20 | ntfy and Gotify push (de-Googled phones, self-hosted push); UnifiedPush in the Android app | Should (post-v1; scheduled by the owner 2026-10-04) | BO-5 | FR-NOTIF-07, FR-NOTIF-08 | M7 |
 
 ## 4. User journeys
 

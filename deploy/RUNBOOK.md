@@ -178,10 +178,20 @@ rotated at 10 MB × 5 per container, no access log, no tokens or content).
 ## 5a. Hardening (optional)
 
 - **Egress proxy for link downloads.** yt-dlp may follow redirects from an allowed site to other
-  hosts ([ADR-0016](../docs/adr/0016-accepted-residual-security-risks-v0-1.md)). To confine it, run
-  an HTTP proxy that refuses private, loopback and link-local destinations (for example Stripe's
-  Smokescreen, which does this by default) as a service on the compose network, and set
-  `FETCH_PROXY_URL=http://<service>:<port>` in `.env`. Every yt-dlp request then goes through it.
+  hosts ([ADR-0016](../docs/adr/0016-accepted-residual-security-risks-v0-1.md)). To confine it, turn
+  on the bundled proxy ([ADR-0023](../docs/adr/0023-bundled-egress-proxy.md)) by adding to `.env`:
+
+  ```sh
+  COMPOSE_PROFILES=egress-proxy
+  FETCH_PROXY_URL=http://egress-proxy:3128
+  ```
+
+  and running `docker compose up -d`. Every yt-dlp request, redirects included, then goes through
+  it. It refuses any host that resolves to a private, loopback, link-local or CGNAT address, and
+  any port other than 80 and 443 (`EGRESS_ALLOWED_PORTS`). Its log lists each host and whether it
+  was allowed: `docker compose logs egress-proxy`. You can point `FETCH_PROXY_URL` at your own
+  filtering proxy instead (for example Stripe's Smokescreen).
+
 - **Internal store APIs stay internal.** Only SeaweedFS's authenticated S3 port is reachable on the
   compose network; keep the `-ip.bind=127.0.0.1` flags if you customise `compose.yml`.
 - **Host:** enable unattended security updates and a firewall allowing only 22, 80 and 443.

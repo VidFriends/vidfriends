@@ -144,6 +144,9 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      egress-proxy:
+        condition: service_healthy
+        required: false
       seaweedfs:
         condition: service_healthy
     # Sandbox for yt-dlp and ffmpeg (TDD §2, TB-4).
@@ -156,6 +159,26 @@ services:
     security_opt: ['no-new-privileges:true']
     mem_limit: 1g
     stop_grace_period: 30s
+    logging: *logging
+
+  # Optional filtering egress proxy for yt-dlp (ADR-0023, TDD §5). Turn it on with
+  # COMPOSE_PROFILES=egress-proxy and FETCH_PROXY_URL=http://egress-proxy:3128 in .env.
+  egress-proxy:
+    profiles: [egress-proxy]
+    image: ${VIDFRIENDS_SERVER_IMAGE:-vidfriends-server:local}
+    restart: unless-stopped
+    entrypoint: ['node', 'dist/egress-proxy.js']
+    environment:
+      EGRESS_ALLOWED_PORTS: ${EGRESS_ALLOWED_PORTS:-80,443}
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3128/healthz >/dev/null || exit 1']
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    mem_limit: 128m
     logging: *logging
 
 volumes:

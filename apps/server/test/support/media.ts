@@ -57,6 +57,39 @@ export function buildFixtures(): void {
       fixture('h264-upload.mp4'),
     ]);
   }
+  // The same clip again, re-encoded at lower quality and at half size (ADR-0022 dedup tests).
+  if (!existsSync(fixture('h264-recoded.mp4'))) {
+    ff([
+      '-i',
+      fixture('h264.mp4'),
+      '-c:v',
+      'libx264',
+      '-crf',
+      '36',
+      '-pix_fmt',
+      'yuv420p',
+      '-c:a',
+      'aac',
+      '-b:a',
+      '64k',
+      fixture('h264-recoded.mp4'),
+    ]);
+  }
+  if (!existsSync(fixture('h264-small.mp4'))) {
+    ff([
+      '-i',
+      fixture('h264.mp4'),
+      '-vf',
+      'scale=160:120',
+      '-c:v',
+      'libx264',
+      '-pix_fmt',
+      'yuv420p',
+      '-c:a',
+      'aac',
+      fixture('h264-small.mp4'),
+    ]);
+  }
   if (!existsSync(fixture('hevc.mov'))) {
     ff([
       ...src,

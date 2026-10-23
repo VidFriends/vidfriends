@@ -4,6 +4,10 @@ appId: io.github.vidfriends.app
 ---
 - tapOn: 'More'
 - tapOn: 'Settings'
+# FR-NOTIF-08 (ADR-0024): the native UnifiedPush module is linked; the emulator has no distributor.
+- scrollUntilVisible:
+    element:
+      id: unifiedpush-none
 - scrollUntilVisible:
     element:
       id: settings-signout

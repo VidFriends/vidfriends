@@ -10,6 +10,7 @@ import {
   updateMe,
 } from '@vidfriends/contracts';
 import { eq } from 'drizzle-orm';
+import { createECDH, createDecipheriv, hkdfSync, randomBytes } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -23,6 +24,7 @@ interface Received {
   path: string;
   headers: IncomingMessage['headers'];
   body: string;
+  raw: Buffer;
 }
 
 let received: Received[] = [];
@@ -34,10 +36,11 @@ let admin: Member;
 
 beforeAll(async () => {
   fake = createServer((req, res) => {
-    let body = '';
-    req.on('data', (c: Buffer) => (body += c.toString()));
+    const chunks: Buffer[] = [];
+    req.on('data', (c: Buffer) => chunks.push(c));
     req.on('end', () => {
-      received.push({ path: req.url ?? '', headers: req.headers, body });
+      const raw = Buffer.concat(chunks);
+      received.push({ path: req.url ?? '', headers: req.headers, body: raw.toString(), raw });
       res.writeHead(status).end('{}');
     });
   });
@@ -215,5 +218,82 @@ describe('egress guard (ADR-0020)', () => {
     expect(await createGuardedPost(['127.0.0.1'])(`${base}/x`, { headers: {}, body: 'x' })).toBe(
       200,
     );
+  });
+});
+
+/** RFC 8291 decryption as the UnifiedPush connector does it on the phone. */
+function decryptWebPush(raw: Buffer, ecdh: ReturnType<typeof createECDH>, authSecret: Buffer) {
+  const salt = raw.subarray(0, 16);
+  const idLen = raw[20]!;
+  const senderKey = raw.subarray(21, 21 + idLen);
+  const ciphertext = raw.subarray(21 + idLen);
+  const shared = ecdh.computeSecret(senderKey);
+  const info = Buffer.concat([Buffer.from('WebPush: info\0'), ecdh.getPublicKey(), senderKey]);
+  const ikm = Buffer.from(hkdfSync('sha256', shared, authSecret, info, 32));
+  const cek = Buffer.from(
+    hkdfSync('sha256', ikm, salt, Buffer.from('Content-Encoding: aes128gcm\0'), 16),
+  );
+  const nonce = Buffer.from(
+    hkdfSync('sha256', ikm, salt, Buffer.from('Content-Encoding: nonce\0'), 12),
+  );
+  const decipher = createDecipheriv('aes-128-gcm', cek, nonce);
+  decipher.setAuthTag(ciphertext.subarray(ciphertext.length - 16));
+  const plain = Buffer.concat([decipher.update(ciphertext.subarray(0, -16)), decipher.final()]);
+  // Strip the padding delimiter (0x02) and any zero padding.
+  return plain.subarray(0, plain.lastIndexOf(2)).toString('utf8');
+}
+
+describe('UnifiedPush targets (FR-NOTIF-08, ADR-0024)', () => {
+  it('sends encrypted Web Push with VAPID to the distributor endpoint, and drops a gone one', async () => {
+    const kim = await member();
+    const ecdh = createECDH('prime256v1');
+    ecdh.generateKeys();
+    const authSecret = randomBytes(16);
+    const keys = {
+      p256dh: ecdh.getPublicKey().toString('base64url'),
+      auth: authSecret.toString('base64url'),
+    };
+    const missing = await kim.client.call(createPushTarget, {
+      body: { kind: 'unifiedpush', endpoint: `${base}/up/abc?up=1` },
+    });
+    expect(missing.status).toBe(400);
+    expect(missing.body.error?.details).toMatchObject({ fields: { keys: 'required' } });
+    const blocked = await kim.client.call(createPushTarget, {
+      body: { kind: 'unifiedpush', endpoint: 'https://10.0.0.9/up/abc', keys },
+    });
+    expect(blocked.body.error?.details).toMatchObject({
+      fields: { endpoint: 'push_endpoint_not_allowed' },
+    });
+
+    const { target } = await kim.client.ok(createPushTarget, {
+      body: { kind: 'unifiedpush', endpoint: `${base}/up/abc?up=1`, keys },
+    });
+    expect(target).toMatchObject({ kind: 'unifiedpush', label: `UnifiedPush · ${base.slice(7)}` });
+    const other = await member();
+    await other.client.ok(sendFriendRequest, { body: { user_id: kim.user.id } });
+    await waitFor(async () => received.length > 0);
+    const msg = received[0]!;
+    expect(msg.path).toBe('/up/abc?up=1');
+    expect(msg.headers['content-encoding']).toBe('aes128gcm');
+    expect(msg.headers.authorization).toMatch(/^vapid t=.+, k=.+/);
+    // Only the distributor's phone can read it: a generic title and opaque ids (BR-NOT-3).
+    expect(msg.raw.toString('latin1')).not.toContain('wants to be friends');
+    const payload = JSON.parse(decryptWebPush(msg.raw, ecdh, authSecret)) as {
+      title: string;
+      data: { url: string };
+    };
+    expect(payload).toMatchObject({ title: 'Kim wants to be friends', data: { url: '/friends' } });
+
+    // A second registration from the same phone replaces the first (one row per endpoint).
+    await kim.client.ok(createPushTarget, {
+      body: { kind: 'unifiedpush', endpoint: `${base}/up/abc?up=1`, keys },
+    });
+    expect((await kim.client.ok(listPushTargets)).items).toHaveLength(1);
+
+    status = 404;
+    expect(await kim.client.ok(testPushTarget, { params: { id: target.id }, body: {} })).toEqual({
+      result: 'gone',
+    });
+    expect((await kim.client.ok(listPushTargets)).items).toEqual([]);
   });
 });

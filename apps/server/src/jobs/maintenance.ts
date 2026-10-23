@@ -15,6 +15,7 @@ import { DAY, HOUR } from '../infra/clock.js';
 import { KEY_PREFIXES } from '../infra/keys.js';
 import type { Deps } from '../http/deps.js';
 import { purgeAuthTokens } from '../modules/admin/service.js';
+import { fileStillUsed } from '../modules/videos/dedup.js';
 import { deleteExpiredSessions } from '../modules/auth/sessions.js';
 import { expireExports } from '../modules/exports/service.js';
 import { getSettings } from '../modules/settings/service.js';
@@ -61,22 +62,32 @@ export async function runRetention(
         if (!v) return null;
         await tx
           .update(videos)
-          .set({ state: 'expired', expiredAt: now, mediaKey: null, mediaBytes: 0, updatedAt: now })
+          .set({
+            state: 'expired',
+            expiredAt: now,
+            mediaKey: null,
+            mediaBytes: 0,
+            mediaReused: false,
+            updatedAt: now,
+          })
           .where(eq(videos.id, id));
-        // Bytes are released when the file is purged (BR-MED-6), in the same transaction.
-        if (v.addedBy && v.mediaBytes > 0) {
+        // Bytes are released when the video stops holding the file (BR-MED-6), in the same
+        // transaction; a video that reused another's file was never charged (ADR-0022).
+        if (v.addedBy && v.mediaBytes > 0 && !v.mediaReused) {
           await tx
             .update(users)
             .set({ storageBytes: sql`greatest(0, ${users.storageBytes} - ${v.mediaBytes})` })
             .where(eq(users.id, v.addedBy));
         }
-        return v;
+        // Another video may still play the same file (perceptual dedup): keep it then.
+        const shared = v.mediaKey ? await fileStillUsed(tx, v.mediaKey) : false;
+        return { ...v, deleteKey: shared ? null : v.mediaKey };
       });
       if (!purged) continue;
       expired += 1;
       // Storage deletes happen after the database commit (SDD §4); the thumbnail stays.
-      if (purged.mediaKey && deps.storage)
-        await deps.storage.deleteObjects([purged.mediaKey]).catch(() => {});
+      if (purged.deleteKey && deps.storage)
+        await deps.storage.deleteObjects([purged.deleteKey]).catch(() => {});
     }
   }
   const notificationsPurged = await deps.db
@@ -184,7 +195,8 @@ export async function runAccountPurge(
       )
       .returning({ media: videos.mediaKey, thumb: videos.thumbKey, id: videos.id });
     for (const v of orphaned) {
-      if (v.media) keys.push(v.media);
+      // Keep a file another video still plays (perceptual dedup, ADR-0022).
+      if (v.media && !(await fileStillUsed(deps.db, v.media))) keys.push(v.media);
       if (v.thumb) keys.push(v.thumb);
       keys.push(`tmp/fetch/${v.id}`);
     }

@@ -197,6 +197,13 @@ type PushRow = typeof pushTargets.$inferSelect;
 function labelFor(row: Pick<PushRow, 'kind' | 'endpoint'>): string {
   if (row.kind === 'webpush') return 'Browser';
   if (row.kind === 'expo') return 'VidFriends app';
+  if (row.kind === 'unifiedpush') {
+    try {
+      return `UnifiedPush · ${new URL(row.endpoint).host}`;
+    } catch {
+      return 'UnifiedPush';
+    }
+  }
   try {
     const url = new URL(row.endpoint);
     return `${url.host}${url.pathname === '/' ? '' : url.pathname}`;
@@ -285,7 +292,23 @@ export async function addPushTarget(
           .returning();
     return { target: toPushTarget(row!) };
   }
-  if (input.kind === 'webpush') {
+  if (input.kind === 'unifiedpush') {
+    // The distributor chose the URL: same egress rules as ntfy and Gotify (ADR-0024, ADR-0020).
+    await checkServerEndpoint(deps, input.endpoint);
+    if (!input.keys) throw fieldError('keys', 'required');
+    const [count] = await deps.db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(pushTargets)
+      .where(
+        and(
+          eq(pushTargets.userId, viewer.id),
+          eq(pushTargets.kind, 'unifiedpush'),
+          sql`${pushTargets.endpoint} <> ${input.endpoint}`,
+        ),
+      );
+    if ((count?.n ?? 0) >= MAX_SERVER_PUSH_TARGETS)
+      throw new ApiError('too_many_push_targets', 'Too many UnifiedPush registrations');
+  } else if (input.kind === 'webpush') {
     if (!isAllowedWebPushEndpoint(input.endpoint))
       throw fieldError('endpoint', 'push_endpoint_not_allowed');
     if (!input.keys) throw fieldError('keys', 'required');
@@ -307,7 +330,7 @@ export async function addPushTarget(
     .onConflictDoUpdate({
       // A browser re-subscribing (or another account on the same device) takes the endpoint over.
       target: pushTargets.endpoint,
-      targetWhere: sql`${pushTargets.kind} in ('webpush','expo')`,
+      targetWhere: sql`${pushTargets.kind} in ('webpush','expo','unifiedpush')`,
       set: {
         userId: viewer.id,
         p256dh: input.keys?.p256dh ?? null,

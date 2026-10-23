@@ -1,4 +1,4 @@
-// Settings: push (FR-NOTIF-03), data export (FR-ACCT-05), server, sign out; switching servers requires signing out (WF-PAIR-2).
+// Settings: push (FR-NOTIF-03, UnifiedPush FR-NOTIF-08), data export (FR-ACCT-05), server, sign out; switching servers requires signing out (WF-PAIR-2).
 import { useApiQuery } from '@vidfriends/api-client/react';
 import { getMe, logout } from '@vidfriends/contracts';
 import { router } from 'expo-router';
@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Switch, Text, View } from 'react-native';
 import { ExportCard } from '@/features/export/export-card';
 import { disablePush, enablePush, pushStatus, type PushStatus } from '@/features/push';
+import { disableUnifiedPush, UnifiedPushCard } from '@/features/unifiedpush';
 import { errorText, LANGUAGES, setLanguage, storedLanguage, type Language } from '@/i18n';
 import { useSession } from '@/lib/session';
 import { Body, Button, Card, ErrorBox, Screen } from '@/ui/kit';
@@ -33,8 +34,11 @@ export default function Settings() {
   async function togglePush(on: boolean) {
     setError(null);
     try {
-      if (on) setPush(await enablePush(session.api, privatePreviews));
-      else {
+      if (on) {
+        // One push channel per phone: turning Expo push on stops UnifiedPush (ADR-0024).
+        await disableUnifiedPush(session.api);
+        setPush(await enablePush(session.api, privatePreviews));
+      } else {
         await disablePush(session.api);
         setPush('off');
       }
@@ -45,6 +49,7 @@ export default function Settings() {
 
   async function signOut(forgetServer: boolean) {
     await disablePush(session.api);
+    await disableUnifiedPush(session.api);
     await session.api.call(logout, { body: { all: false } }).catch(() => {});
     await session.signOut({ forgetServer });
     router.replace('/');
@@ -104,6 +109,7 @@ export default function Settings() {
         </View>
         <Body muted>{t('settings.privatePreviewsHelp')}</Body>
       </Card>
+      <UnifiedPushCard onEnabled={() => setPush('off')} />
       <Card>
         <Text accessibilityRole="header" style={{ color: theme.text, fontSize: 16 }}>
           {t('language.title')}
