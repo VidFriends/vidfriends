@@ -1,4 +1,4 @@
-yt-dlp==2026.8.19
+yt-dlp==2026.10.21
 # YouTube challenge solver run by the worker's Node runtime (--js-runtimes node); the version
 # yt-dlp's own "default" extra pins. Bumped together with yt-dlp.
 yt-dlp-ejs==0.8.0
