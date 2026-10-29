@@ -17,6 +17,6 @@
     "@vidfriends/config": "workspace:*",
     "@vidfriends/contracts": "workspace:*",
     "@vidfriends/test-utils": "workspace:*",
-    "eslint": "9.39.5"
+    "eslint": "10.13.0"
   }
 }
